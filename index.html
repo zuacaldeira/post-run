@@ -970,8 +970,66 @@ setBase(DB.base || 60);
 renderProgress();
 </script>
 <script>
-if ("serviceWorker" in navigator)
-  addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}) });
+/* ---------------------------------------------------------------
+   Self-update. The worker already revalidates in the background, so a
+   new build lands in the cache on its own; this is what gets it onto
+   the screen without the user having to know there was anything to do.
+
+   The one rule: never swap out from under a session. The log is in
+   localStorage and survives, but which cards are doing/done is only in
+   the DOM, so a reload mid-routine would silently reset the board. We
+   only ever reload from a clean slate -- and if the board is dirty, the
+   update just waits for the next cold start, which is where it would
+   have landed anyway.
+   --------------------------------------------------------------- */
+if ("serviceWorker" in navigator) addEventListener("load", function(){
+  var pending = false, reloaded = false;
+  var adopted = !!navigator.serviceWorker.controller;   /* false on a first-ever visit */
+
+  function clean(){
+    return !document.body.classList.contains("running") &&
+           !ALL.some(function(o){ return o.dataset.state !== "todo" });
+  }
+  function apply(){
+    if (!pending || reloaded || !clean()) return;
+    reloaded = true;
+    location.reload();
+  }
+
+  /* reg.update() only re-checks sw.js; ask() is what catches a changed page */
+  function ask(){
+    var sw = navigator.serviceWorker.controller;
+    if (sw) sw.postMessage({ type:"check-update", url:location.href });
+  }
+
+  navigator.serviceWorker.register("sw.js", { updateViaCache:"none" }).then(function(reg){
+    ask();
+    /* An installed PWA can go weeks without a cold start, so waiting for a
+       navigation to notice a new build is not good enough. */
+    setInterval(function(){ reg.update().catch(function(){}); ask() }, 3600000);
+    addEventListener("visibilitychange", function(){
+      if (document.hidden){ apply(); return }   /* swapping while hidden is invisible */
+      reg.update().catch(function(){});
+      ask();
+      apply();
+    });
+    /* the worker that answered this page may have arrived after it started loading */
+    navigator.serviceWorker.ready.then(ask).catch(function(){});
+  }).catch(function(){});
+
+  /* the worker saw the page it revalidated differ from the cached copy */
+  navigator.serviceWorker.addEventListener("message", function(e){
+    if (e.data && e.data.type === "update-ready"){ pending = true; apply() }
+  });
+
+  /* a new worker took over: the assets being served are not the ones this
+     document was parsed from. Ignore the claim on a first-ever visit --
+     that is the worker arriving, not a new version of it. */
+  navigator.serviceWorker.addEventListener("controllerchange", function(){
+    if (!adopted){ adopted = true; return }
+    pending = true; apply();
+  });
+});
 </script>
 </body>
 </html>
