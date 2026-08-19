@@ -1,0 +1,16 @@
+{
+  "name": "Post-Run Core & Mobility",
+  "short_name": "Post-Run",
+  "description": "The post-run core and mobility session, with hold timers, sound cues and autopilot.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F2FF",
+  "theme_color": "#F5F2FF",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
