@@ -493,6 +493,12 @@ function flip(el, on){
       f.src = "https://www.youtube-nocookie.com/embed/" + x.id +
               "?autoplay=1&mute=1&loop=1&playlist=" + x.id +
               "&controls=0&modestbranding=1&rel=0&playsinline=1";
+      /* The page is served Referrer-Policy: no-referrer, and YouTube reads the
+         Referer to work out which site is embedding it -- with none it refuses
+         to start and shows "Video player configuration error". This attribute
+         overrides the document policy for this one request, so YouTube learns
+         the origin and nothing else: no path, and no referrer anywhere else. */
+      f.referrerPolicy = "strict-origin-when-cross-origin";
       f.allow = "autoplay; encrypted-media; picture-in-picture";
       f.title = x.n + " demonstration";
       f.onerror = function(){ back.innerHTML = '<div class="fallback">' + x.n + '</div>' };
@@ -570,6 +576,7 @@ function build(x, host){
       box.querySelector(".facade").onclick = function(e){
         var f = document.createElement("iframe");
         f.src = "https://www.youtube-nocookie.com/embed/" + x.id + "?autoplay=1&rel=0&playsinline=1";
+        f.referrerPolicy = "strict-origin-when-cross-origin";
         f.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture";
         f.allowFullscreen = true; f.title = x.n;
         e.currentTarget.replaceWith(f);
