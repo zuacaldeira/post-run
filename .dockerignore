@@ -1,9 +1,0 @@
-*
-!index.html
-!sw.js
-!manifest.webmanifest
-!*.png
-!poster.jpg
-!bg.mp4
-!chroma-js-LICENSE.txt
-!deploy/nginx.conf

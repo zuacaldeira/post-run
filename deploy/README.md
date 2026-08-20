@@ -1,126 +1,105 @@
 # Deploying
 
-The app ships as a container: nginx plus the static files, no build step.
-
-## On the server
-
-```sh
-cp .env.example .env        # set APP_DOMAIN, and IMAGE_TAG if not on :latest
-docker compose pull && docker compose up -d
-curl -sI http://127.0.0.1:8081/healthz     # 200 ok, straight from the container
-```
-
-Once the proxy is up, check what the browser will actually receive:
+The app is eight static files with no build step, so the deployment is the
+simplest thing that can work: rsync them to the server and let nginx serve them
+off disk. No image, no registry, no CI, no container runtime.
 
 ```sh
-curl -sI https://postrun.zuacaldeira.com/ | grep -iE 'cache-control|content-security|strict-transport'
+./deploy.sh
 ```
 
-`Cache-Control: no-cache` and the CSP must both survive the proxy. If either is
-missing, the proxy is stripping headers and the app will not update itself.
+That copies the app to `/var/www/postrun.zuacaldeira.com` on the server and
+prints the headers the browser will actually receive. Nothing needs restarting:
+`index.html` and `sw.js` are served `no-cache`, so the next load picks the new
+build up.
 
-The image is published to `ghcr.io/zuacaldeira/post-run` by
-`.github/workflows/docker.yml` on every push. `:latest` only ever moves from the
-default branch; feature branches publish under their own tag, so a work-in-progress
-build cannot become what the server pulls next.
+Set `POSTRUN_HOST` to deploy somewhere else; it defaults to the server that runs
+the site today.
 
-GHCR packages start **private**; this server is already logged in to `ghcr.io`
-for images it pulls for other sites, so it can pull this one too. On a host
-without that, either `docker login ghcr.io` with a read:packages token or mark
-the package public in its GitHub settings.
+## nginx
+
+`deploy/nginx-host.conf` is the served vhost, kept in the repo so the
+configuration is reviewable here rather than only on the box. It is installed as
+`/etc/nginx/sites-available/postrun.zuacaldeira.com` and symlinked into
+`sites-enabled`. After editing it:
+
+```sh
+scp deploy/nginx-host.conf root@<server>:/tmp/postrun-vhost.conf
+ssh root@<server> 'install -m644 /tmp/postrun-vhost.conf \
+  /etc/nginx/sites-available/postrun.zuacaldeira.com && nginx -t && systemctl reload nginx'
+```
+
+Always `nginx -t` before reloading. The box serves a dozen other sites from the
+same nginx, and a broken vhost takes all of them down together.
+
+### The headers are the deployment
+
+There is no framework here to fall back on -- if the vhost is wrong the app
+quietly stops being an app:
+
+- **`Cache-Control: no-cache`** on everything. The filenames are not
+  content-hashed, so freshness has to come from revalidation rather than a
+  `max-age` guess. The browser keeps its copy and always asks; an unchanged file
+  costs a 304. The service worker refreshes itself through this same cache, so a
+  long `max-age` would throttle how fast a deploy reaches an installed app. The
+  whole app is ~150 KB; there is nothing to win by caching harder.
+- **The CSP** allows this origin, YouTube frames and YouTube thumbnails, nothing
+  else. Adding a third-party script, font or image means editing it.
+- **`application/manifest+json`** is declared explicitly. It is not in nginx's
+  `mime.types`, and a manifest served as `text/plain` is ignored -- no install
+  prompt, no icon.
+- **Every `add_header` sits at server level.** nginx replaces the whole
+  inherited set the moment a location adds one of its own, so a single stray
+  `add_header` inside a `location` would silently drop the CSP for that path.
+
+If assets ever get content-hashed names, give those a long `max-age` and leave
+`index.html` and `sw.js` on `no-cache`.
+
+## TLS
+
+The certificate comes from Let's Encrypt via certbot, webroot mode, the same way
+every other site on this box gets one:
+
+```sh
+certbot certonly --webroot -w /var/www/certbot -d postrun.zuacaldeira.com
+```
+
+The port-80 block serves `/.well-known/acme-challenge/` from that webroot and
+redirects everything else, so issuance and renewal work without touching the
+443 block.
+
+Renewal runs from `certbot.timer`. Webroot mode writes the new certificate and
+stops there -- nothing tells nginx -- so nginx would go on presenting the old
+certificate until something reloaded it, and a renewal that succeeded on disk
+would still expire in the browser. `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh`
+closes that: it runs `nginx -t && systemctl reload nginx` after any successful
+renewal, for every certificate on the box.
+
+TLS is not optional here. Service workers only register on a secure origin, so
+over plain HTTP or a bare LAN IP the app silently loses offline mode, caching
+and self-updating, and degrades to an ordinary web page.
 
 ## The subdomain
 
 `postrun.zuacaldeira.com` already resolves to the server: DNS for the zone is at
-Strato, and it answers for subdomains without a per-host record. Nothing had to
-be created. If that ever changes, one A record at the server's public IP is the
-whole requirement (AAAA too if it has IPv6).
-
-`APP_DOMAIN` in `.env` only feeds the Caddy front end, which this deployment
-does not use; the hostname that matters here is the `server_name` in
-`deploy/nginx-host.conf`. Nothing else in the repo hardcodes it.
+Strato, which answers for subdomains without a per-host record, so nothing had
+to be created. If that ever changes, one A record at the server's public IP is
+the whole requirement (AAAA too if it has IPv6).
 
 The zone is not behind Cloudflare, so the HTTP-01 challenge reaches this box
 directly. Were it ever proxied, the record would have to stay DNS-only until the
 first certificate is issued -- an orange cloud terminates TLS at the edge, and
 the challenge would be answered for a hostname this server does not control.
 
-### The deployed setup: host nginx + certbot
-
-`postrun.zuacaldeira.com` runs this way. The box already terminates TLS for a
-dozen other sites with nginx and certbot, so 80 and 443 are spoken for and Caddy
-is not used. `deploy/nginx-host.conf` is that vhost, kept in the repo so the
-served configuration is reviewable here rather than only on the server.
-
-```sh
-install -m644 deploy/nginx-host.conf /etc/nginx/sites-available/postrun.zuacaldeira.com
-ln -s ../sites-available/postrun.zuacaldeira.com /etc/nginx/sites-enabled/
-```
-
-The 443 block will not load until the certificate exists, so issue it first with
-the port-80 block alone in place, then enable the whole file:
-
-```sh
-certbot certonly --webroot -w /var/www/certbot -d postrun.zuacaldeira.com
-nginx -t && systemctl reload nginx
-```
-
-Renewal is the same webroot the other certs on the box use; the timer picks it
-up with no per-site hook.
-
-### If nothing is terminating TLS on the box yet
-
-```sh
-docker compose -f compose.yaml -f compose.tls.yaml up -d
-```
-
-That adds Caddy, which gets a Let's Encrypt certificate on first start and
-renews it on its own. Keep the `caddy_data` volume: certificates live there, and
-recreating without it means re-issuing every time, which runs into rate limits.
-
-Caddy wants 80 and 443 to itself, so this is for a fresh box only -- on a server
-already running a web server it will fail to bind.
-
-### If you already run a different reverse proxy
-
-Skip `compose.tls.yaml`. Put your proxy on the `web` network and send it to
-`post-run:80`. For Traefik that is labels on the post-run service:
-
-```yaml
-    labels:
-      traefik.enable: "true"
-      traefik.http.routers.postrun.rule: Host(`postrun.zuacaldeira.com`)
-      traefik.http.routers.postrun.entrypoints: websecure
-      traefik.http.routers.postrun.tls.certresolver: letsencrypt
-      traefik.http.services.postrun.loadbalancer.server.port: "80"
-```
-
-Whatever the proxy, it must pass the origin's response headers through
-untouched. The CSP and the cache headers come from the app's own nginx; a proxy
-that rewrites or duplicates them is how the two copies drift apart.
-
-## TLS is not optional
-
-The container speaks plain HTTP and expects your proxy to terminate TLS in front of
-it. Service workers only register on a secure origin, so on plain HTTP or a bare LAN
-IP the app quietly loses offline mode, caching and self-updating and degrades to an
-ordinary web page. It needs a real hostname with a certificate.
-
-The port is bound to `127.0.0.1` so only the proxy can reach it. It is 8081
-rather than the more obvious 8080, which is already taken on this server.
-
-## Cache headers
-
-Everything is served `no-cache`: the browser keeps its copy but always revalidates,
-and an unchanged file costs a 304. This is deliberate. The service worker refreshes
-itself by revalidating through the browser's HTTP cache, so a long `max-age` here
-would throttle how fast a deploy reaches an installed app. The whole app is ~150 KB,
-so there is nothing to win by caching harder.
-
-If assets ever get content-hashed names, give those a long `max-age` and leave
-`index.html` and `sw.js` on `no-cache`.
-
 ## Subpath
 
-`start_url` and `scope` are relative and nothing in the app uses an absolute path,
-so it works unchanged at a domain root or under `/post-run/`.
+`start_url` and `scope` are relative and nothing in the app uses an absolute
+path, so it works unchanged at a domain root or under `/post-run/`.
+
+## It used to be a container
+
+Through commit `45a3ac0` this shipped as an nginx image built by GitHub Actions,
+published to GHCR and pulled by the server behind a reverse proxy. That is a
+reasonable shape for an app with a build step; for eight static files it was a
+registry, a CI run and a second nginx standing between an edit and the server.
+`git show 45a3ac0` has it all if it is ever wanted back.

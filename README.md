@@ -99,18 +99,20 @@ The self-reload also holds off while a session is running or any card has been
 touched -- so if you clicked a card to test something, the update is waiting on
 purpose, not broken. Reset the board or reload by hand.
 
-### Check it the way it ships
+### Shipping it
 
 ```bash
-docker build -t post-run:dev .
-docker run --rm -p 8080:80 post-run:dev      # http://localhost:8080
+./deploy.sh
 ```
 
-Same nginx, same headers, same CSP as production. Worth doing before you push
-anything that adds an external script, font or image: the CSP in
-`deploy/nginx.conf` allows this origin plus YouTube and nothing else, so a new
-third-party URL fails here first rather than on the server. `deploy/README.md`
-covers deployment itself.
+rsyncs the files to the server and prints the headers the browser will get back.
+There is no build and no container -- what you edited is what gets served.
+
+The one thing a local server will not show you is the CSP, which lives in the
+nginx vhost rather than the page. It allows this origin plus YouTube and nothing
+else, so anything that adds an external script, font or image works locally and
+then fails in production. `deploy/README.md` covers that and the rest of the
+deployment.
 
 ### Claude Code locally
 
