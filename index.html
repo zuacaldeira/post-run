@@ -77,10 +77,36 @@ h2{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
    -- only the outline gains a level. */
 h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
   margin:22px 0 12px 4px}
-.ph{margin-bottom:34px}
-.pht{font-size:23px;font-weight:900;letter-spacing:-.02em;text-transform:none;color:var(--ink);
-  margin:0 0 14px 2px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.pht span{font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--ink-2)}
+.ph{margin-bottom:34px;border-bottom:1px solid var(--rim)}
+/* closed sections are a list of headers, so they sit close together */
+.ph:not(.open){margin-bottom:0}
+.pht{margin:0}
+/* The whole header is the control, not a chevron off to one side: the target is
+   the full width of the row, which is what a thumb actually aims at. */
+.phb{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;width:100%;
+  background:none;border:0;padding:12px 2px;margin:0;cursor:pointer;text-align:left;
+  color:var(--ink);font:inherit}
+.phb .t{font-size:23px;font-weight:900;letter-spacing:-.02em}
+.phb .s{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.phb .chev{margin-left:auto;align-self:center;width:11px;height:11px;flex:none;
+  border-right:2.5px solid var(--ink-2);border-bottom:2.5px solid var(--ink-2);
+  border-radius:2px;transform:rotate(45deg) translate(-2px,-2px);
+  transition:transform .3s ease}
+.ph.open .phb .chev{transform:rotate(225deg) translate(-2px,-2px)}
+/* 0fr to 1fr collapses to exactly the content's height without measuring it in
+   JS, so a section that grows -- a card flipping to its video, a note unfolding
+   -- stays right. */
+.ph-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .34s cubic-bezier(.2,.85,.25,1)}
+.ph.open .ph-body{grid-template-rows:1fr}
+/* padding only while open: at 0fr the box is zero high but padding still paints,
+   which left a sliver of the section showing under a closed header */
+.ph-inner{overflow:hidden;min-height:0}
+.ph.open .ph-inner{padding-bottom:4px}
+/* A closed section still has to answer the question its header asks. */
+.phb .sum{font-size:12.5px;font-weight:800;color:var(--ink-2);margin-left:auto;
+  align-self:center;padding-right:12px}
+.ph.open .phb .sum{display:none}
+@media (prefers-reduced-motion:reduce){ .ph-body{transition:none} }
 /* The prescription is written as prose with its own line breaks and indented
    lists; it is quoted, not restyled, so pre-wrap rather than a paragraph. */
 .pre{font-family:inherit;font-size:13.5px;line-height:1.62;color:var(--ink-2);font-weight:500;
@@ -343,8 +369,9 @@ add a little every couple of weeks.</p>
   <span class="chip" id="cTime">about <b>9 min</b></span>
 </div>
 
-<section class="ph">
-  <h2 class="pht">Pre-run<span>before you go out</span></h2>
+<section class="ph" id="ph-pre" data-phase="pre">
+  <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-pre"><span class="t">Pre-run</span><span class="s">before you go out</span><span class="chev" aria-hidden="true"></span></button></h2>
+  <div class="ph-body" id="body-pre"><div class="ph-inner">
   <div id="prerun"></div>
 
   <button class="run" id="runPre">▶ Run the drills<small>hands free · with sound cues</small></button>
@@ -356,15 +383,19 @@ add a little every couple of weeks.</p>
   StrengthRunning. They are a conventional dynamic warm-up rather than something your
   plan asks for — change them freely. Run them after a few minutes of easy jogging,
   not cold.</p>
+  </div></div>
 </section>
 
-<section class="ph">
-  <h2 class="pht">Run<span>today, from the Stryd plan</span></h2>
+<section class="ph" id="ph-run" data-phase="run">
+  <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-run"><span class="t">Run</span><span class="s">today, from the Stryd plan</span><span class="chev" aria-hidden="true"></span></button></h2>
+  <div class="ph-body" id="body-run"><div class="ph-inner">
   <div id="runplan"></div>
+  </div></div>
 </section>
 
-<section class="ph">
-  <h2 class="pht">Post-run<span>core &amp; mobility</span></h2>
+<section class="ph" id="ph-post" data-phase="post">
+  <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-post"><span class="t">Post-run</span><span class="s">core &amp; mobility</span><span class="chev" aria-hidden="true"></span></button></h2>
+  <div class="ph-body" id="body-post"><div class="ph-inner">
   <button class="run" id="runAll">▶ Run the session<small>hands free · with sound cues</small></button>
 
   <div class="dial">
@@ -386,11 +417,14 @@ add a little every couple of weeks.</p>
   the next run matters more than this one's gains — race week, back-to-back hard
   days, after a test. Skip the cold and take a plain warm bath after the sessions
   you want to adapt to: threshold, VO₂max, a long run with tempo in it.</p>
+  </div></div>
 </section>
 
-<section>
-  <h2>Progress</h2>
+<section class="ph" id="ph-progress" data-phase="progress">
+  <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-progress"><span class="t">Progress</span><span class="s">what you have been doing</span><span class="chev" aria-hidden="true"></span></button></h2>
+  <div class="ph-body" id="body-progress"><div class="ph-inner">
   <div class="panel" id="progress"></div>
+  </div></div>
 </section>
 
 <div class="over" id="over">
@@ -905,6 +939,7 @@ function tally(){
     rb.children[i].style.transform  = st === "done" ? "scaleY(1.4)" : "none";
   });
   document.getElementById("cDone").innerHTML = "<b>" + n.done + "</b> of " + ALL.length + " done";
+  summarise();
 }
 function estimate(phase){
   var s = 0;
@@ -919,6 +954,59 @@ function estimate(phase){
 }
 /* One "about N min" cannot describe three phases, so the total stays on the chip
    and each button says how long its own phase takes. */
+/* ---- one section at a time ---- */
+var PHASES = ["pre", "run", "post", "progress"];
+
+function openPhase(key){
+  PHASES.forEach(function(k){
+    var sec = document.getElementById("ph-" + k);
+    if (!sec) return;
+    var on = k === key;
+    sec.classList.toggle("open", on);
+    sec.querySelector(".phb").setAttribute("aria-expanded", on ? "true" : "false");
+  });
+  summarise();
+}
+
+/* What a closed section is worth knowing without opening it. */
+function summarise(){
+  PHASES.forEach(function(k){
+    var sec = document.getElementById("ph-" + k);
+    if (!sec) return;
+    var slot = sec.querySelector(".sum");
+    if (!slot){
+      slot = document.createElement("span");
+      slot.className = "sum";
+      sec.querySelector(".phb").insertBefore(slot, sec.querySelector(".chev"));
+    }
+    slot.textContent = summaryFor(k);
+  });
+}
+function summaryFor(key){
+  if (key === "run"){
+    var w = planFor(todayISO());
+    return w ? fmtDur(w.s) : "rest day";
+  }
+  if (key === "progress") return "";
+  var cards = ALL.filter(function(el){ return el._x.phase === key && !el._x.solo }),
+      done  = cards.filter(function(el){ return el.dataset.state === "done" }).length;
+  if (!cards.length) return "";
+  return done === cards.length ? "done" : done + "/" + cards.length;
+}
+
+/* Which section to open on arrival. Follows the day rather than the clock: what
+   is finished says more about where you are than what time it is. */
+function currentPhase(){
+  var left = function(k){
+    return ALL.some(function(el){
+      return el._x.phase === k && !el._x.solo && el.dataset.state !== "done";
+    });
+  };
+  if (left("pre")) return "pre";
+  if (left("post")) return planFor(todayISO()) ? "run" : "post";
+  return "progress";
+}
+
 function labelRun(id, phase){
   var b = document.getElementById(id);
   if (b) b.querySelector("small").textContent =
@@ -1157,6 +1245,10 @@ function finish(){
   var left = ALL.filter(function(el){ return el.dataset.state !== "done" });
   if (Q.auto || !left.length){
     cue.finish();
+    /* Only when a whole phase has run, not after a single card: finishing the
+       drills should hand you the run, but tapping one stretch should not move
+       the page out from under you. */
+    openPhase(currentPhase());
     phaseE.textContent = "That's the session";
     whatE.textContent = left.length ? left.length + " left to do by hand" : "Nicely done 🎉";
     buttons([{ label:"Finish", primary:true, fn:stopAll }]);
@@ -1271,7 +1363,7 @@ function renderProgress(){
   };
 }
 
-function run(el){ start(phasesFor(el), false); controls() }
+function run(el){ openPhase(el._x.phase); start(phasesFor(el), false); controls() }
 document.getElementById("runPre").onclick = function(){
   var q = sessionQueue("pre");
   if (!q.length){ return }
@@ -1287,9 +1379,17 @@ document.getElementById("runAll").onclick = function(){
 
 load();
 renderPlan();
+PHASES.forEach(function(k){
+  var sec = document.getElementById("ph-" + k);
+  if (sec) sec.querySelector(".phb").onclick = function(){
+    /* tapping the open one closes it: nothing has to stay open */
+    openPhase(sec.classList.contains("open") ? null : k);
+  };
+});
 ALL.forEach(function(el){ setState(el, "todo") });
 setBase(DB.base || 60);
 renderProgress();
+openPhase(currentPhase());
 </script>
 <script>
 /* ---------------------------------------------------------------
