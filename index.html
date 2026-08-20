@@ -183,23 +183,33 @@ section{margin-bottom:28px}
   border-radius:22px;padding:15px 17px;margin:12px 0 0}
 .note b{color:var(--ink);font-weight:800}
 
-.over{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;flex-direction:column;
-  justify-content:flex-end;border-radius:28px 28px 0 0;
+/* Two columns rather than one stack: the label reads down the left, the clock sits
+   at the right on the same rows. Stacked, the card wanted most of the screen and
+   pushed the exercise you are actually looking at off the top of it. */
+.over{position:fixed;left:0;right:0;bottom:0;z-index:30;
+  display:grid;grid-template-columns:1fr auto;align-items:end;column-gap:16px;
+  border-radius:22px 22px 0 0;
   -webkit-backdrop-filter:blur(26px) saturate(1.5);backdrop-filter:blur(26px) saturate(1.5);
-  padding:20px 22px calc(24px + env(safe-area-inset-bottom));color:#fff;
+  padding:14px 18px calc(16px + env(safe-area-inset-bottom));color:#fff;
   box-shadow:0 -18px 40px -24px rgba(14,10,34,.8);
   transform:translateY(100%);transition:transform .34s cubic-bezier(.2,.85,.25,1)}
-body.running{padding-bottom:calc(58vh + env(safe-area-inset-bottom))}
+/* Enough room to scroll the list clear of the card, with a floor under it so a
+   short viewport cannot let the two overlap. */
+body.running{padding-bottom:calc(max(196px, 26vh) + env(safe-area-inset-bottom))}
 .over.up{transform:none}
-.over .ring{position:absolute;left:0;top:0;height:6px;background:rgba(255,255,255,.6);width:0}
-.over .phase{font-size:14px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:var(--phase)}
-.over .stepcount{font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
-  opacity:.75;margin-top:6px}
-.over .what{font-size:clamp(22px,7vw,32px);font-weight:900;letter-spacing:-.03em;line-height:1;margin-top:8px}
-.over .digits{font-size:clamp(64px,22vw,104px);font-weight:900;letter-spacing:-.055em;line-height:.85;
-  margin:10px 0 6px;font-variant-numeric:tabular-nums;text-align:right}
-.over .ctl{display:flex;gap:10px}
-.over .ctl button{flex:1;padding:19px;border-radius:99px;border:1px solid rgba(255,255,255,.35);font-size:15px;
+.over .ring{position:absolute;left:0;top:0;height:4px;background:rgba(255,255,255,.6);width:0}
+.over .phase{grid-column:1;font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--phase)}
+.over .stepcount{grid-column:2;justify-self:end;font-size:12px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;opacity:.75}
+/* one line, ellipsis rather than wrap: a long name must not grow the card */
+.over .what{grid-column:1;font-size:clamp(17px,4.8vw,22px);font-weight:900;letter-spacing:-.02em;
+  line-height:1.1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* still the biggest thing here -- it gets read from the floor, mid-hold, a couple
+   of feet away. Only the surrounding chrome shrank. */
+.over .digits{grid-column:2;font-size:clamp(42px,12.5vw,60px);font-weight:900;letter-spacing:-.045em;
+  line-height:.9;margin:0;font-variant-numeric:tabular-nums;text-align:right}
+.over .ctl{grid-column:1/-1;display:flex;gap:10px;margin-top:12px}
+.over .ctl button{flex:1;padding:13px;border-radius:99px;border:1px solid rgba(255,255,255,.35);font-size:14px;
   font-weight:900;cursor:pointer;background:rgba(255,255,255,.20);color:inherit}
 .over .ctl button.go{background:#fff}
 .over .ctl button:active{transform:translateY(2px)}
