@@ -79,7 +79,7 @@ section{margin-bottom:28px}
   -webkit-backdrop-filter:blur(20px) saturate(1.8);backdrop-filter:blur(20px) saturate(1.8);
   border:1px solid var(--rim);
   box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 10px 26px -20px rgba(27,20,64,.6);
-  contain:layout style;transition:background .25s,box-shadow .3s,scale .2s,min-height .5s;
+  contain:layout style;transition:background .25s,box-shadow .3s,scale .2s,min-height .5s,opacity .35s,filter .35s;
   perspective:1400px;
   /* identity transforms on the base: applying one only on a state change would
      move the element into a new stacking context mid-transition */
@@ -133,6 +133,49 @@ section{margin-bottom:28px}
 .ex[data-state="doing"]{box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 16px 34px -18px var(--solid);
   scale:1.015}
 .ex[data-state="done"]{box-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 12px 30px -20px var(--solid)}
+
+/* Spotlight, while a session is running: everything that is not the exercise
+   being done or the bar timing it drops back, so the card holding the video is
+   the only lit thing left.
+   Dimmed element by element rather than under a single overlay. These cards are
+   glass -- an overlay laid behind them would be sampled by their own
+   backdrop-filter, which would darken the very card the spotlight exists to
+   keep lit. Sections are skipped for the same reason in reverse: dimming one
+   would take the active card inside it down too, and opacity on an ancestor
+   cannot be undone by a child. */
+/* This is a light interface on a pale backdrop, so dimming means receding
+   towards the paper, not going dark: darkening it would invert the whole app
+   for the length of a hold. The backdrop keeps its scrim -- that layer is what
+   bounds contrast for the glass above it -- and only the video behind it calms
+   down. */
+:root{--dim-o:.3;--dim-s:saturate(.5);--dim-bg-o:.4;--dim-bg-f:saturate(.25)}
+/* In forced colours the palette is the user's, and dimming it is not ours to do. */
+@media (forced-colors:active){ :root{--dim-o:1;--dim-s:none;--dim-bg-o:1;--dim-bg-f:none} }
+
+.hi,h1,.lede,.rainbow,.run,.legend,.stats,.dial,h2,.note,.panel{
+  transition:opacity .35s ease,filter .35s ease}
+#bg{transition:opacity .35s ease,filter .35s ease}
+
+body.running .hi,
+body.running h1,
+body.running .lede,
+body.running .rainbow,
+body.running .run,
+body.running .legend,
+body.running .stats,
+body.running .dial,
+body.running h2,
+body.running .note,
+body.running .panel,
+body.running .ex:not([data-state="doing"]){opacity:var(--dim-o);filter:var(--dim-s)}
+
+/* the moving backdrop calms down with them; the scrim stays, since it is what
+   keeps every contrast solve above it valid */
+body.running #bg{opacity:var(--dim-bg-o);filter:var(--dim-bg-f)}
+
+/* The lit card stops being glass. Left translucent it would blur the darkened
+   backdrop straight through itself and dim along with everything else. */
+body.running .ex[data-state="doing"]{background:var(--opaque)}
 .hd{display:flex;gap:13px;align-items:center}
 .badge{flex:0 0 auto;width:44px;height:44px;border-radius:15px;background:var(--badge-bg);color:var(--badge-fg);
   display:grid;place-items:center;font-weight:900;font-size:16px;letter-spacing:-.02em}
