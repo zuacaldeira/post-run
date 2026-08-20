@@ -23,6 +23,24 @@ DESC_KEYS = ("desc", "description", "notes", "text", "body")
 # fields that only a run carries; their absence is what separates a drill from a session
 RUN_KEYS = ("duration", "distance", "stress", "intensity_zones", "blocks")
 TYPE_KEYS = ("type", "category", "kind", "workout_type", "activity_type", "subtype")
+TIMING_KEYS = ("recommended_timing", "timing", "when")
+# a calendar row wraps its content in one of these
+INNER_KEYS = ("workout", "exercise")
+
+# Collections where `deleted` means the row is gone.
+#
+# It does for `workouts`: PowerCenter keeps the rows of superseded plans beside
+# the live one -- today carries one deleted row with an empty title and one live
+# session -- so taking them all would show two contradictory workouts on a day.
+#
+# It does not for `supplementals`. Every row of the current block is flagged
+# deleted (813 of them in 2026, and not one live), while the app goes on
+# displaying them: today's drill, stretch, plyometrics, hip/glute and strength
+# sessions are all flagged, all `source: stryd`, and all on screen in the app.
+# Whatever the flag records there, it is not absence -- and honouring it would
+# quietly drop every supplemental session the plan has, which is precisely the
+# failure that made the plan look run-only in the first place.
+DELETED_IS_AUTHORITATIVE = {"workouts"}
 
 ISO_DAY = re.compile(r"^(\d{4}-\d{2}-\d{2})")
 
@@ -80,15 +98,21 @@ def harvest(payload: dict) -> Iterator[dict]:
         for raw in value:
             if not looks_like_entry(raw):
                 continue
-            if raw.get("deleted"):
+            if raw.get("deleted") and key in DELETED_IS_AUTHORITATIVE:
                 continue
-            inner = raw.get("workout") if isinstance(raw.get("workout"), dict) else {}
+            inner = {}
+            for ik in INNER_KEYS:
+                if isinstance(raw.get(ik), dict):
+                    inner = raw[ik]
+                    break
             yield {
                 "collection": key,
                 "day": _day_of(raw),
                 "title": str(_first(inner, TITLE_KEYS) or _first(raw, TITLE_KEYS) or "").strip(),
                 "desc": str(_first(inner, DESC_KEYS) or _first(raw, DESC_KEYS) or "").strip(),
-                "kind": str(_first(raw, TYPE_KEYS) or _first(inner, TYPE_KEYS) or "").strip(),
+                "kind": str(_first(inner, TYPE_KEYS) or _first(raw, TYPE_KEYS) or "").strip(),
+                "timing": str(_first(inner, TIMING_KEYS) or _first(raw, TIMING_KEYS) or "").strip(),
+                "flagged_deleted": bool(raw.get("deleted")),
                 "duration_s": raw.get("duration"),
                 "distance_m": raw.get("distance"),
                 "rss": raw.get("stress"),

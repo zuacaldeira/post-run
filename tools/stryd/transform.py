@@ -15,6 +15,7 @@ removes the eye from the loop entirely.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import urllib.error
@@ -26,7 +27,7 @@ VIDEO = re.compile(
     r"https?://(?:www\.)?(?:youtube\.com/watch\?(?:[^\s]*&)?v=|youtu\.be/)([A-Za-z0-9_-]{11})"
 )
 # a leading bullet, and the punctuation a label trails off with
-BULLET = re.compile(r"^[\s\-\u2022\.]*")
+BULLET = re.compile(r"^[\s\-\u2022\.,]*")
 TRAIL = re.compile(r"[\s:\-]+$")
 # labels that name nothing: the line was only there to introduce a link
 EMPTY_LABEL = re.compile(r"^(video|videos|e\.?g\.?|link|links|and)?$", re.I)
@@ -49,8 +50,14 @@ def exercises(desc: str) -> list[dict]:
     seen: set[tuple[str, str]] = set()
 
     for i, line in enumerate(lines):
+        # Where the previous link on this line ended. Stryd puts three lunges on
+        # one line -- "Front Step Lunge: <url>, Back Step Lunge: <url>, ..." --
+        # and taking everything before the match would label every one of them
+        # after the first "Front Step Lunge: https".
+        cursor = 0
         for m in VIDEO.finditer(line):
-            label = _clean(line[: m.start()])
+            label = _clean(line[cursor:m.start()])
+            cursor = m.end()
             if EMPTY_LABEL.match(label):
                 for back in range(i - 1, -1, -1):
                     if lines[back].strip():
@@ -92,6 +99,11 @@ def verify(items: list[dict], *, timeout: int = 12) -> list[dict]:
     return items
 
 
+def _digest(title: str, desc: str) -> str:
+    """A short stable name for one session's text, so days can point at it."""
+    return hashlib.sha256((title + "\x00" + desc).encode("utf-8")).hexdigest()[:12]
+
+
 PRE = re.compile(r"\bpre[\s\-_]*run\b", re.I)
 POST = re.compile(r"\bpost[\s\-_]*run\b", re.I)
 
@@ -99,11 +111,13 @@ POST = re.compile(r"\bpost[\s\-_]*run\b", re.I)
 def when(entry: dict) -> str | None:
     """Whether a session belongs before or after the run.
 
-    Stryd's own app labels them "Pre Run" and "Post Run". Which field carries
-    that is not known until a real payload has been seen, so this reads the
-    fields that might and falls back to the text, rather than guessing one.
+    The payload says so outright: a supplemental carries
+    `exercise.recommended_timing`, "pre-run" or "post-run". The text search
+    behind it is the fallback for a row that has no such field, not the
+    primary -- guessing from prose when the data states it would be perverse.
     """
-    for hay in (entry.get("kind", ""), entry.get("title", ""), entry.get("desc", "")[:200]):
+    for hay in (entry.get("timing", ""), entry.get("kind", ""),
+                entry.get("title", ""), entry.get("desc", "")[:200]):
         if PRE.search(hay or ""):
             return "pre"
         if POST.search(hay or ""):
@@ -111,11 +125,13 @@ def when(entry: dict) -> str | None:
     return None
 
 
-def build(entries: list[dict], *, since: str | None = None, do_verify: bool = False) -> dict:
+def build(entries: list[dict], *, since: str | None = None, do_verify: bool = False,
+          token_expires_at: str | None = None) -> dict:
     """The document the app reads."""
     from .calendar import is_run
 
     days: dict[str, dict] = {}
+    defs: dict[str, dict] = {}
     for e in entries:
         if since and e["day"] < since:
             continue
@@ -130,20 +146,39 @@ def build(entries: list[dict], *, since: str | None = None, do_verify: bool = Fa
                 "zones": e["zones"],
             }
         else:
-            items = exercises(e["desc"])
-            if do_verify:
-                verify(items)
-            day["sessions"].append({
-                "collection": e["collection"],
-                "kind": e["kind"],
-                "when": when(e),
-                "title": e["title"],
-                "desc": e["desc"],
-                "exercises": items,
-            })
+            # A row with a date but neither a title nor a description is not a
+            # session -- `plans` carries the block's own start and end dates and
+            # matches every other test for a calendar entry.
+            if not (e["title"] or e["desc"]):
+                continue
+            # The same five sessions are prescribed every day of a block, so the
+            # text is stored once and referenced. Written out per day it came to
+            # 228 KB for 39 days, against an app of 138 KB -- for one routine
+            # repeated verbatim.
+            key = _digest(e["title"], e["desc"])
+            if key not in defs:
+                items = exercises(e["desc"])
+                if do_verify:
+                    verify(items)
+                defs[key] = {
+                    "collection": e["collection"],
+                    "kind": e["kind"],
+                    "when": when(e),
+                    "title": e["title"],
+                    "desc": e["desc"],
+                    "exercises": items,
+                }
+            if key not in day["sessions"]:
+                day["sessions"].append(key)
 
     return {
         "source": "stryd",
         "fetched_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        # When the credential behind this data stops working. These tokens last
+        # hours, not months, so the app can say the sync is about to go stale
+        # before it does rather than after -- an expiry is a warning, a stale
+        # plan is only ever a symptom.
+        "token_expires_at": token_expires_at,
+        "sessions": defs,
         "days": dict(sorted(days.items())),
     }

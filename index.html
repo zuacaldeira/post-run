@@ -115,6 +115,9 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
 .plan-m{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .plan-m .chip{padding:7px 12px;font-size:12px}
 .quiet{color:var(--ink-2);font-size:14px;font-weight:600}
+.age{font-size:12px;font-weight:700;color:var(--ink-2);margin:10px 2px 0;opacity:.85}
+/* an expired token is not decoration: it is the reason tomorrow's plan will not arrive */
+.age.stale{color:#8A2F2F;opacity:1}
 .more{margin-top:12px}
 .more summary{cursor:pointer;font-size:12px;font-weight:900;letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink-2)}
@@ -389,6 +392,7 @@ add a little every couple of weeks.</p>
   <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-run"><span class="t">Run</span><span class="s">today, from the Stryd plan</span><span class="chev" aria-hidden="true"></span></button></h2>
   <div class="ph-body" id="body-run"><div class="ph-inner">
   <div id="runplan"></div>
+  <p class="age" id="planage"></p>
   </div></div>
 </section>
 
@@ -734,6 +738,8 @@ function body(desc){
    index.html so a deep link still boots the app, which means a missing
    plan.json arrives as an HTML page with a 200 on it. Parsing that as JSON
    would throw; treating it as a plan would be worse. */
+var PLAN_META = null;
+
 function adoptPlan(doc){
   if (!doc || !doc.days) return false;
   var days = Object.keys(doc.days).sort(), out = [];
@@ -747,7 +753,45 @@ function adoptPlan(doc){
   PLAN = out;
   PLAN_FROM = out[0].d;
   PLAN_TO = out[out.length - 1].d;
+  PLAN_META = { fetched: doc.fetched_at || null, tokenExpires: doc.token_expires_at || null };
   return true;
+}
+
+/* Rough on purpose. "3 days" is what you want to know; "3 days, 4 hours and 12
+   minutes" is the same fact with more to read. */
+function span(ms){
+  var m = Math.round(Math.abs(ms) / 60000);
+  if (m < 60) return m + " min";
+  var h = Math.round(m / 60);
+  if (h < 48) return h + "h";
+  return Math.round(h / 24) + " days";
+}
+
+/* The token behind the sync lasts hours, not months, so the app says when it
+   runs out rather than leaving a silently frozen plan to be discovered later.
+   Nothing here can renew it -- this is a prompt to go and replace it. */
+function renderAge(){
+  var el = document.getElementById("planage");
+  if (!el) return;
+  if (!PLAN_META){
+    el.textContent = "Built-in plan. No sync on this server yet.";
+    el.className = "age";
+    return;
+  }
+  var bits = [], stale = false, now = Date.now();
+  if (PLAN_META.fetched) bits.push("Synced " + span(now - Date.parse(PLAN_META.fetched)) + " ago");
+  if (PLAN_META.tokenExpires){
+    var left = Date.parse(PLAN_META.tokenExpires) - now;
+    if (left <= 0){
+      bits.push("Stryd token expired " + span(left) + " ago — replace it or the plan stops updating");
+      stale = true;
+    } else {
+      bits.push("Stryd token valid for " + span(left));
+      stale = left < 6 * 3600 * 1000;
+    }
+  }
+  el.textContent = bits.join(" · ");
+  el.className = stale ? "age stale" : "age";
 }
 
 function refreshPlan(){
@@ -775,8 +819,10 @@ function renderPlan(){
       ? "This build carries the plan from " + PLAN_FROM + " to " + PLAN_TO + ", and today is outside it."
       : "Rest day. Nothing prescribed for " + day + ".";
     pre.innerHTML = run.innerHTML = '<div class="panel quiet">' + esc(msg) + '</div>';
+    renderAge();
     return;
   }
+  renderAge();
   var warm = warmupOf(w.x);
   pre.innerHTML = warm
     ? '<div class="panel"><div class="plan-t">Warm-up</div><div class="pre">' + esc(warm) + '</div></div>'

@@ -23,6 +23,7 @@ DEFAULT_OUT = Path("/var/www/postrun.zuacaldeira.com/plan.json")
 
 
 def _payload(args) -> dict:
+    """The calendar, and as a side effect the token's expiry for the document."""
     if args.payload:                       # a saved response, for working offline
         try:
             return json.loads(Path(args.payload).read_text(encoding="utf-8"))
@@ -40,6 +41,8 @@ def _payload(args) -> dict:
                 token.HOW_TO_GET_ONE.format(path=args.token or token.DEFAULT_PATH),
             )
         )
+    when = token.expires_at(tok)
+    _payload.token_expires_at = when.isoformat() if when else None
     data = client.calendar(tok, token.athlete_id(tok))
     if args.save_payload:
         Path(args.save_payload).write_text(json.dumps(data), encoding="utf-8")
@@ -150,15 +153,16 @@ def main(argv=None) -> int:
         print("no non-run entries found -- if the calendar shows drills, they are in a "
               "collection this did not recognise. Run --discover.")
 
-    doc = transform.build(entries, since=args.since, do_verify=args.verify)
+    doc = transform.build(entries, since=args.since, do_verify=args.verify,
+                          token_expires_at=getattr(_payload, "token_expires_at", None))
 
     if args.verify:
-        bad = [(d, s["title"], x)
-               for d, day in doc["days"].items()
-               for s in day["sessions"]
-               for x in s["exercises"] if not x.get("ok")]
-        for day, title, x in bad:
-            print("  BAD LINK {} {!r} {} {}".format(day, title, x["id"], x.get("error", "")),
+        # sessions are stored once and referenced by day, so check them once too
+        bad = [(sess["title"], x)
+               for sess in doc["sessions"].values()
+               for x in sess["exercises"] if not x.get("ok")]
+        for title, x in bad:
+            print("  BAD LINK {!r} {} {}".format(title, x["id"], x.get("error", "")),
                   file=sys.stderr)
         print("demo links checked; {} unusable".format(len(bad)))
 
