@@ -9,6 +9,11 @@
 # --delete is deliberate: the target holds nothing but these files, so a rename
 # should remove the old name rather than leave it served forever. Only the app's
 # own files are listed, so the repo's git history, scripts and docs stay here.
+#
+# plan.json is the exception and has to be excluded by name. It is written on the
+# server by tools/stryd/sync.py, so it is exactly the "extraneous" file --delete
+# exists to remove -- and deploying the app would otherwise throw away the plan
+# every time.
 set -euo pipefail
 
 HOST="${POSTRUN_HOST:-root@217.154.2.230}"
@@ -23,7 +28,7 @@ for f in "${FILES[@]}"; do
 done
 
 ssh "$HOST" "mkdir -p $ROOT"
-rsync -av --delete --chmod=F644 "${FILES[@]}" "$HOST:$ROOT/"
+rsync -av --delete --exclude=plan.json --chmod=F644 "${FILES[@]}" "$HOST:$ROOT/"
 ssh "$HOST" "chown -R www-data:www-data $ROOT"
 
 # index.html and sw.js are served no-cache, so a reload picks the new build up;

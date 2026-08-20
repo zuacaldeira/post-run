@@ -6,7 +6,10 @@
    every client to rebuild its cache from scratch. */
 const CACHE = "postrun-v2";
 const ASSETS = ["./", "./index.html", "./bg.mp4", "./poster.jpg",
-                "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
+                "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png",
+                /* may not exist yet: install puts each asset separately and skips
+                   what does not return 200, so a server with no sync is fine */
+                "./plan.json"];
 
 /* no-cache, not the default: install has to reach past the browser's HTTP cache,
    or a fresh worker can happily reinstall the build it was meant to replace. Each

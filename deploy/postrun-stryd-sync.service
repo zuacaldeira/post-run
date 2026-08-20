@@ -1,0 +1,26 @@
+# Pulls the Stryd plan and writes plan.json next to the app.
+#
+#   install -m644 deploy/postrun-stryd-sync.{service,timer} /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now postrun-stryd-sync.timer
+#
+# Runs as www-data: it needs to write one file into the web root and read one
+# token, and nothing else on this machine.
+[Unit]
+Description=Sync the Stryd training plan into postrun's plan.json
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+WorkingDirectory=/opt/postrun-sync
+ExecStart=/usr/bin/python3 -m tools.stryd.sync --verify
+Environment=STRYD_TOKEN_FILE=/etc/postrun/stryd.token
+
+# A sync job has no business anywhere but its own directory and the web root.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/postrun.zuacaldeira.com
+ReadOnlyPaths=/etc/postrun

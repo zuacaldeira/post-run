@@ -726,6 +726,41 @@ function body(desc){
          '<details class="more"><summary>Stryd\'s notes</summary>' +
          '<div class="pre">' + esc(desc.slice(i).trim()) + '</div></details>';
 }
+/* The plan baked into this file is the floor, not the source. If the server has
+   a fresher one from tools/stryd/sync.py it is used instead; if it has none,
+   or is unreachable, or the sync failed, the baked copy still answers and the
+   app works with no signal exactly as before.
+   The content-type check is load-bearing: the vhost falls unknown paths back to
+   index.html so a deep link still boots the app, which means a missing
+   plan.json arrives as an HTML page with a 200 on it. Parsing that as JSON
+   would throw; treating it as a plan would be worse. */
+function adoptPlan(doc){
+  if (!doc || !doc.days) return false;
+  var days = Object.keys(doc.days).sort(), out = [];
+  days.forEach(function(d){
+    var run = doc.days[d].run;
+    if (!run) return;
+    out.push({ d:d, t:run.title || "", s:Math.round(run.duration_s || 0),
+               m:Math.round(run.distance_m || 0), r:run.rss || 0, x:run.desc || "" });
+  });
+  if (!out.length) return false;
+  PLAN = out;
+  PLAN_FROM = out[0].d;
+  PLAN_TO = out[out.length - 1].d;
+  return true;
+}
+
+function refreshPlan(){
+  if (typeof fetch !== "function") return;
+  fetch("plan.json", { cache:"no-cache" }).then(function(res){
+    if (!res.ok) return null;
+    var type = res.headers.get("content-type") || "";
+    return type.indexOf("json") < 0 ? null : res.json();
+  }).then(function(doc){
+    if (adoptPlan(doc)) renderPlan();
+  }).catch(function(){});      /* offline is the normal case, not an error */
+}
+
 function renderPlan(){
   var day = todayISO(), w = planFor(day),
       hi = document.getElementById("hi"),
@@ -1422,6 +1457,7 @@ document.getElementById("runAll").onclick = function(){
 
 load();
 renderPlan();
+refreshPlan();
 PHASES.forEach(function(k){
   var sec = document.getElementById("ph-" + k);
   if (sec) sec.querySelector(".phb").onclick = function(){

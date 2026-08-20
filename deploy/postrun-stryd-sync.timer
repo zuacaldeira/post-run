@@ -1,0 +1,13 @@
+# Weekly, not hourly. The calendar endpoint returns the entire history in one
+# response and the plan is written once at the start of a block -- polling it
+# would cost someone else's bandwidth to learn nothing.
+[Unit]
+Description=Weekly Stryd plan sync
+
+[Timer]
+OnCalendar=Mon 05:30
+RandomizedDelaySec=30m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
