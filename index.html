@@ -115,6 +115,9 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
 .plan-m{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .plan-m .chip{padding:7px 12px;font-size:12px}
 .quiet{color:var(--ink-2);font-size:14px;font-weight:600}
+.grp{margin-bottom:26px}
+.grp h3{margin-top:0}
+.grp .more{margin-top:2px}
 .age{font-size:12px;font-weight:700;color:var(--ink-2);margin:10px 2px 0;opacity:.85}
 /* an expired token is not decoration: it is the reason tomorrow's plan will not arrive */
 .age.stale{color:#8A2F2F;opacity:1}
@@ -377,14 +380,12 @@ add a little every couple of weeks.</p>
   <div class="ph-body" id="body-pre"><div class="ph-inner">
   <div id="prerun"></div>
 
-  <button class="run" id="runPre">▶ Run the drills<small>hands free · with sound cues</small></button>
-  <div id="preex"></div>
+  <div id="pre-groups"></div>
 
   <p class="note">Two things run before the run: the warm-up written into the
-  prescription above, and Stryd's own <b>Drill · Pre Run</b> session — the lunge matrix
-  and the fence drills. The reps for these are still marked <i>as prescribed</i>: that
-  calendar entry has not been read in full here, and its title trails off after the
-  fence drills, so there may be more to it.</p>
+  prescription above, and whatever Stryd schedules as pre-run work for today. Each
+  session below keeps its own prescription — the reps and distances live there, and
+  a card only ever states a dose it could read.</p>
   </div></div>
 </section>
 
@@ -399,8 +400,6 @@ add a little every couple of weeks.</p>
 <section class="ph" id="ph-post" data-phase="post">
   <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-post"><span class="t">Post-run</span><span class="s">core &amp; mobility</span><span class="chev" aria-hidden="true"></span></button></h2>
   <div class="ph-body" id="body-post"><div class="ph-inner">
-  <button class="run" id="runAll">▶ Run the session<small>hands free · with sound cues</small></button>
-
   <div class="dial">
     <span class="lab">Front plank hold<small>Side planks follow at half</small></span>
     <button id="minus" aria-label="Five seconds less">−</button>
@@ -408,19 +407,7 @@ add a little every couple of weeks.</p>
     <button id="plus" aria-label="Five seconds more">+</button>
   </div>
 
-  <h3>Planks</h3><div id="planks"></div>
-  <p class="note">One set of each. Add <b>10s</b> to the front plank and <b>5s</b> to the sides every two weeks. Extra core work is optional.</p>
-
-  <h3>Mobility</h3><div id="mobility"></div>
-
-  <h3>Drills</h3>
-  <button class="run" id="runDrill">▶ Run the drills<small>hands free · with sound cues</small></button>
-  <div id="postdrill"></div>
-  <p class="note">Stryd's second post-run entry, <b>hip / glute / hamstring</b>, kept
-  separate from the stretch above because Stryd lists it as its own session. Both are
-  marked optional but recommended. It repeats the hip flexor stretch and the donkey
-  kicks from the mobility list — that repetition is in the prescription, not an
-  oversight here. Progress very gradually: 10s or one rep every 3–4 weeks.</p>
+  <div id="post-groups"></div>
 
   <h3>Recovery</h3><div id="recovery"></div>
   <p class="note">Optional, and deliberately outside the session above — run it on
@@ -801,8 +788,23 @@ function refreshPlan(){
     var type = res.headers.get("content-type") || "";
     return type.indexOf("json") < 0 ? null : res.json();
   }).then(function(doc){
-    if (adoptPlan(doc)) renderPlan();
-  }).catch(function(){});      /* offline is the normal case, not an error */
+    if (!adoptPlan(doc)) return;
+    /* The cards are the plan's too, not just the run. Rebuilding is safe
+       because nothing about a card survives a reload anyway: only the log and
+       the plank length are persisted, and both are keyed by name. */
+    if (buildFromPlan(doc)){
+      drawRainbow();
+      ALL.forEach(function(el){ setState(el, "todo") });
+      refresh();
+    }
+    renderPlan();
+    openPhase(currentPhase());
+  }).catch(function(err){
+    /* Being offline is the normal case and says nothing. A failure once the
+       document is in hand is a bug in this file, and swallowing it silently
+       would leave the baked cards showing with no hint why. */
+    if (err && err.name !== "TypeError") try { console.error("plan.json:", err) } catch (e) {}
+  });
 }
 
 function renderPlan(){
@@ -1026,14 +1028,151 @@ solveStates();
 function buildAll(list, host, phase, group){
   list.forEach(function(x){
     x.phase = phase; x.group = group;
-    build(x, document.getElementById(host));
+    build(x, typeof host === "string" ? document.getElementById(host) : host);
   });
 }
-buildAll(PRERUN,    "preex",    "pre",  "predrill");
-buildAll(PLANKS,    "planks",   "post", "stretch");
-buildAll(MOBILITY,  "mobility", "post", "stretch");
-buildAll(POSTDRILL, "postdrill","post", "postdrill");
-buildAll(RECOVERY,  "recovery", "post", "recovery");
+
+/* ---- cards from the prescription ----------------------------------------
+   Stryd states doses in prose, and not always beside the link they belong to:
+   "Perform 3 lunges each leg of the following exercises" sits a line above
+   three of them. So a card states a dose only where one can actually be read,
+   and every generated group keeps the prescription underneath it. Nothing is
+   lost to a parse that came up empty -- at worst a card says "as prescribed"
+   and the words that say otherwise are two inches below it. */
+
+function secsIn(text){
+  var m = /(\d+)\s*(?:-|to)?\s*\d*\s*(?:s\b|sec|second)/i.exec(text || "");
+  if (m) return parseInt(m[1], 10);
+  /* "30 each leg" -- Stryd leaves the unit implied for seconds */
+  m = /(\d+)\s+each\s+(?:leg|side)/i.exec(text || "");
+  return m ? parseInt(m[1], 10) : 0;
+}
+function bothSides(text){
+  return /each (leg|side|arm)|both (sides|legs|directions)|per (leg|side)/i.test(text || "");
+}
+
+/* A plank is the one exercise the plan deliberately leaves open: "start with
+   something easily accomplished, then progress 10s every two weeks" names no
+   number, so the app owns it and the dial is where it lives. */
+function plankKind(label){
+  if (/side\s*plank/i.test(label)) return "side";
+  if (/plank/i.test(label)) return "front";
+  return null;
+}
+
+function cardFrom(item, sess){
+  /* The dose was read on the server, from the line that states it, and is
+     absent rather than guessed where the prescription does not say. So this
+     reads item.dose and never goes hunting through the prose itself. */
+  var label = item.label || "Exercise",
+      dose  = item.dose || "",
+      drill = sess.kind !== "stretch",
+      plank = plankKind(label),
+      card  = { n: label, sub: "", sides: bothSides(dose) ? 2 : 1, id: item.id,
+                verb: drill ? "Do" : "Hold", gerund: drill ? "Drill" : "Holding" };
+
+  if (plank){
+    var half = plank === "side";
+    card.d = function(){ return half ? Math.round(base / 2) : base };
+    card.dose = function(){ return half ? Math.round(base / 2) + "s each side" : base + "s hold" };
+    card.sides = half ? 2 : 1;
+    card.verb = "Hold"; card.gerund = "Holding";
+    return card;
+  }
+
+  var secs = secsIn(dose);
+  if (secs){
+    card.d = function(){ return secs };
+    card.dose = function(){ return dose };
+    return card;
+  }
+  /* No length to hold: the timer still allots a slot so the session runs
+     hands-free, and the card states the reps if the plan gave any. */
+  card.d = null;
+  card.auto = 45;
+  card.dose = function(){ return dose || "as prescribed" };
+  return card;
+}
+
+/* One Stryd calendar entry becomes one runnable group: a heading, its own
+   button, its cards, and the prescription it came from. */
+function buildGroup(host, sess, key, phase){
+  var wrap = document.createElement("div");
+  wrap.className = "grp";
+
+  var h = document.createElement("h3");
+  h.textContent = sess.title || "Session";
+  wrap.appendChild(h);
+
+  var cards = sess.exercises.map(function(x){ return cardFrom(x, sess) });
+
+  if (cards.length){
+    var btn = document.createElement("button");
+    btn.className = "run";
+    btn.id = "run-" + key;
+    btn.dataset.group = key;
+    btn.innerHTML = "▶ Run it<small>hands free · with sound cues</small>";
+    btn.onclick = function(){
+      var q = sessionQueue(key);
+      if (!q.length) return;
+      openPhase(phase); start(q, true); controls();
+    };
+    wrap.appendChild(btn);
+  }
+
+  var list = document.createElement("div");
+  wrap.appendChild(list);
+
+  var note = document.createElement("details");
+  note.className = "more";
+  note.innerHTML = "<summary>The prescription</summary>";
+  var pre = document.createElement("div");
+  pre.className = "pre";
+  pre.textContent = sess.desc || "";
+  note.appendChild(pre);
+  wrap.appendChild(note);
+
+  host.appendChild(wrap);
+  buildAll(cards, list, phase, key);
+  return cards.length;
+}
+
+/* Everything Stryd scheduled for today, in the phase it belongs to. Returns
+   false if the document had nothing for today, so the baked cards stand. */
+function buildFromPlan(doc){
+  var day = doc && doc.days && doc.days[todayISO()];
+  if (!day || !day.sessions || !day.sessions.length) return false;
+
+  var hosts = { pre: document.getElementById("pre-groups"),
+                post: document.getElementById("post-groups") };
+  hosts.pre.innerHTML = ""; hosts.post.innerHTML = "";
+  /* the bath is ours, not Stryd's, so it survives the rebuild */
+  ALL = ALL.filter(function(el){ return el._x.group === "recovery" });
+  seq = 0;
+
+  var built = 0;
+  day.sessions.forEach(function(key){
+    var sess = doc.sessions && doc.sessions[key];
+    if (!sess) return;
+    var phase = sess.when === "pre" ? "pre" : "post";
+    built += buildGroup(hosts[phase], sess, key, phase);
+  });
+  if (!built) return false;
+
+  /* the recovery card was built first and keeps its number; renumber so the
+     badges read down the page as they are now ordered */
+  ALL.sort(function(a, b){
+    return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+  });
+  ALL.forEach(function(el, i){ el.querySelector(".badge").textContent = pad(i + 1) });
+  return true;
+}
+
+buildAll(PRERUN,    "pre-groups",  "pre",  "predrill");
+buildAll(PLANKS,    "post-groups", "post", "stretch");
+buildAll(MOBILITY,  "post-groups", "post", "stretch");
+buildAll(POSTDRILL, "post-groups", "post", "postdrill");
+buildAll(RECOVERY,  "recovery",    "post", "recovery");
 
 /* legend, because colour now carries meaning */
 var leg = document.getElementById("legend");
@@ -1045,7 +1184,11 @@ var leg = document.getElementById("legend");
 });
 
 var rb = document.getElementById("rainbow");
-ALL.forEach(function(){ rb.appendChild(document.createElement("i")) });
+function drawRainbow(){
+  rb.innerHTML = "";
+  ALL.forEach(function(){ rb.appendChild(document.createElement("i")) });
+}
+drawRainbow();
 
 function tally(){
   var n = { todo:0, doing:0, done:0 };
@@ -1124,16 +1267,17 @@ function currentPhase(){
   return "progress";
 }
 
-function labelRun(id, group){
-  var b = document.getElementById(id);
-  if (b) b.querySelector("small").textContent =
-    "about " + estimate(group) + " min · hands free · with sound cues";
+/* Each generated group carries its own length. One "about N min" could not
+   describe five sessions any more than it could describe three phases. */
+function labelRuns(){
+  [].forEach.call(document.querySelectorAll(".grp .run"), function(b){
+    b.querySelector("small").textContent =
+      "about " + estimate(b.dataset.group) + " min · hands free · with sound cues";
+  });
 }
 function refresh(){
   document.getElementById("cTime").innerHTML = "about <b>" + estimate() + " min</b>";
-  labelRun("runPre",   "predrill");
-  labelRun("runAll",   "stretch");
-  labelRun("runDrill", "postdrill");
+  labelRuns();
   ALL.forEach(function(el){
     var x = el._x;
     el.querySelector(".dose").textContent = x.dose() + (x.sub ? " · " + x.sub : "");
@@ -1482,28 +1626,13 @@ function renderProgress(){
 }
 
 function run(el){ openPhase(el._x.phase); start(phasesFor(el), false); controls() }
-document.getElementById("runPre").onclick = function(){
-  var q = sessionQueue("predrill");
-  if (!q.length){ return }
-  start(q, true);
-  controls();
-};
-document.getElementById("runDrill").onclick = function(){
-  var q = sessionQueue("postdrill");
-  if (!q.length){ return }
-  start(q, true);
-  controls();
-};
-document.getElementById("runAll").onclick = function(){
-  var q = sessionQueue("stretch");
-  if (!q.length){ return }
-  start(q, true);
-  controls();
-};
 
 load();
 renderPlan();
-refreshPlan();
+/* After load, not during it. The first paint should not be racing a network
+   request, and the rebuild it triggers is cheaper once the page is settled. */
+if (document.readyState === "complete") refreshPlan();
+else window.addEventListener("load", refreshPlan);
 PHASES.forEach(function(k){
   var sec = document.getElementById("ph-" + k);
   if (sec) sec.querySelector(".phb").onclick = function(){

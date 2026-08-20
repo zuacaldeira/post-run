@@ -37,6 +37,64 @@ def _clean(text: str) -> str:
     return TRAIL.sub("", BULLET.sub("", text)).strip()
 
 
+# A dose is a count with a unit: reps, lunges, seconds, metres. Stryd states it
+# in the line that introduces a group of links rather than beside each one --
+# "Perform 3 lunges each leg of the following exercises", then three links on the
+# next line; "5 reps each leg", then two; "2 x 15 - 20 meters for each of three
+# drills", then three.
+DOSE = re.compile(
+    r"\b(\d+\s*(?:x|×)\s*\d+(?:\s*[-\u2013]\s*\d+)?\s*(?:m\b|meters?|metres?)"
+    r"|\d+(?:\s*[-\u2013]\s*|\s+to\s+)?\d*\s*(?:reps?|lunges|seconds?|secs?|s)\b"
+    r"|\d+\s*(?:m\b|meters?|metres?)"
+    r"|\d+(?=\s+each\s+(?:leg|side)\b))"
+    r"(\s+(?:each|per)\s+(?:leg|side|arm|way|direction)s?)?", re.I)
+
+
+# A line that introduces a *group*, not one that happens to end in a colon.
+# "…of the following exercises", "…for each of three drills:". A bare colon is
+# not enough: in the stretch list every item ends with one before its link.
+INTRODUCER = re.compile(r"\bfollowing\b|\beach of\b", re.I)
+# An introducer that states two doses cannot be applied to either. "Start with
+# 30 seconds each for the hip stretching, and 3 to five reps of each of the
+# other exercises" governs two groups, and taking the first number gave the
+# glute thrusts the hip stretch's 30 seconds.
+TWO_DOSES = re.compile(r"\band\b[^.]*\b(reps?|seconds?|minutes?|met(?:er|re)s?|"
+                       r"two|three|four|five|six|eight|ten)\b", re.I)
+
+
+def dose_near(lines: list[str], i: int, back: int = 3) -> str:
+    """The dose governing the link on line `i`.
+
+    Its own line first. Failing that, the line that introduced the group it
+    belongs to, within three lines -- Stryd states a count once and then lists
+    the links under it: "Perform 3 lunges each leg of the following exercises".
+
+    The walk stops the moment it crosses a line carrying a dose of its own,
+    because that dose belongs to a different exercise. Without that, the hip
+    flexor in the stretch list inherits the glute stretch's 30s from the line
+    above it, and a card confidently states a number the plan never gave it.
+
+    The cost is a dose occasionally left unread -- the fence drills' five reps
+    each leg sit in a bullet that introduces nothing. Those say "as prescribed",
+    with the prescription folded into the group directly above them. Silence is
+    the acceptable failure here; a wrong number is not.
+    """
+    own = DOSE.search(lines[i])
+    if own:
+        return re.sub(r"\s+", " ", own.group(0)).strip()
+
+    for j in range(i - 1, max(-1, i - back) - 1, -1):
+        line = lines[j]
+        if not line.strip():
+            continue
+        m = DOSE.search(line)
+        if m and INTRODUCER.search(line) and not TWO_DOSES.search(line):
+            return re.sub(r"\s+", " ", m.group(0)).strip()
+        if m:
+            return ""          # a neighbour's dose; ours is simply not stated
+    return ""
+
+
 def exercises(desc: str) -> list[dict]:
     """Every demo link in a prescription, with the label that introduces it.
 
@@ -58,18 +116,29 @@ def exercises(desc: str) -> list[dict]:
         for m in VIDEO.finditer(line):
             label = _clean(line[cursor:m.start()])
             cursor = m.end()
+            # Where this exercise is described. Usually the link's own line, but
+            # Stryd often puts the label on one line and the URL on the next --
+            # and that label line is this exercise's, not a neighbour's, which
+            # is where its dose is written.
+            own = i
             if EMPTY_LABEL.match(label):
                 for back in range(i - 1, -1, -1):
                     if lines[back].strip():
                         candidate = _clean(lines[back])
                         if not EMPTY_LABEL.match(candidate):
                             label = candidate
+                            own = back
                         break
             key = (label.lower(), m.group(1))
             if key in seen:
                 continue
             seen.add(key)
-            out.append({"label": label, "id": m.group(1), "line": line.strip()})
+            out.append({
+                "label": label,
+                "id": m.group(1),
+                "line": line.strip(),
+                "dose": dose_near(lines, own),
+            })
     return out
 
 
