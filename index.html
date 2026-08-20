@@ -377,12 +377,11 @@ add a little every couple of weeks.</p>
   <button class="run" id="runPre">▶ Run the drills<small>hands free · with sound cues</small></button>
   <div id="preex"></div>
 
-  <p class="note">Stryd keeps no separate warm-up session — it is written into the run
-  itself, so the prescription above is lifted out of today's. The drills are not from
-  Stryd either: its library is core and mobility only, so these demos come from
-  StrengthRunning. They are a conventional dynamic warm-up rather than something your
-  plan asks for — change them freely. Run them after a few minutes of easy jogging,
-  not cold.</p>
+  <p class="note">Two things run before the run: the warm-up written into the
+  prescription above, and Stryd's own <b>Drill · Pre Run</b> session — the lunge matrix
+  and the fence drills. The reps for these are still marked <i>as prescribed</i>: that
+  calendar entry has not been read in full here, and its title trails off after the
+  fence drills, so there may be more to it.</p>
   </div></div>
 </section>
 
@@ -409,6 +408,15 @@ add a little every couple of weeks.</p>
   <p class="note">One set of each. Add <b>10s</b> to the front plank and <b>5s</b> to the sides every two weeks. Extra core work is optional.</p>
 
   <h3>Mobility</h3><div id="mobility"></div>
+
+  <h3>Drills</h3>
+  <button class="run" id="runDrill">▶ Run the drills<small>hands free · with sound cues</small></button>
+  <div id="postdrill"></div>
+  <p class="note">Stryd's second post-run entry, <b>hip / glute / hamstring</b>, kept
+  separate from the stretch above because Stryd lists it as its own session. Both are
+  marked optional but recommended. It repeats the hip flexor stretch and the donkey
+  kicks from the mobility list — that repetition is in the prescription, not an
+  oversight here. Progress very gradually: 10s or one rep every 3–4 weeks.</p>
 
   <h3>Recovery</h3><div id="recovery"></div>
   <p class="note">Optional, and deliberately outside the session above — run it on
@@ -614,21 +622,42 @@ function solveStates(){
    The session
    --------------------------------------------------------------- */
 var base = 60;
-/* Stryd's library is core and mobility only -- it has no warm-up series, because
-   Stryd's warm-up is the easy running at the top of each prescription. So these
-   demos are not Stryd's: they are StrengthRunning's drill series, picked for
-   being one channel in one format rather than six strangers, and every id was
-   checked against YouTube's oembed before it went in here.
-   The drills themselves are a conventional dynamic warm-up, not something your
-   plan prescribes. They are yours to change. */
+/* Stryd's "Drill | Pre Run" session. The videos are Stryd's own -- an earlier
+   pass here used a substitute series, on the mistaken finding that Stryd had no
+   warm-up content; it does, and this is it.
+   Every id below was resolved against YouTube's oembed rather than read off a
+   screenshot: the front step lunge is a lowercase L, and the back step lunge
+   carries two capital I's, both of which 404 if guessed the other way.
+   The reps are still unknown -- the pre-run entry has not been read in full, and
+   its title trails off after the fence drills -- so these say "as prescribed"
+   rather than invent a number. */
 var PRERUN = [
-  {verb:"Do", gerund:"Drill", n:"High knees",          sub:"tall, quick off the ground",   d:function(){return 30}, dose:function(){return "30s"},          sides:1, id:"VKc58tjEVfs"},
-  {verb:"Do", gerund:"Drill", n:"Butt kicks",          sub:"heel to glute, stay upright",  d:function(){return 30}, dose:function(){return "30s"},          sides:1, id:"kRR1i9btd_w"},
-  {verb:"Do", gerund:"Drill", n:"Carioca",             sub:"hips open, both directions",   d:function(){return 30}, dose:function(){return "30s each way"}, sides:2, id:"CMeuCmzKf84"},
-  {verb:"Do", gerund:"Drill", n:"A-skip",              sub:"",                             d:function(){return 30}, dose:function(){return "30s"},          sides:1, id:"_MCDR-luwHU"},
-  {verb:"Do", gerund:"Drill", n:"B-skip",              sub:"once the A-skip feels easy",   d:function(){return 30}, dose:function(){return "30s"},          sides:1, id:"Zy97yNE7WEE"},
-  {verb:"Do", gerund:"Drill", n:"Straight leg bounds", sub:"",                             d:function(){return 30}, dose:function(){return "30s"},          sides:1, id:"g1Wb9DbbO1g"}
+  {verb:"Do", gerund:"Drill", n:"Front step lunge", sub:"lunge matrix",       d:null, auto:45, dose:function(){return "as prescribed"}, sides:1, id:"Pl2W1NosCog"},
+  {verb:"Do", gerund:"Drill", n:"Back step lunge",  sub:"lunge matrix",       d:null, auto:45, dose:function(){return "as prescribed"}, sides:1, id:"PT2_SeII7kA"},
+  {verb:"Do", gerund:"Drill", n:"Side step lunge",  sub:"lunge matrix",       d:null, auto:45, dose:function(){return "as prescribed"}, sides:1, id:"KH4tHHvqGis"},
+  {verb:"Do", gerund:"Drill", n:"Fence drill",      sub:"front side",         d:null, auto:45, dose:function(){return "as prescribed"}, sides:1, id:"MSSvEw4R2iU"},
+  {verb:"Do", gerund:"Drill", n:"Fence drill",      sub:"back side",          d:null, auto:45, dose:function(){return "as prescribed"}, sides:1, id:"VG2BtO4U2x8"}
 ];
+
+/* Stryd's "Drill | Post Run" session -- HIP/GLUTE/HAMSTRING. A separate entry in
+   the calendar from the stretch session, so it is a separate session here too.
+   "Start with 30 seconds each for the hip stretching, and 3 to five reps of each
+   of the other exercises. Progress very gradually (10s / 1 rep) every 3-4 weeks."
+   The hip flexor stretch and the donkey kicks appear in the stretch session as
+   well. That repetition is Stryd's, not a mistake here.
+   Stryd links its own "Glute Stretch" clip for the hip thrusts; the label is
+   theirs, and so is the video. */
+var POSTDRILL = [
+  {n:"Hip flexor stretch", sub:"",                  d:function(){return 30}, dose:function(){return "30s each side"}, sides:2, id:"PSikcROWGKg"},
+  {verb:"Do", gerund:"Drill", n:"Glute/hip thrusts", sub:"without weight",    d:null, auto:45, dose:function(){return "3-5 reps"}, sides:1, id:"8w1Au_r4MIE"},
+  {verb:"Do", gerund:"Drill", n:"Donkey kicks",     sub:"",                   d:null, auto:45, dose:function(){return "3-5 reps"}, sides:1, id:"CwjkF0994qo"},
+  {verb:"Do", gerund:"Drill", n:"Front step lunge", sub:"lunge matrix",       d:null, auto:45, dose:function(){return "3-5 reps"}, sides:1, id:"Pl2W1NosCog"},
+  {verb:"Do", gerund:"Drill", n:"Back step lunge",  sub:"lunge matrix",       d:null, auto:45, dose:function(){return "3-5 reps"}, sides:1, id:"PT2_SeII7kA"},
+  {verb:"Do", gerund:"Drill", n:"Side step lunge",  sub:"lunge matrix",       d:null, auto:45, dose:function(){return "3-5 reps"}, sides:1, id:"KH4tHHvqGis"},
+  {verb:"Do", gerund:"Drill", n:"Fence drill",      sub:"front side",         d:null, auto:45, dose:function(){return "3-5 reps"}, sides:1, id:"MSSvEw4R2iU"},
+  {verb:"Do", gerund:"Drill", n:"Fence drill",      sub:"back side",          d:null, auto:45, dose:function(){return "3-5 reps"}, sides:1, id:"VG2BtO4U2x8"}
+];
+
 var PLANKS = [
   {n:"Front plank", d:function(){return base}, dose:function(){return base + "s hold"}, sides:1, id:"kPTrIXtULa4"},
   {n:"Side plank",  d:function(){return Math.round(base/2)}, dose:function(){return Math.round(base/2) + "s each side"}, sides:2, id:"CTSc55CeljQ"}
@@ -839,8 +868,8 @@ function build(x, host){
       '<button class="check"><span class="state">To do</span></button>' +
     '</div>' +
     '<div class="acts">' +
-      (x.d      ? '<button class="hold">▶ ' + (x.verb || "Hold") + ' ' + x.d() + 's</button>' :
-       x.phases ? '<button class="hold">▶ Start</button>' : '') +
+      (x.d               ? '<button class="hold">▶ ' + (x.verb || "Hold") + ' ' + x.d() + 's</button>' :
+       (x.phases || x.auto) ? '<button class="hold">▶ Start</button>' : '') +
       (x.id ? '<button class="watch">Show me</button>' : '') +
       (x.id ? '<a href="https://www.youtube.com/watch?v=' + x.id + '" target="_blank" rel="noopener">YouTube ↗</a>' : '') +
     '</div>' +
@@ -910,13 +939,20 @@ function dressPage(){
 
 dressPage();
 solveStates();
-function buildAll(list, host, phase){
-  list.forEach(function(x){ x.phase = phase; build(x, document.getElementById(host)) });
+/* A phase is where a card sits on the page; a group is what runs together.
+   Stryd lists the stretch and the drills as two entries on the same day, so
+   post-run holds two sessions rather than one long one. */
+function buildAll(list, host, phase, group){
+  list.forEach(function(x){
+    x.phase = phase; x.group = group;
+    build(x, document.getElementById(host));
+  });
 }
-buildAll(PRERUN,   "preex",    "pre");
-buildAll(PLANKS,   "planks",   "post");
-buildAll(MOBILITY, "mobility", "post");
-buildAll(RECOVERY, "recovery", "post");
+buildAll(PRERUN,    "preex",    "pre",  "predrill");
+buildAll(PLANKS,    "planks",   "post", "stretch");
+buildAll(MOBILITY,  "mobility", "post", "stretch");
+buildAll(POSTDRILL, "postdrill","post", "postdrill");
+buildAll(RECOVERY,  "recovery", "post", "recovery");
 
 /* legend, because colour now carries meaning */
 var leg = document.getElementById("legend");
@@ -941,13 +977,13 @@ function tally(){
   document.getElementById("cDone").innerHTML = "<b>" + n.done + "</b> of " + ALL.length + " done";
   summarise();
 }
-function estimate(phase){
+function estimate(group){
   var s = 0;
   /* solo items are not in the session, so they are not in its estimate either */
   ALL.forEach(function(el){
     var x = el._x;
     if (x.solo) return;
-    if (phase && x.phase !== phase) return;
+    if (group && x.group !== group) return;
     s += x.total ? x.total() : x.d ? x.d() * x.sides : 60;
   });
   return Math.round(s / 60);
@@ -1007,15 +1043,16 @@ function currentPhase(){
   return "progress";
 }
 
-function labelRun(id, phase){
+function labelRun(id, group){
   var b = document.getElementById(id);
   if (b) b.querySelector("small").textContent =
-    "about " + estimate(phase) + " min · hands free · with sound cues";
+    "about " + estimate(group) + " min · hands free · with sound cues";
 }
 function refresh(){
   document.getElementById("cTime").innerHTML = "about <b>" + estimate() + " min</b>";
-  labelRun("runPre", "pre");
-  labelRun("runAll", "post");
+  labelRun("runPre",   "predrill");
+  labelRun("runAll",   "stretch");
+  labelRun("runDrill", "postdrill");
   ALL.forEach(function(el){
     var x = el._x;
     el.querySelector(".dose").textContent = x.dose() + (x.sub ? " · " + x.sub : "");
@@ -1111,11 +1148,11 @@ function phasesFor(el){
 /* Per phase, because they are three sessions and not one: you do the warm-up,
    leave for the run, and come back. Chaining them would have the post-run
    routine start while you are still lacing up. */
-function sessionQueue(phase){
+function sessionQueue(group){
   var q = [], n = 0;
   ALL.forEach(function(el){
     if (el.dataset.state === "done" || el._x.solo) return;
-    if (phase && el._x.phase !== phase) return;
+    if (group && el._x.group !== group) return;
     q.push({ card:el, label:"Get ready", s: n === 0 ? 5 : 8, kind:"prep" });
     q = q.concat(phasesFor(el));
     n++;
@@ -1365,13 +1402,19 @@ function renderProgress(){
 
 function run(el){ openPhase(el._x.phase); start(phasesFor(el), false); controls() }
 document.getElementById("runPre").onclick = function(){
-  var q = sessionQueue("pre");
+  var q = sessionQueue("predrill");
+  if (!q.length){ return }
+  start(q, true);
+  controls();
+};
+document.getElementById("runDrill").onclick = function(){
+  var q = sessionQueue("postdrill");
   if (!q.length){ return }
   start(q, true);
   controls();
 };
 document.getElementById("runAll").onclick = function(){
-  var q = sessionQueue("post");
+  var q = sessionQueue("stretch");
   if (!q.length){ return }
   start(q, true);
   controls();
