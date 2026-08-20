@@ -72,49 +72,67 @@ h1 span{background-image:var(--mark);-webkit-background-clip:text;background-cli
   font-variant-numeric:tabular-nums}
 
 h2{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);margin:0 0 12px 4px}
-/* h2 was the section label; with three phases above them the groups inside a
-   phase step down to h3 and keep exactly that look, so nothing shifts visually
-   -- only the outline gains a level. */
+/* h2 was the section label; inside a phase the groups step down to h3 and keep
+   exactly that look, so nothing shifts visually -- only the outline gains a
+   level. */
 h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
   margin:22px 0 12px 4px}
-.ph{margin-bottom:34px;border-bottom:1px solid var(--rim)}
-/* closed sections are a list of headers, so they sit close together */
-.ph:not(.open){margin-bottom:0}
-.pht{margin:0}
-/* The whole header is the control, not a chevron off to one side: the target is
-   the full width of the row, which is what a thumb actually aims at. */
-.phb{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;width:100%;
-  background:none;border:0;padding:12px 2px;margin:0;cursor:pointer;text-align:left;
-  color:var(--ink);font:inherit}
-.phb .t{font-size:23px;font-weight:900;letter-spacing:-.02em}
-.phb .s{font-size:12.5px;font-weight:700;color:var(--ink-2)}
-.phb .chev{margin-left:auto;align-self:center;width:11px;height:11px;flex:none;
-  border-right:2.5px solid var(--ink-2);border-bottom:2.5px solid var(--ink-2);
-  border-radius:2px;transform:rotate(45deg) translate(-2px,-2px);
-  transition:transform .3s ease}
-.ph.open .phb .chev{transform:rotate(225deg) translate(-2px,-2px)}
-/* 0fr to 1fr collapses to exactly the content's height without measuring it in
-   JS, so a section that grows -- a card flipping to its video, a note unfolding
-   -- stays right. */
-.ph-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .34s cubic-bezier(.2,.85,.25,1)}
-.ph.open .ph-body{grid-template-rows:1fr}
-/* padding only while open: at 0fr the box is zero high but padding still paints,
-   which left a sliver of the section showing under a closed header */
-.ph-inner{overflow:hidden;min-height:0}
-.ph.open .ph-inner{padding-bottom:4px}
-/* A closed section still has to answer the question its header asks. */
-.phb .sum{font-size:12.5px;font-weight:800;color:var(--ink-2);margin-left:auto;
-  align-self:center;padding-right:12px}
-.ph.open .phb .sum{display:none}
-@media (prefers-reduced-motion:reduce){ .ph-body{transition:none} }
-/* The prescription is written as prose with its own line breaks and indented
-   lists; it is quoted, not restyled, so pre-wrap rather than a paragraph. */
+
+/* One phase on screen at a time, chosen from a strip rather than by folding
+   four headers. A fold answers "what else is there" by making you open things;
+   a tab bar answers it at a glance, and keeps the one you want one tap away
+   instead of a scroll away. */
+.tabs{display:flex;gap:6px;margin:22px 0 18px;overflow-x:auto;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;display:flex;align-items:baseline;gap:7px;cursor:pointer;
+  padding:10px 14px;border-radius:99px;border:1px solid transparent;
+  background:var(--pane);color:var(--ink-2);font:900 13.5px/1 var(--sans);
+  letter-spacing:-.01em;white-space:nowrap;
+  transition:background .2s,color .2s,border-color .2s}
+.tab .n{font-size:11px;font-weight:800;opacity:.8}
+.tab[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tab[aria-selected="true"] .n{opacity:.75}
+@media (forced-colors:active){
+  .tab[aria-selected="true"]{border:2px solid Highlight;background:Canvas;color:CanvasText}
+}
+
+.ph{display:none;margin-bottom:34px}
+.ph.open{display:block}
+.pht{margin:0 0 14px 2px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.pht .t{font-size:23px;font-weight:900;letter-spacing:-.02em;color:var(--ink)}
+.pht .s{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+/* The prescription is quoted, not restyled: it arrives as prose with its own
+   line breaks and indented lists, so pre-wrap rather than a paragraph. */
 .pre{font-family:inherit;font-size:13.5px;line-height:1.62;color:var(--ink-2);font-weight:500;
   white-space:pre-wrap;overflow-wrap:break-word;margin:10px 0 0}
 .plan-t{font-size:17px;font-weight:900;letter-spacing:-.02em;color:var(--ink)}
 .plan-m{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .plan-m .chip{padding:7px 12px;font-size:12px}
 .quiet{color:var(--ink-2);font-size:14px;font-weight:600}
+
+/* The run card swaps faces rather than rotating them. The video back is
+   absolutely positioned so its height comes from the front, which is right for
+   a 16/9 frame and wrong for a prescription of arbitrary length. */
+.runcard{margin-bottom:0}
+.runcard .faces{transform:none!important;min-height:0}
+.runcard.flipped,.runcard.flipped .faces{min-height:0}
+.runcard .back{position:static;inset:auto;transform:none;background:none;
+  border-radius:0;overflow:visible;display:none}
+.runcard.flipped .back{display:block}
+.runcard.flipped .front{display:none}
+.plan-head{display:flex;align-items:flex-start;gap:10px}
+.plan-head .plan-t{flex:1;min-width:0}
+.info{flex:none;width:30px;height:30px;border-radius:99px;cursor:pointer;
+  border:1px solid var(--rim);background:var(--pane);color:var(--ink-2);
+  font:900 15px/1 var(--sans);font-style:italic}
+.zwrap{margin-top:14px}
+.zbar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--pane)}
+.zbar i{display:block}
+.zkey{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:9px}
+.zkey span{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--ink-2)}
+.zkey i{width:9px;height:9px;border-radius:3px;flex:none}
+.zcap{font-size:11.5px;font-weight:700;color:var(--ink-2);opacity:.75;margin-top:8px}
 .grp{margin-bottom:26px}
 .grp h3{margin-top:0}
 .grp .more{margin-top:2px}
@@ -375,31 +393,27 @@ add a little every couple of weeks.</p>
   <span class="chip" id="cTime">about <b>9 min</b></span>
 </div>
 
-<section class="ph" id="ph-pre" data-phase="pre">
-  <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-pre"><span class="t">Pre-run</span><span class="s">before you go out</span><span class="chev" aria-hidden="true"></span></button></h2>
-  <div class="ph-body" id="body-pre"><div class="ph-inner">
-  <div id="prerun"></div>
+<nav class="tabs" id="tabs" role="tablist" aria-label="Phases of the day"></nav>
 
+<section class="ph" id="ph-pre" data-phase="pre">
+  <h2 class="pht"><span class="t">Pre-run</span><span class="s">before you go out</span></h2>
   <div id="pre-groups"></div>
 
-  <p class="note">Two things run before the run: the warm-up written into the
-  prescription above, and whatever Stryd schedules as pre-run work for today. Each
-  session below keeps its own prescription — the reps and distances live there, and
-  a card only ever states a dose it could read.</p>
-  </div></div>
+  <p class="note">Whatever Stryd schedules as pre-run work for today. The warm-up
+  is not here: it is written into the run's own prescription — ten minutes easy, then
+  accelerations — which is something you do while running, not before you leave. It
+  sits behind the <b>i</b> on the run card. Each session keeps its prescription too,
+  and a card only states a dose it could actually read.</p>
 </section>
 
 <section class="ph" id="ph-run" data-phase="run">
-  <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-run"><span class="t">Run</span><span class="s">today, from the Stryd plan</span><span class="chev" aria-hidden="true"></span></button></h2>
-  <div class="ph-body" id="body-run"><div class="ph-inner">
+  <h2 class="pht"><span class="t">Run</span><span class="s">today, from the Stryd plan</span></h2>
   <div id="runplan"></div>
   <p class="age" id="planage"></p>
-  </div></div>
 </section>
 
 <section class="ph" id="ph-post" data-phase="post">
-  <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-post"><span class="t">Post-run</span><span class="s">core &amp; mobility</span><span class="chev" aria-hidden="true"></span></button></h2>
-  <div class="ph-body" id="body-post"><div class="ph-inner">
+  <h2 class="pht"><span class="t">Post-run</span><span class="s">core &amp; mobility</span></h2>
   <div class="dial">
     <span class="lab">Front plank hold<small>Side planks follow at half</small></span>
     <button id="minus" aria-label="Five seconds less">−</button>
@@ -416,14 +430,11 @@ add a little every couple of weeks.</p>
   the next run matters more than this one's gains — race week, back-to-back hard
   days, after a test. Skip the cold and take a plain warm bath after the sessions
   you want to adapt to: threshold, VO₂max, a long run with tempo in it.</p>
-  </div></div>
 </section>
 
 <section class="ph" id="ph-progress" data-phase="progress">
-  <h2 class="pht"><button class="phb" type="button" aria-expanded="false" aria-controls="body-progress"><span class="t">Progress</span><span class="s">what you have been doing</span><span class="chev" aria-hidden="true"></span></button></h2>
-  <div class="ph-body" id="body-progress"><div class="ph-inner">
+  <h2 class="pht"><span class="t">Progress</span><span class="s">what you have been doing</span></h2>
   <div class="panel" id="progress"></div>
-  </div></div>
 </section>
 
 <div class="over" id="over">
@@ -693,20 +704,6 @@ function planFor(day){
   for (var i = 0; i < PLAN.length; i++) if (PLAN[i].d === day) return PLAN[i];
   return null;
 }
-/* Stryd keeps no warm-up field: it is prose inside the prescription, phrased as
-   "Warm-up for 15 minutes:" or "Warm with easy running...". Take the paragraph
-   that first mentions warming and stop at the blank line after it. A heuristic
-   over someone else's prose, so the run card always shows the whole thing too --
-   if this picks the wrong paragraph, nothing is lost, only repeated. */
-function warmupOf(desc){
-  var lines = (desc || "").split("\n"), out = [], on = false, i;
-  for (i = 0; i < lines.length; i++){
-    if (!on && /warm/i.test(lines[i])) on = true;
-    else if (on && !lines[i].trim()) break;
-    if (on) out.push(lines[i]);
-  }
-  return out.join("\n").trim();
-}
 /* Stryd signs most prescriptions off with the same standing NOTEs -- how to read
    the power targets, what the session is for. Worth keeping, not worth making
    someone scroll past the actual instructions to reach tomorrow. */
@@ -734,7 +731,8 @@ function adoptPlan(doc){
     var run = doc.days[d].run;
     if (!run) return;
     out.push({ d:d, t:run.title || "", s:Math.round(run.duration_s || 0),
-               m:Math.round(run.distance_m || 0), r:run.rss || 0, x:run.desc || "" });
+               m:Math.round(run.distance_m || 0), r:run.rss || 0, x:run.desc || "",
+               z:run.zones || [] });
   });
   if (!out.length) return false;
   PLAN = out;
@@ -807,10 +805,43 @@ function refreshPlan(){
   });
 }
 
+var RUN_FLIPPED = false;
+
+/* Stryd's zones, as seconds spent in each. Not power against time: the
+   per-split timeline the Stryd app draws comes from a structured workout this
+   API does not return -- `blocks` is null on the calendar row, on
+   /workouts/{id}, and on /workouts/{id}?full=true alike. This is the shape of
+   the session that is actually available, and it answers the question that
+   matters before going out: how much of this is easy, and how much is not. */
+var ZONE_NAMES = ["Easy", "Steady", "Tempo", "Threshold", "Max"];
+
+function zoneChart(zones){
+  if (!zones || !zones.length) return "";
+  var total = 0, i;
+  for (i = 0; i < zones.length; i++) total += zones[i] || 0;
+  if (!total) return "";
+
+  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || "#7B5CFF",
+      bar = "", key = "";
+  for (i = 0; i < zones.length; i++){
+    var secs = zones[i] || 0;
+    if (!secs) continue;                 /* an unused zone is not a sliver */
+    var col = chroma.mix("#FFFFFF", anchor,
+                         0.25 + (i / (zones.length - 1)) * 0.75, "lch").hex();
+    bar += '<i style="flex:' + (secs / total * 100).toFixed(2) +
+           ';background:' + col + '"></i>';
+    /* twenty seconds at max is the point of the session, and "0 min" hides it */
+    key += '<span><i style="background:' + col + '"></i>' +
+           ZONE_NAMES[i] + " " + (secs < 60 ? secs + "s" : fmtDur(secs)) + "</span>";
+  }
+  return '<div class="zwrap"><div class="zbar">' + bar + '</div>' +
+         '<div class="zkey">' + key + '</div>' +
+         '<div class="zcap">Planned time in each power zone</div></div>';
+}
+
 function renderPlan(){
   var day = todayISO(), w = planFor(day),
       hi = document.getElementById("hi"),
-      pre = document.getElementById("prerun"),
       run = document.getElementById("runplan");
   hi.textContent = new Date().toLocaleDateString(undefined,
     { weekday:"long", day:"numeric", month:"long" });
@@ -820,25 +851,40 @@ function renderPlan(){
     var msg = (day < PLAN_FROM || day > PLAN_TO)
       ? "This build carries the plan from " + PLAN_FROM + " to " + PLAN_TO + ", and today is outside it."
       : "Rest day. Nothing prescribed for " + day + ".";
-    pre.innerHTML = run.innerHTML = '<div class="panel quiet">' + esc(msg) + '</div>';
+    run.innerHTML = '<div class="panel quiet">' + esc(msg) + '</div>';
     renderAge();
     return;
   }
   renderAge();
-  var warm = warmupOf(w.x);
-  pre.innerHTML = warm
-    ? '<div class="panel"><div class="plan-t">Warm-up</div><div class="pre">' + esc(warm) + '</div></div>'
-    : '<div class="panel quiet">Today\'s prescription does not name a warm-up.</div>';
+  /* Two-sided, like the exercise cards: the shape of the session on the front,
+     the prescription behind the i. Whole on the front it was the longest thing
+     on the page, and it is what you read once before going out rather than what
+     you check. */
   run.innerHTML =
-    '<div class="panel">' +
-      '<div class="plan-t">' + esc(w.t) + '</div>' +
-      '<div class="plan-m">' +
-        '<span class="chip">' + fmtDur(w.s) + '</span>' +
-        (w.m ? '<span class="chip">' + (w.m / 1000).toFixed(1) + ' km</span>' : '') +
-        (w.r ? '<span class="chip">RSS ' + w.r + '</span>' : '') +
+    '<article class="ex runcard' + (RUN_FLIPPED ? ' flipped' : '') + '"><div class="faces">' +
+      '<div class="front">' +
+        '<div class="plan-head"><div class="plan-t">' + esc(w.t) + '</div>' +
+          '<button class="info" type="button" aria-label="Show the full prescription">i</button></div>' +
+        '<div class="plan-m">' +
+          '<span class="chip">' + fmtDur(w.s) + '</span>' +
+          (w.m ? '<span class="chip">' + (w.m / 1000).toFixed(1) + ' km</span>' : '') +
+          (w.r ? '<span class="chip">RSS ' + Math.round(w.r) + '</span>' : '') +
+        '</div>' +
+        zoneChart(w.z) +
       '</div>' +
-      body(w.x) +
-    '</div>';
+      '<div class="back">' +
+        '<div class="plan-head"><div class="plan-t">' + esc(w.t) + '</div>' +
+          '<button class="info" type="button" aria-label="Back to the summary">\u00d7</button></div>' +
+        body(w.x) +
+      '</div>' +
+    '</div></article>';
+
+  [].forEach.call(run.querySelectorAll(".info"), function(b){
+    b.onclick = function(){
+      RUN_FLIPPED = !RUN_FLIPPED;
+      run.querySelector(".runcard").classList.toggle("flipped", RUN_FLIPPED);
+    };
+  });
 }
 
 function fmtDur(sec){
@@ -1214,38 +1260,55 @@ function estimate(group){
 }
 /* One "about N min" cannot describe three phases, so the total stays on the chip
    and each button says how long its own phase takes. */
-/* ---- one section at a time ---- */
+/* ---- one phase at a time ---- */
 var PHASES = ["pre", "run", "post", "progress"];
+var TAB_NAMES = { pre:"Pre-run", run:"Run", post:"Post-run", progress:"Progress" };
+
+function buildTabs(){
+  var strip = document.getElementById("tabs");
+  if (!strip) return;
+  strip.innerHTML = "";
+  PHASES.forEach(function(k){
+    if (!document.getElementById("ph-" + k)) return;
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "tab";
+    b.id = "tab-" + k;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-controls", "ph-" + k);
+    b.setAttribute("aria-selected", "false");
+    b.innerHTML = TAB_NAMES[k] + '<span class="n"></span>';
+    b.onclick = function(){ openPhase(k) };
+    strip.appendChild(b);
+  });
+}
 
 function openPhase(key){
+  /* One is always chosen: with a strip there is no closed state to fall into,
+     and a page showing none of its four sections is a page showing nothing. */
+  if (!key || !document.getElementById("ph-" + key)) key = PHASES[0];
   PHASES.forEach(function(k){
-    var sec = document.getElementById("ph-" + k);
+    var sec = document.getElementById("ph-" + k), tab = document.getElementById("tab-" + k);
     if (!sec) return;
     var on = k === key;
     sec.classList.toggle("open", on);
-    sec.querySelector(".phb").setAttribute("aria-expanded", on ? "true" : "false");
+    if (tab) tab.setAttribute("aria-selected", on ? "true" : "false");
   });
   summarise();
 }
 
-/* What a closed section is worth knowing without opening it. */
+/* What each phase is worth knowing without opening it. */
 function summarise(){
   PHASES.forEach(function(k){
-    var sec = document.getElementById("ph-" + k);
-    if (!sec) return;
-    var slot = sec.querySelector(".sum");
-    if (!slot){
-      slot = document.createElement("span");
-      slot.className = "sum";
-      sec.querySelector(".phb").insertBefore(slot, sec.querySelector(".chev"));
-    }
-    slot.textContent = summaryFor(k);
+    var tab = document.getElementById("tab-" + k);
+    if (!tab) return;
+    tab.querySelector(".n").textContent = summaryFor(k);
   });
 }
 function summaryFor(key){
   if (key === "run"){
     var w = planFor(todayISO());
-    return w ? fmtDur(w.s) : "rest day";
+    return w ? fmtDur(w.s) : "rest";
   }
   if (key === "progress") return "";
   var cards = ALL.filter(function(el){ return el._x.phase === key && !el._x.solo }),
@@ -1254,8 +1317,8 @@ function summaryFor(key){
   return done === cards.length ? "done" : done + "/" + cards.length;
 }
 
-/* Which section to open on arrival. Follows the day rather than the clock: what
-   is finished says more about where you are than what time it is. */
+/* Which phase to open. Follows the day rather than the clock: what is finished
+   says more about where you are than what time it is. */
 function currentPhase(){
   var left = function(k){
     return ALL.some(function(el){
@@ -1267,8 +1330,6 @@ function currentPhase(){
   return "progress";
 }
 
-/* Each generated group carries its own length. One "about N min" could not
-   describe five sessions any more than it could describe three phases. */
 function labelRuns(){
   [].forEach.call(document.querySelectorAll(".grp .run"), function(b){
     b.querySelector("small").textContent =
@@ -1633,13 +1694,7 @@ renderPlan();
    request, and the rebuild it triggers is cheaper once the page is settled. */
 if (document.readyState === "complete") refreshPlan();
 else window.addEventListener("load", refreshPlan);
-PHASES.forEach(function(k){
-  var sec = document.getElementById("ph-" + k);
-  if (sec) sec.querySelector(".phb").onclick = function(){
-    /* tapping the open one closes it: nothing has to stay open */
-    openPhase(sec.classList.contains("open") ? null : k);
-  };
-});
+buildTabs();
 ALL.forEach(function(el){ setState(el, "todo") });
 setBase(DB.base || 60);
 renderProgress();
