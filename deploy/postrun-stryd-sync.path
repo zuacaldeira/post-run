@@ -1,0 +1,21 @@
+# Sync when a new token lands, not on a clock.
+#
+# The token lasts hours, so a weekly timer would nearly always fire on an
+# expired one and a shorter interval would just fail more often. The moment
+# worth syncing is the moment there is a fresh credential -- which is exactly
+# when this file changes.
+#
+#   systemctl enable --now postrun-stryd-sync.path
+#
+# Pair it with place-stryd-token.sh, which writes the file atomically. A plain
+# `cat > file` truncates first, so the unit would fire once on an empty file and
+# again on the real one.
+[Unit]
+Description=Sync the Stryd plan when a fresh token is placed
+
+[Path]
+PathChanged=/etc/postrun/stryd.token
+Unit=postrun-stryd-sync.service
+
+[Install]
+WantedBy=paths.target

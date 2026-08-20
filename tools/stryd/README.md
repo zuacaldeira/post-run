@@ -106,14 +106,38 @@ a truncated file would be kept and re-served offline. Writes go to a temp file
 and are moved into place with `os.replace`, so a reader never sees half a
 document.
 
-## Scheduling
+## When it runs
 
-`deploy/postrun-stryd-sync.{service,timer}` run it weekly as `www-data`, with
-write access to the web root and read access to the token and nothing else.
+**On paste, not on a clock.** A PowerCenter token lasts hours -- the first real
+one here had twelve left -- so a weekly timer would nearly always fire on an
+expired credential, and a shorter interval would only fail more often. The
+moment worth syncing is the moment there is a fresh token, which is exactly when
+the token file changes.
 
-Weekly is deliberate. The calendar route returns the entire history in one
-response and the plan is written once at the start of a block, so polling costs
-someone else's bandwidth to learn nothing.
+`deploy/postrun-stryd-sync.path` watches it and starts the service:
+
+```sh
+install -m644 deploy/postrun-stryd-sync.{service,path} /etc/systemd/system/
+install -m755 deploy/place-stryd-token.sh /usr/local/sbin/place-stryd-token
+systemctl daemon-reload && systemctl enable --now postrun-stryd-sync.path
+```
+
+Then re-authenticating is the whole workflow:
+
+```sh
+place-stryd-token          # paste the JWT, Enter, Ctrl-D
+```
+
+It writes the file atomically and the sync fires by itself. Atomically matters:
+a plain `cat > file` truncates first, so the path unit would fire once on an
+empty file and again on the real one.
+
+`deploy/postrun-stryd-sync.timer` is kept but left **disabled**. It is there for
+a future with a credential that outlives the day; against session tokens it is
+noise.
+
+The service runs as `www-data` with write access to the web root and nothing
+else -- not even to the token, which reaches it as a systemd credential.
 
 ## This is a private API
 
