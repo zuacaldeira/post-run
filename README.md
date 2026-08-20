@@ -66,7 +66,7 @@ HTML with Chrome. Works, but no icon and no offline guarantee — fine for a one
 ```bash
 git clone https://github.com/zuacaldeira/post-run.git
 cd post-run
-git checkout claude/video-full-width-card-aueowt
+# main has everything; no branch to check out
 ```
 
 It is one HTML file plus a service worker -- no build step, no dependencies, no

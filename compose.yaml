@@ -11,7 +11,7 @@ services:
     container_name: post-run
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:80"     # bound to loopback: reachable by the proxy, not the internet
+      - "127.0.0.1:8081:80"     # bound to loopback: reachable by the proxy, not the internet
     read_only: true             # nothing writes to disk; nginx only needs its scratch dirs
     tmpfs:
       - /var/cache/nginx
