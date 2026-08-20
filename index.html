@@ -1230,19 +1230,33 @@ var leg = document.getElementById("legend");
 });
 
 var rb = document.getElementById("rainbow");
+/* The bar belongs to the phase on screen, not to the day. Twenty-eight segments
+   for every phase at once made it a decoration: nothing you could look at and
+   learn where you were. Scoped to the active tab it reads as that session's
+   progress, and on a tab with no cards -- the run, the log -- there is nothing
+   to draw, so it goes. */
+function phaseCards(){
+  return ALL.filter(function(el){ return !ACTIVE || el._x.phase === ACTIVE });
+}
 function drawRainbow(){
+  var cards = phaseCards();
   rb.innerHTML = "";
-  ALL.forEach(function(){ rb.appendChild(document.createElement("i")) });
+  rb.style.display = cards.length ? "" : "none";
+  document.getElementById("legend").style.display = cards.length ? "" : "none";
+  cards.forEach(function(){ rb.appendChild(document.createElement("i")) });
 }
 drawRainbow();
 
 function tally(){
   var n = { todo:0, doing:0, done:0 };
-  ALL.forEach(function(el, i){
+  /* the count is the day's, the bar is the phase's */
+  ALL.forEach(function(el){ n[el.dataset.state || "todo"]++ });
+  phaseCards().forEach(function(el, i){
+    var seg = rb.children[i];
+    if (!seg) return;
     var st = el.dataset.state || "todo";
-    n[st]++;
-    rb.children[i].style.background = STYLE[st].seg;
-    rb.children[i].style.transform  = st === "done" ? "scaleY(1.4)" : "none";
+    seg.style.background = STYLE[st].seg;
+    seg.style.transform  = st === "done" ? "scaleY(1.4)" : "none";
   });
   /* Exercises, said plainly: the run is in the time above but cannot be ticked
      off here, and "0 of 28 done" invited the question of what the 28 were. */
@@ -1286,6 +1300,8 @@ function buildTabs(){
   });
 }
 
+var ACTIVE = null;
+
 function openPhase(key){
   /* One is always chosen: with a strip there is no closed state to fall into,
      and a page showing none of its four sections is a page showing nothing. */
@@ -1297,7 +1313,9 @@ function openPhase(key){
     sec.classList.toggle("open", on);
     if (tab) tab.setAttribute("aria-selected", on ? "true" : "false");
   });
-  summarise();
+  ACTIVE = key;
+  drawRainbow();
+  tally();
 }
 
 /* What each phase is worth knowing without opening it. */
