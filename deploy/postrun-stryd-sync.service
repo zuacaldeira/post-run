@@ -15,12 +15,18 @@ Type=oneshot
 User=www-data
 WorkingDirectory=/opt/postrun-sync
 ExecStart=/usr/bin/python3 -m tools.stryd.sync --verify
-Environment=STRYD_TOKEN_FILE=/etc/postrun/stryd.token
+
+# pid 1 reads the token as root, before dropping to www-data, and leaves it on a
+# ramfs only this unit can read. So the token stays root:root 0600 and www-data
+# never gets access to the file itself -- which matters, because nginx runs as
+# www-data too. Nothing lands in the environment, and it is unmounted on exit.
+LoadCredential=stryd:/etc/postrun/stryd.token
 
 # A sync job has no business anywhere but its own directory and the web root.
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
+PrivateDevices=true
+RestrictAddressFamilies=AF_INET AF_INET6
 ReadWritePaths=/var/www/postrun.zuacaldeira.com
-ReadOnlyPaths=/etc/postrun

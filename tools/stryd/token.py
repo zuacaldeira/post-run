@@ -27,6 +27,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DEFAULT_PATH = Path(os.environ.get("STRYD_TOKEN_FILE", "/etc/postrun/stryd.token"))
+CREDENTIAL_ID = os.environ.get("STRYD_CREDENTIAL_ID", "stryd")
 
 HOW_TO_GET_ONE = (
     "Stryd needs a PowerCenter session token. It never needs your password.\n"
@@ -47,7 +48,35 @@ class ExpiredToken(RuntimeError):
 
 
 def read(path: Path | None = None) -> str:
-    """The token, from the environment or from a file outside the repo."""
+    """The token, from whichever of the three ways it arrived.
+
+    systemd first. Under `LoadCredential=`, pid 1 reads the file as root before
+    dropping to the service user and leaves the contents on a ramfs the service
+    can read and nothing else can. That lets the token stay root-owned and 0600
+    while the sync runs as www-data -- so nginx, which also runs as www-data,
+    cannot read it. Nothing lands in the environment, and the directory is
+    unmounted when the unit stops.
+
+    Then the environment, then the file, because neither is available under
+    systemd but both are how this gets run by hand: `--discover` and `--dry-run`
+    happen from a shell, where there is no manager to hand anything over.
+    """
+    creds = os.environ.get("CREDENTIALS_DIRECTORY")
+    if creds:
+        candidate = Path(creds) / CREDENTIAL_ID
+        try:
+            raw = candidate.read_text(encoding="utf-8").strip()
+            if raw:
+                return raw
+        except OSError:
+            # declared but unreadable is worth saying plainly; falling through
+            # silently would report "no token" and hide a broken unit
+            raise MissingToken(
+                "systemd passed a credentials directory but {} is not readable "
+                "in it. Check LoadCredential= names the credential {!r}.".format(
+                    candidate, CREDENTIAL_ID)
+            ) from None
+
     env = os.environ.get("STRYD_TOKEN")
     if env and env.strip():
         return env.strip()
@@ -111,3 +140,13 @@ def athlete_id(tok: str) -> str:
         "addressed. Re-copy the JWT from local storage; a truncated paste is "
         "the usual cause."
     )
+
+
+def source() -> str:
+    """Which of the three routes supplied the token. Never the token itself."""
+    creds = os.environ.get("CREDENTIALS_DIRECTORY")
+    if creds and (Path(creds) / CREDENTIAL_ID).exists():
+        return "systemd credential ({}/{})".format(creds, CREDENTIAL_ID)
+    if os.environ.get("STRYD_TOKEN", "").strip():
+        return "STRYD_TOKEN environment variable"
+    return "file {}".format(DEFAULT_PATH)

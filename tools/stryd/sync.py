@@ -59,12 +59,56 @@ def _write(path: Path, doc: dict) -> None:
     os.replace(tmp, path)
 
 
+def _check(args) -> int:
+    """Is there a usable token, and how long is it good for.
+
+    Prints where it came from, when it expires and which athlete it addresses --
+    never the token, and never enough of it to reconstruct one. It makes no
+    request, so it says nothing about whether Stryd would accept it; an
+    unexpired token can still have been revoked.
+    """
+    print("looking in:", token.source())
+    try:
+        tok = token.read(Path(args.token) if args.token else None)
+    except token.MissingToken as exc:
+        print(exc, file=sys.stderr)
+        return 2
+
+    print("found     : {} characters, {} segments".format(len(tok), len(tok.split("."))))
+    if len(tok.split(".")) != 3:
+        print("This does not look like a JWT. A partial paste is the usual cause.",
+              file=sys.stderr)
+        return 2
+
+    try:
+        print("athlete   :", token.athlete_id(tok))
+    except token.MissingToken as exc:
+        print("athlete   : unknown --", exc, file=sys.stderr)
+        return 2
+
+    when = token.expires_at(tok)
+    if when is None:
+        print("expires   : no exp claim; only the API can say")
+        return 0
+
+    from datetime import datetime, timezone
+    left = when - datetime.now(timezone.utc)
+    if left.total_seconds() <= 0:
+        print("expires   : {}  EXPIRED".format(when.isoformat()), file=sys.stderr)
+        return 2
+    days, rem = divmod(int(left.total_seconds()), 86400)
+    print("expires   : {}  ({}d {}h left)".format(when.isoformat(), days, rem // 3600))
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Sync the Stryd plan into plan.json")
     ap.add_argument("--out", default=str(DEFAULT_OUT), help="where plan.json goes")
     ap.add_argument("--since", help="drop days before this ISO date")
     ap.add_argument("--verify", action="store_true",
                     help="check every demo link against YouTube's oembed")
+    ap.add_argument("--check", action="store_true",
+                    help="report where the token came from and when it expires, and stop")
     ap.add_argument("--discover", action="store_true",
                     help="print the payload's collections and fields, write nothing")
     ap.add_argument("--dry-run", action="store_true", help="summarise, write nothing")
@@ -72,6 +116,9 @@ def main(argv=None) -> int:
     ap.add_argument("--payload", help="read a saved payload instead of fetching")
     ap.add_argument("--save-payload", help="keep the raw response here")
     args = ap.parse_args(argv)
+
+    if args.check:
+        return _check(args)
 
     try:
         payload = _payload(args)

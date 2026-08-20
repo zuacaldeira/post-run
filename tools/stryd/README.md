@@ -34,8 +34,35 @@ It expires. When it does, repeat — nothing here can renew it, and nothing here
 should try, because renewing means holding the password. `sync.py` says so
 plainly rather than failing with a 401.
 
-`STRYD_TOKEN_FILE` moves the path; `STRYD_TOKEN` supplies it directly, which is
-for testing rather than for a server.
+Check what you placed without printing it:
+
+```sh
+python3 -m tools.stryd.sync --check
+```
+
+It reports where the token came from, how long it is good for and which athlete
+it addresses -- never the token. It makes no request, so an unexpired token that
+has been revoked still looks fine to it.
+
+### Three ways in, in this order
+
+1. **A systemd credential.** Under `LoadCredential=`, pid 1 reads the file as
+   root before dropping to the service user and leaves the contents on a ramfs
+   only that unit can read. The token stays `root:root 0600` and the service
+   user never gets access to the file -- which matters here, because the sync
+   runs as `www-data` and so does nginx. Nothing lands in the environment, and
+   the directory is unmounted when the unit stops.
+2. **`STRYD_TOKEN`** in the environment.
+3. **The file** at `STRYD_TOKEN_FILE`, default `/etc/postrun/stryd.token`.
+
+The last two exist because neither is available under systemd and both are how
+this gets run by hand: `--discover` and `--dry-run` happen from a shell, where
+there is no manager to hand anything over.
+
+**`LoadCredential=` requires the source file to exist**, and fails the unit with
+an opaque `243/CREDENTIALS` if it does not. So the file is created empty and
+root-owned at install time; the sync then reports the missing token in its own
+words, in the journal, and writes nothing.
 
 ## Nothing here assumes the payload's shape
 
