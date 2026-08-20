@@ -107,7 +107,9 @@ def _check(args) -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Sync the Stryd plan into plan.json")
     ap.add_argument("--out", default=str(DEFAULT_OUT), help="where plan.json goes")
-    ap.add_argument("--since", help="drop days before this ISO date")
+    ap.add_argument("--since", default="today",
+                    help='drop days before this ISO date; "today" resolves when it runs, '
+                         '"all" keeps the whole history')
     ap.add_argument("--verify", action="store_true",
                     help="check every demo link against YouTube's oembed")
     ap.add_argument("--check", action="store_true",
@@ -139,6 +141,16 @@ def main(argv=None) -> int:
             print("  fields: " + ", ".join(c["fields"]))
         return 0
 
+    # "today" rather than a date, because a date baked into a unit file goes
+    # stale the day after it is written -- and the history is the part that makes
+    # this document ten times bigger than the app it sits next to.
+    since = args.since
+    if since == "today":
+        from datetime import date
+        since = date.today().isoformat()
+    elif since == "all":
+        since = None
+
     entries = list(cal.harvest(payload))
     runs = [e for e in entries if cal.is_run(e)]
     others = [e for e in entries if not cal.is_run(e)]
@@ -153,7 +165,7 @@ def main(argv=None) -> int:
         print("no non-run entries found -- if the calendar shows drills, they are in a "
               "collection this did not recognise. Run --discover.")
 
-    doc = transform.build(entries, since=args.since, do_verify=args.verify,
+    doc = transform.build(entries, since=since, do_verify=args.verify,
                           token_expires_at=getattr(_payload, "token_expires_at", None))
 
     if args.verify:

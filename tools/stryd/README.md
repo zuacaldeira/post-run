@@ -10,6 +10,12 @@ python3 -m tools.stryd.sync --dry-run      # what would be written
 python3 -m tools.stryd.sync --verify       # write it, checking every demo link
 ```
 
+`--since` defaults to `today` and is resolved when it runs, not when it is
+written -- a date baked into a unit file is stale the day after. `--since all`
+keeps the whole history, which is 866 days and 340 KB against an app of 138 KB;
+from today it is 39 days and 38 KB. The past belongs to fundo, not to a phone in
+a bathroom.
+
 ## Why this is not in the browser
 
 The app is a static page served with `connect-src 'self'`. It cannot call
