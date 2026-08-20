@@ -5,7 +5,9 @@
 # web page. Give it a real hostname and a certificate.
 services:
   post-run:
-    image: ghcr.io/zuacaldeira/post-run:latest
+    # IMAGE_TAG floats so the server can sit on :latest (default branch only) or
+    # pin a branch/sha tag while something is being tried out. See .env.example.
+    image: ghcr.io/zuacaldeira/post-run:${IMAGE_TAG:-latest}
     container_name: post-run
     restart: unless-stopped
     ports:
@@ -16,3 +18,7 @@ services:
       - /var/run
     security_opt:
       - no-new-privileges:true
+    networks: [web]
+
+networks:
+  web:

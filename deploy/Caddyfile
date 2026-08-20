@@ -1,0 +1,17 @@
+{$APP_DOMAIN} {
+	# The app's own nginx sets the CSP, cache and MIME headers; they pass straight
+	# through. Nothing here should restate them -- two sources for one header is
+	# how they drift apart.
+	reverse_proxy post-run:80
+
+	# A PWA that has been installed once should never be reachable over plain HTTP
+	# again: the worker needs a secure origin, and a downgrade would silently cost
+	# the app its offline mode.
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+	encode gzip zstd
+	log {
+		output stderr
+		format console
+	}
+}
