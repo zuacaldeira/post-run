@@ -190,7 +190,7 @@ section{margin-bottom:28px}
    Column 2 is minmax(0,1fr) rather than 1fr so a long exercise name shrinks and
    ellipses instead of shoving the clock and the buttons off the edge. */
 .over{position:fixed;left:0;right:0;bottom:0;z-index:30;
-  display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;
+  display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto auto;align-items:center;
   column-gap:10px;row-gap:1px;border-radius:18px 18px 0 0;
   -webkit-backdrop-filter:blur(26px) saturate(1.5);backdrop-filter:blur(26px) saturate(1.5);
   padding:12px 14px calc(13px + env(safe-area-inset-bottom));color:#fff;
@@ -202,9 +202,11 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
    than as one more widget competing for the height we just saved */
 .over .ring{position:absolute;left:0;top:0;height:3px;background:rgba(255,255,255,.6);width:0}
 .over .phase{grid-row:1;grid-column:1;font-size:11px;font-weight:900;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--phase)}
-.over .stepcount{grid-row:1;grid-column:2;justify-self:start;overflow:hidden;font-size:11px;
-  font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.7;white-space:nowrap}
+  text-transform:uppercase;color:var(--phase);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.over .stepcount{grid-row:1;grid-column:2;overflow:hidden;font-size:11px;
+  font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.7;
+  white-space:nowrap;text-overflow:ellipsis}
 /* :not(:empty) -- the step count is blank off autopilot, and a stray dot is worse
    than no separator at all */
 .over .stepcount:not(:empty)::before{content:"·";opacity:.55;margin-right:6px}
@@ -214,7 +216,7 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* still the largest thing on the bar: it gets read from the floor, mid-hold, a
    couple of feet away, and that is the one thing the height was never worth */
-.over .digits{grid-row:1/3;grid-column:3;align-self:center;font-size:clamp(28px,8vw,34px);
+.over .digits{grid-row:1/3;grid-column:3;align-self:center;font-size:clamp(34px,10.5vw,46px);
   font-weight:900;letter-spacing:-.04em;line-height:1;margin:0;
   font-variant-numeric:tabular-nums;text-align:right}
 .over .ctl{grid-row:1/3;grid-column:4;align-self:center;display:flex;gap:7px}
