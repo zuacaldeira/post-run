@@ -96,6 +96,14 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
 @media (forced-colors:active){
   .tab[aria-selected="true"]{border:2px solid Highlight;background:Canvas;color:CanvasText}
 }
+/* 360px is the common narrow phone and the four tabs just miss fitting there.
+   Below that the strip scrolls, which is the right answer rather than shaving
+   the type until it cannot be read. */
+@media (max-width:360px){
+  .tabs{gap:5px}
+  .tab{padding:9px 11px;font-size:12.5px}
+  .tab .n{font-size:10.5px}
+}
 
 .ph{display:none;margin-bottom:34px}
 .ph.open{display:block}
@@ -1279,7 +1287,10 @@ function estimate(group){
    and each button says how long its own phase takes. */
 /* ---- one phase at a time ---- */
 var PHASES = ["pre", "run", "post", "progress"];
-var TAB_NAMES = { pre:"Pre-run", run:"Run", post:"Post-run", progress:"Progress" };
+/* Short, because four tabs and their counts want about 430px and a 390px phone
+   offers 358 -- which clipped the fourth into "P...". The panel underneath
+   still says "Pre-run · before you go out", so the strip does not have to. */
+var TAB_NAMES = { pre:"Pre", run:"Run", post:"Post", progress:"Log" };
 
 function buildTabs(){
   var strip = document.getElementById("tabs");
