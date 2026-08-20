@@ -507,7 +507,9 @@ function flip(el, on){
   }
 }
 
-function setState(el, state){
+/* `restoring` means we are replaying what is already on disk. Recording that
+   would invent a second completion for a workout that happened once. */
+function setState(el, state, restoring){
   var s = STYLE[state];
   el.dataset.state = state;
   el.style.setProperty("--surface", s.surface);
@@ -523,7 +525,13 @@ function setState(el, state){
   el.style.setProperty("--badge-fg", s.badge.fg);
   el.style.setProperty("--tick",    s.tick || s.solid);
   flip(el, state === "doing");
-  if (state === "done" && typeof record === "function") record(el);
+  if (!restoring){
+    /* Keyed by name, like the log already is: the identity of an exercise is
+       what it is called, not where it happens to sit in the list today. */
+    DB.status[el._x.n] = state;
+    save();
+    if (state === "done" && typeof record === "function") record(el);
+  }
   /* state is never signalled by colour alone -- the pill spells it out */
   el.querySelector(".state").textContent = LABEL[state];
   el.querySelector(".check").setAttribute("aria-label", el._x.n + ", " + LABEL[state] + ". Change state");
@@ -868,7 +876,12 @@ function finish(){
    progress; a calf stretch has no reason to get longer than 30s.
    --------------------------------------------------------------- */
 var KEY = "postrun.v1";
-var DB  = { base:60, lastBump:null, log:[] };
+/* `log` is the history -- every completion, append-only, feeding the progress
+   panel. `status` is the board: where each exercise stands right now. They are
+   separate on purpose. Marking something done twice is one status and two log
+   entries, and re-opening a finished exercise must not erase the fact that it
+   was finished. */
+var DB  = { base:60, lastBump:null, log:[], status:{} };
 var CAP = 120;          /* seconds; past this, progress by variation, not duration */
 var GAP_DAYS = 14;      /* the plan's own interval */
 var NEED_SESSIONS = 6;  /* consistency gate -- a bump has to be earned, not just waited out */
@@ -879,6 +892,7 @@ function load(){
     if (raw) DB = JSON.parse(raw);
   } catch (e){ /* private mode or a sandboxed frame: stay in memory */ }
   if (!DB.log) DB.log = [];
+  if (!DB.status) DB.status = {};   /* absent in stores written before this existed */
 }
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(DB)) } catch (e){}
@@ -965,7 +979,9 @@ document.getElementById("runAll").onclick = function(){
 };
 
 load();
-ALL.forEach(function(el){ setState(el, "todo") });
+/* The board is part of the record now, not a blank sheet every launch. Anything with
+   no stored status -- a new exercise, a first run -- starts at todo. */
+ALL.forEach(function(el){ setState(el, DB.status[el._x.n] || "todo", true) });
 setBase(DB.base || 60);
 renderProgress();
 </script>
@@ -975,20 +991,20 @@ renderProgress();
    new build lands in the cache on its own; this is what gets it onto
    the screen without the user having to know there was anything to do.
 
-   The one rule: never swap out from under a session. The log is in
-   localStorage and survives, but which cards are doing/done is only in
-   the DOM, so a reload mid-routine would silently reset the board. We
-   only ever reload from a clean slate -- and if the board is dirty, the
-   update just waits for the next cold start, which is where it would
-   have landed anyway.
+   The one rule: never swap out from under a running clock. The board is in
+   the store now and comes back exactly as it was, so a reload costs nothing
+   except a session in progress -- the queue and the countdown are the only
+   state that lives purely in memory.
    --------------------------------------------------------------- */
 if ("serviceWorker" in navigator) addEventListener("load", function(){
   var pending = false, reloaded = false;
   var adopted = !!navigator.serviceWorker.controller;   /* false on a first-ever visit */
 
+  /* Card states used to block this: a reload wiped them. They are persisted
+     now, so a half-finished board survives and no longer has to hold up an
+     update. A running session still does. */
   function clean(){
-    return !document.body.classList.contains("running") &&
-           !ALL.some(function(o){ return o.dataset.state !== "todo" });
+    return !document.body.classList.contains("running");
   }
   function apply(){
     if (!pending || reloaded || !clean()) return;
