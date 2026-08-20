@@ -772,8 +772,10 @@ function refresh(){
   ALL.forEach(function(el){
     var x = el._x;
     el.querySelector(".dose").textContent = x.dose() + (x.sub ? " · " + x.sub : "");
+    /* the button exists for anything runnable, but only a single-hold item has a
+       length to restate -- a phase-built one would ask null for a duration */
     var h = el.querySelector(".hold");
-    if (h) h.textContent = "▶ Hold " + x.d() + "s";
+    if (h && x.d) h.textContent = "▶ Hold " + x.d() + "s";
   });
   tally();
 }
