@@ -72,6 +72,26 @@ h1 span{background-image:var(--mark);-webkit-background-clip:text;background-cli
   font-variant-numeric:tabular-nums}
 
 h2{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);margin:0 0 12px 4px}
+/* h2 was the section label; with three phases above them the groups inside a
+   phase step down to h3 and keep exactly that look, so nothing shifts visually
+   -- only the outline gains a level. */
+h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
+  margin:22px 0 12px 4px}
+.ph{margin-bottom:34px}
+.pht{font-size:23px;font-weight:900;letter-spacing:-.02em;text-transform:none;color:var(--ink);
+  margin:0 0 14px 2px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.pht span{font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--ink-2)}
+/* The prescription is written as prose with its own line breaks and indented
+   lists; it is quoted, not restyled, so pre-wrap rather than a paragraph. */
+.pre{font-family:inherit;font-size:13.5px;line-height:1.62;color:var(--ink-2);font-weight:500;
+  white-space:pre-wrap;overflow-wrap:break-word;margin:10px 0 0}
+.plan-t{font-size:17px;font-weight:900;letter-spacing:-.02em;color:var(--ink)}
+.plan-m{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.plan-m .chip{padding:7px 12px;font-size:12px}
+.quiet{color:var(--ink-2);font-size:14px;font-weight:600}
+.more{margin-top:12px}
+.more summary{cursor:pointer;font-size:12px;font-weight:900;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-2)}
 section{margin-bottom:28px}
 
 .ex{position:relative;border-radius:26px;padding:16px;margin-bottom:10px;
@@ -310,31 +330,50 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
 </video>
 <div id="scrim" aria-hidden="true"></div>
 
-<p class="hi">Evening session</p>
+<p class="hi" id="hi">Today</p>
 <h1>Core &amp;<br><span id="mark">Mobility</span></h1>
-<p class="lede">A short session after your run. Hold what you can hold well, then add a little every couple of weeks.</p>
+<p class="lede">The day in three parts: the warm-up out of today's Stryd plan, the run
+itself, and the core and mobility session afterwards. Hold what you can hold well, then
+add a little every couple of weeks.</p>
 
-<div class="rainbow" id="rainbow"></div>
-<button class="run" id="runAll">▶ Run the whole session<small>hands free · with sound cues</small></button>
-<div class="legend" id="legend"></div>
-<div class="stats">
-  <span class="chip" id="cDone"><b>0</b> done</span>
-  <span class="chip" id="cTime">about <b>9 min</b></span>
-</div>
-
-<div class="dial">
-  <span class="lab">Front plank hold<small>Side planks follow at half</small></span>
-  <button id="minus" aria-label="Five seconds less">−</button>
-  <output id="dialOut">60s</output>
-  <button id="plus" aria-label="Five seconds more">+</button>
-</div>
-
-<section><h2>Planks</h2><div id="planks"></div>
-  <p class="note">One set of each. Add <b>10s</b> to the front plank and <b>5s</b> to the sides every two weeks. Extra core work is optional.</p>
+<section class="ph">
+  <h2 class="pht">Pre-run<span>before you go out</span></h2>
+  <div id="prerun"></div>
+  <p class="note">Stryd keeps no separate warm-up session — it is written into the run
+  itself, so the above is lifted out of today's prescription. Your own activation
+  drills would live here; there are none in the plan to read them from.</p>
 </section>
-<section><h2>Mobility</h2><div id="mobility"></div></section>
 
-<section><h2>Recovery</h2><div id="recovery"></div>
+<section class="ph">
+  <h2 class="pht">Run<span>today, from the Stryd plan</span></h2>
+  <div id="runplan"></div>
+</section>
+
+<section class="ph">
+  <h2 class="pht">Post-run<span>core &amp; mobility</span></h2>
+
+  <div class="rainbow" id="rainbow"></div>
+  <div class="legend" id="legend"></div>
+  <div class="stats">
+    <span class="chip" id="cDone"><b>0</b> done</span>
+    <span class="chip" id="cTime">about <b>9 min</b></span>
+  </div>
+
+  <button class="run" id="runAll">▶ Run the session<small>hands free · with sound cues</small></button>
+
+  <div class="dial">
+    <span class="lab">Front plank hold<small>Side planks follow at half</small></span>
+    <button id="minus" aria-label="Five seconds less">−</button>
+    <output id="dialOut">60s</output>
+    <button id="plus" aria-label="Five seconds more">+</button>
+  </div>
+
+  <h3>Planks</h3><div id="planks"></div>
+  <p class="note">One set of each. Add <b>10s</b> to the front plank and <b>5s</b> to the sides every two weeks. Extra core work is optional.</p>
+
+  <h3>Mobility</h3><div id="mobility"></div>
+
+  <h3>Recovery</h3><div id="recovery"></div>
   <p class="note">Optional, and deliberately outside the session above — run it on
   its own, after the mobility, while you are still warm. Cold damps the
   inflammatory signal that <b>drives</b> adaptation, so it is a trade: take it when
@@ -555,6 +594,91 @@ var MOBILITY = [
    change lands while you are still climbing out of the water, and every cycle
    runs a few seconds short of what it claims. */
 var BATH = { warm:180, cold:60, swap:10, cycles:4 };
+/* The Stryd plan, as it stood when it was exported from fundo on 2026-08-20.
+   It is fixed -- written once at the start of the block and not regenerated --
+   so it ships as data rather than as an integration. Only the remainder is
+   here: all 353 sessions would be 244 KB against an app of 107 KB, and the ones
+   already run are fundo's business, not this app's.
+   Fields are short because they repeat 27 times: d day, t title, s seconds,
+   m metres, r planned RSS, x the prescription itself. */
+var PLAN = [{"d":"2026-08-20","t":"Day 102 - Testing","s":2400,"m":5301,"r":42.0,"x":"9 minute maximum effort time trial\n\n1) Warm-up for 15 minutes:\n- first 10 minutes: EZ running (<= 80% of auto-CP)\n- roll into 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n- finish with an additional minute of easy running\n\n2) stop, walk, and recover breathing fully for the next 3 minutes\n\n3) run 9 minutes at maximal effort*\n- aim for a fast steady start, but not initially maximal. The effort should feel maximal by the end of the test, not the outset.\n- target power for the first 6 minutes: a) use your Stryd 9 minute model power as a target for the first 6 minutes, or b) if you have tested for 9 minutes before use the prior test average power as the starting power for the first 6 minutes.\n\n4) stop, walk, and recover breathing fully for 5 minutes\n\n5) resume EZ running (<= 80% of CP) for balance of planned duration\n\nNOTE: it is ok to do this this testing on a track, path, or road - as long as it is safe and allows you to run uninterrupted for the test. Avoid 180 degree turns if possible.\n\nNOTE: on the “structured workout”: Since I do not know your maximum effort for the test duration, I left that segment of the pre-built structured workout with an RPE target. Stryd Membership holders may use the following two methods to add a power target, with non-members using them as a guide:\n1) Go to your current power-duration curve *model*, look up the that \"model power\" at the prescribed duration for the test. Then enter that \"model power\" minus 1% as the target power on the low end of the structured workout range. And, enter that that \"model power\" plus 5% as the target power on the high end of the structured workout range.\n2) If you have tested at the same duration previously, use something like prior test power result minus 1% to prior test power result plus 5%.\n\nThe purpose of this run is, in part, to *optimize* Stryd auto-CP. And, of course, \"testing is training, too\" - this effort will be a power stimulus in your fitness growth."},{"d":"2026-08-22","t":"Day 104 - EZ Aerobic / Recovery Run","s":900,"m":1982,"r":11.9,"x":"EZ Run (with accelerations)\n\nEZ run @ <= 80% of CP\n- include 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP. Except for the accelerations a) limit the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoid segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\".\n\nThe addition of the accelerations is for; a) changing up running mechanics to a style closer to top end, and b) as opener/primer efforts for the following day."},{"d":"2026-08-23","t":"Day 105 - Long Run","s":3000,"m":6739,"r":39.0,"x":"LR w 6x 1:00 \"CP\" fartlek\nBegin with EZ running (<= 80% of CP) for 27 minutes\n\nThen roll into 6x 1:00 @ 99-101% of CP\n( 2 minute EZ running between reps)\n\ncool down with EZ running (<= 80% of CP) for the remainder of the run\n____\n\nDo not overpower the one minute fartlek segments.\n\nThe purpose of this session is:\n- build fatigue resistance\n- improve aerobic fitness\n- provide some stimulus near CP"},{"d":"2026-08-25","t":"Day 107 - EZ Aerobic / Recovery Run","s":900,"m":1944,"r":9.9,"x":"EZ Run\n\nEZ run @ <= 80% of CP\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP while a) limiting the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoiding segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\"."},{"d":"2026-08-26","t":"Day 108 - EZ Aerobic / Recovery Run","s":900,"m":1982,"r":11.9,"x":"EZ Run (with accelerations)\n\nEZ run @ <= 80% of CP\n- include 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP. Except for the accelerations a) limit the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoid segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\".\n\nThe addition of the accelerations is for; a) changing up running mechanics to a style closer to top end, and b) as opener/primer efforts for the following day."},{"d":"2026-08-27","t":"Day 109 - Testing","s":1800,"m":3688,"r":35.4,"x":"2 minute maximum effort time trial\n\n1) Warm-up for 15 minutes:\n- first 10 minutes: EZ running (<= 80% of auto-CP)\n- roll into 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n- finish with an additional minute of easy running\n\n2) stop, walk, and recover breathing fully for the next 3 minutes\n\n3) run 2 minutes at maximal effort*\n- aim for a fast steady start, but not initially maximal. The effort should feel maximal aby the end of the test, not the outset.\n- target power for the first 1 minute: a) use your Stryd 2 minute model power as a target for the first 1 minute, or b) if you have tested for 2 minutes before use the prior test average power as the starting power for the first 1 minute.\n\n4) stop, walk, and recover breathing fully for 5 minutes\n\n5) resume EZ running (<= 80% of CP) for balance of planned duration\n\nNOTE: it is ok to do this this testing on a track, path, or road - as long as it is safe and allows you to run uninterrupted for the test. Avoid 180 degree turns if possible.\n\nNOTE: on the “structured workout”: Since I do not know your maximum effort for the test duration, I left that segment of the pre-built structured workout with an RPE target. Stryd Membership holders may use the following two methods to add a power target, with non-members using them as a guide:\n1) Go to your current power-duration curve *model*, look up the that \"model power\" at the prescribed duration for the test. Then enter that \"model power\" minus 1% as the target power on the low end of the structured workout range. And, enter that that \"model power\" plus 5% as the target power on the high end of the structured workout range.\n2) If you have tested at the same duration previously, use something like prior test power result minus 1% to prior test power result plus 5%.\n\nThe purpose of this run is, in part, to *optimize* Stryd auto-CP. And, of course, \"testing is training, too\" - this effort will be a power stimulus in your fitness growth."},{"d":"2026-08-29","t":"Day 111 - EZ Aerobic / Recovery Run","s":900,"m":1982,"r":11.9,"x":"EZ Run (with accelerations)\n\nEZ run @ <= 80% of CP\n- include 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP. Except for the accelerations a) limit the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoid segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\".\n\nThe addition of the accelerations is for; a) changing up running mechanics to a style closer to top end, and b) as opener/primer efforts for the following day."},{"d":"2026-08-30","t":"Day 112 - Testing","s":3000,"m":7154,"r":60.4,"x":"20 minute maximum effort time trial (or optional 5K)\n\n1) Warm-up for 15 minutes:\n- first 10 minutes: EZ running (<= 80% of auto-CP)\n- roll into 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n- finish with an additional minute of easy running\n\n2) stop, walk, and recover breathing fully for the next 3 minutes\n\n3) run 20 minutes at maximal effort*\n- aim for a fast steady start, but not initially maximal. The effort should feel maximal by the end of the test, not the outset.\n- target power for the first 15 minutes: a) use your Stryd 20 minute model power as a target for the first 15 minutes, or b) if you have tested for 20 minutes before use the prior test average power as the starting power for the first 15 minutes.\n\n4) stop, walk, and recover breathing fully for 5 minutes\n\n5) resume EZ running (<= 80% of CP) for balance of planned duration\n\nNOTE: it is ok to do this this testing on a track, path, or road - as long as it is safe and allows you to run uninterrupted for the test. Avoid 180 degree turns if possible.\n\nNOTE: as an alternative to this 20 minute test, it is ok to race 5K - use Stryd race power estimator for your target. Remember to change the structured workout from 20 minute *duration* to 5K *distance*.\n\nNOTE: on the “structured workout”: Since I do not know your maximum effort for the test duration, I left that segment of the pre-built structured workout with an RPE target. Stryd Membership holders may use the following two methods to add a power target, with non-members using them as a guide:\n1) Go to your current power-duration curve *model*, look up the that \"model power\" at the prescribed duration for the test. Then enter that \"model power\" minus 1% as the target power on the low end of the structured workout range. And, enter that that \"model power\" plus 5% as the target power on the high end of the structured workout range.\n2) If you have tested at the same duration previously, use something like prior test power result minus 1% to prior test power result plus 5%.\n\nThe purpose of this run is, in part, to *optimize* Stryd auto-CP. And, of course, \"testing is training, too\" - this effort will be a power stimulus in your fitness growth."},{"d":"2026-09-01","t":"Day 114 - EZ Aerobic / Recovery Run","s":1500,"m":3240,"r":16.4,"x":"EZ Run\n\nEZ run @ <= 80% of CP\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP while a) limiting the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoiding segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\"."},{"d":"2026-09-02","t":"Day 115 - EZ Aerobic / Recovery Run","s":1800,"m":3926,"r":21.8,"x":"EZ Run (with accelerations)\n\nEZ run @ <= 80% of CP\n- include 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP. Except for the accelerations a) limit the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoid segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\".\n\nThe addition of the accelerations is for; a) changing up running mechanics to a style closer to top end, and b) as opener/primer efforts for the following day."},{"d":"2026-09-03","t":"Day 116 - Supra-Threshold Interval Workout","s":3300,"m":7432,"r":54.4,"x":"4x 4:45 @ 98-104% of CP (2:45 rec)\n\nWarm up for 20 minutes:\n- easy running (<= 80% of CP) for 8 minutes\n- 2x 1 minute @ 96-102% of CP (2 minute easy running recoveries)\n- 2 more minutes of easy running\n\n4x 4:45 @ 98-104% of CP\n(2:45 recoveries - walk or jog as needed)\n\nCool down with EZ running (< = 80 of CP) for the remainder of the run\n\nThe purpose of this session is to:\n- build CP\n- expand fatigue resistance near CP\n- build power at just over 10K race effort for most runners"},{"d":"2026-09-05","t":"Day 118 - EZ Aerobic / Recovery Run","s":1800,"m":3926,"r":21.8,"x":"EZ Run (with accelerations)\n\nEZ run @ <= 80% of CP\n- include 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP. Except for the accelerations a) limit the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoid segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\".\n\nThe addition of the accelerations is for; a) changing up running mechanics to a style closer to top end, and b) as opener/primer efforts for the following day."},{"d":"2026-09-06","t":"Day 119 - Long Run","s":10500,"m":23568,"r":131.3,"x":"LR w 40:00 MP tempo @ 82-89% of CP\n\nSteady running @ <= 80% of CP for the first 50 minutes\n\n40:00 MP tempo @ 82-89% of CP\n\nCool down with EZ running (<= 80% of CP) for the remainder of the run\n____\n\nThe purpose of this session is:\n- build fatigue resistance\n- improve aerobic fitness\n- provide stimulus near marathon power"},{"d":"2026-09-08","t":"Day 121 - EZ Aerobic / Recovery Run","s":1800,"m":3888,"r":19.7,"x":"EZ Run\n\nEZ run @ <= 80% of CP\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP while a) limiting the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoiding segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\"."},{"d":"2026-09-09","t":"Day 122 - EZ Aerobic / Recovery Run","s":1800,"m":3926,"r":21.8,"x":"EZ Run (with accelerations)\n\nEZ run @ <= 80% of CP\n- include 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP. Except for the accelerations a) limit the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoid segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\".\n\nThe addition of the accelerations is for; a) changing up running mechanics to a style closer to top end, and b) as opener/primer efforts for the following day."},{"d":"2026-09-10","t":"Day 123 - HM Power Tempo","s":3300,"m":7995,"r":54.3,"x":"2x 12:30 @ 89-94% of CP (3:00 rec)\nWarm up for 20 minutes:\n- easy running (<= 80% of CP) for 12 minutes\n- 2x 1 minute @ 96-102% of CP (2 minute easy running recoveries)\n- 2 more minutes of easy running\n\n2x 12:30 @ 89-94% of CP\n(4:00 recovery - easy jog/run)\n\nCool down with EZ running (< = 80 of CP) for the remainder of the run\n\nThe purpose of this session is to:\n- build power near HM race effort\n- expand fatigue resistance near HM power\n- build CP"},{"d":"2026-09-12","t":"Day 125 - EZ Aerobic / Recovery Run","s":1800,"m":3926,"r":21.8,"x":"EZ Run (with accelerations)\n\nEZ run @ <= 80% of CP\n- include 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP. Except for the accelerations a) limit the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoid segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\".\n\nThe addition of the accelerations is for; a) changing up running mechanics to a style closer to top end, and b) as opener/primer efforts for the following day."},{"d":"2026-09-13","t":"Day 126 - Long Run","s":10800,"m":24216,"r":134.5,"x":"LR w 40:00 MP tempo @ 82-89% of CP\n\nSteady running @ <= 80% of CP for the first 50 minutes\n\n40:00 MP tempo @ 82-89% of CP\n\nCool down with EZ running (<= 80% of CP) for the remainder of the run\n____\n\nThe purpose of this session is:\n- build fatigue resistance\n- improve aerobic fitness\n- provide stimulus near marathon power"},{"d":"2026-09-15","t":"Day 128 - EZ Aerobic / Recovery Run","s":1200,"m":2592,"r":13.2,"x":"EZ Run\n\nEZ run @ <= 80% of CP\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP while a) limiting the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoiding segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\"."},{"d":"2026-09-16","t":"Day 129 - EZ Aerobic / Recovery Run","s":1200,"m":2630,"r":15.2,"x":"EZ Run (with accelerations)\n\nEZ run @ <= 80% of CP\n- include 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP. Except for the accelerations a) limit the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoid segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\".\n\nThe addition of the accelerations is for; a) changing up running mechanics to a style closer to top end, and b) as opener/primer efforts for the following day."},{"d":"2026-09-17","t":"Day 130 - Supra-Threshold Interval Workout","s":2700,"m":5987,"r":44.3,"x":"4x 4:00 @ 98-104% of CP (2:45 rec)\n\nWarm up for 15 minutes:\n- easy running (<= 80% of CP) for 8 minutes\n- 2x 1 minute @ 96-102% of CP (2 minute easy running recoveries)\n- 1 more minutes of easy running\n\n4x 4:00 @ 98-104% of CP\n(2:45 recoveries - walk or jog as needed)\n\nCool down with EZ running (< = 80 of CP) for the remainder of the run\n\nThe purpose of this session is to:\n- build CP\n- expand fatigue resistance near CP\n- build power at just over 10K race effort for most runners"},{"d":"2026-09-19","t":"Day 132 - EZ Aerobic / Recovery Run","s":1200,"m":2630,"r":15.2,"x":"EZ Run (with accelerations)\n\nEZ run @ <= 80% of CP\n- include 2x 10s (or ~50m) gradual accelerations to near top speed. Stay fluid. Don't strain. (1:50 easy running recoveries)\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP. Except for the accelerations a) limit the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoid segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\".\n\nThe addition of the accelerations is for; a) changing up running mechanics to a style closer to top end, and b) as opener/primer efforts for the following day."},{"d":"2026-09-20","t":"Day 133 - Long Run","s":4800,"m":10812,"r":60.7,"x":"LR w 20:00 MP tempo @ 82-89% of CP\n\nSteady running @ <= 80% of CP for the first 50 minutes\n\n20:00 MP tempo @ 82-89% of CP\n\nCool down with EZ running (<= 80% of CP) for the remainder of the run\n____\n\nThe purpose of this session is:\n- build fatigue resistance\n- improve aerobic fitness\n- provide stimulus near marathon power"},{"d":"2026-09-22","t":"Day 135 - Fartlek","s":1200,"m":2722,"r":16.2,"x":"3x 1:00 \"CP\" fartlek\n\nWarm with easy running @ <= 80% of CP for 15 minutes\n\nRoll right into 3x 1:00 @ 97-102% of CP\n(2:00 easy running recoveries)\n\nComplete the run with easy running @ <= 80% of CP\n\nThe purpose of this session is to:\n- maintain some light exposure to CP effort\n- leg openers / priming efforts\n\nNOTE: do not overpower the one minute efforts - they are not intended to be HIIT efforts."},{"d":"2026-09-23","t":"Day 136 - EZ Aerobic / Recovery Run","s":900,"m":1944,"r":9.9,"x":"EZ Run\n\nEZ run @ <= 80% of CP\n\nAvoid overpowering this run. Avoid rigorous hills.\n\nThe objective to keep the *average* power for this run at <= 80% of CP while a) limiting the number of excursions over 80% of CP, b) avoiding exceeding 100% of CP at any time, and c) avoiding segments longer than 10-30s if over 80% of CP.\n\nThe purpose of the run is to provide an easy aerobic stimulus while keeping running stress score (RSS) below the \"42d average\"."},{"d":"2026-09-24","t":"Day 137 - Fartlek","s":1200,"m":2722,"r":16.2,"x":"3x 1:00 \"CP\" fartlek\n\nWarm with easy running @ <= 80% of CP for 15 minutes\n\nRoll right into 3x 1:00 @ 97-102% of CP\n(2:00 easy running recoveries)\n\nComplete the run with easy running @ <= 80% of CP\n\nThe purpose of this session is to:\n- maintain some light exposure to CP effort\n- leg openers / priming efforts\n\nNOTE: do not overpower the one minute efforts - they are not intended to be HIIT efforts."},{"d":"2026-09-26","t":"Day 139 - Pre-Race","s":900,"m":2030,"r":11.9,"x":"2x 1:00 \"CP\" fartlek\n\nWarm with easy running @ <= 80% of CP for 7 minutes\n\nRoll right into 2x 1:00 @ 97-102% of CP\n(2:00 easy running recoveries)\n\nComplete the run with easy running @ <= 80% of CP\n\nThe purpose of this session is to:\n- maintain some light exposure to CP effort\n- leg openers / priming efforts\n\nNOTE: do not overpower the one minute efforts - they are not intended to be HIIT efforts."}];
+var PLAN_FROM = "2026-08-20", PLAN_TO = "2026-09-26";
+
+function esc(t){
+  return String(t).replace(/[&<>]/g, function(c){
+    return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
+  });
+}
+function todayISO(){
+  var n = new Date(), p = function(v){ return (v < 10 ? "0" : "") + v };
+  /* local, not toISOString: at 22:00 UTC+2 that would already say tomorrow */
+  return n.getFullYear() + "-" + p(n.getMonth() + 1) + "-" + p(n.getDate());
+}
+function planFor(day){
+  for (var i = 0; i < PLAN.length; i++) if (PLAN[i].d === day) return PLAN[i];
+  return null;
+}
+/* Stryd keeps no warm-up field: it is prose inside the prescription, phrased as
+   "Warm-up for 15 minutes:" or "Warm with easy running...". Take the paragraph
+   that first mentions warming and stop at the blank line after it. A heuristic
+   over someone else's prose, so the run card always shows the whole thing too --
+   if this picks the wrong paragraph, nothing is lost, only repeated. */
+function warmupOf(desc){
+  var lines = (desc || "").split("\n"), out = [], on = false, i;
+  for (i = 0; i < lines.length; i++){
+    if (!on && /warm/i.test(lines[i])) on = true;
+    else if (on && !lines[i].trim()) break;
+    if (on) out.push(lines[i]);
+  }
+  return out.join("\n").trim();
+}
+/* Stryd signs most prescriptions off with the same standing NOTEs -- how to read
+   the power targets, what the session is for. Worth keeping, not worth making
+   someone scroll past the actual instructions to reach tomorrow. */
+function body(desc){
+  var i = desc.search(/\nNOTE:/);
+  if (i < 0) return '<div class="pre">' + esc(desc) + '</div>';
+  return '<div class="pre">' + esc(desc.slice(0, i).trim()) + '</div>' +
+         '<details class="more"><summary>Stryd\'s notes</summary>' +
+         '<div class="pre">' + esc(desc.slice(i).trim()) + '</div></details>';
+}
+function renderPlan(){
+  var day = todayISO(), w = planFor(day),
+      hi = document.getElementById("hi"),
+      pre = document.getElementById("prerun"),
+      run = document.getElementById("runplan");
+  hi.textContent = new Date().toLocaleDateString(undefined,
+    { weekday:"long", day:"numeric", month:"long" });
+  if (!w){
+    /* Say which of the two it is. "Nothing today" reads as a bug when the real
+       answer is that the plan ran out three weeks ago. */
+    var msg = (day < PLAN_FROM || day > PLAN_TO)
+      ? "This build carries the plan from " + PLAN_FROM + " to " + PLAN_TO + ", and today is outside it."
+      : "Rest day. Nothing prescribed for " + day + ".";
+    pre.innerHTML = run.innerHTML = '<div class="panel quiet">' + esc(msg) + '</div>';
+    return;
+  }
+  var warm = warmupOf(w.x);
+  pre.innerHTML = warm
+    ? '<div class="panel"><div class="plan-t">Warm-up</div><div class="pre">' + esc(warm) + '</div></div>'
+    : '<div class="panel quiet">Today\'s prescription does not name a warm-up.</div>';
+  run.innerHTML =
+    '<div class="panel">' +
+      '<div class="plan-t">' + esc(w.t) + '</div>' +
+      '<div class="plan-m">' +
+        '<span class="chip">' + fmtDur(w.s) + '</span>' +
+        (w.m ? '<span class="chip">' + (w.m / 1000).toFixed(1) + ' km</span>' : '') +
+        (w.r ? '<span class="chip">RSS ' + w.r + '</span>' : '') +
+      '</div>' +
+      body(w.x) +
+    '</div>';
+}
+
+function fmtDur(sec){
+  var m = Math.round(sec / 60);
+  return m >= 60 ? Math.floor(m / 60) + "h " + (m % 60 ? (m % 60) + "min" : "") : m + " min";
+}
+
 var RECOVERY = [
   { n:"Contrast bath", sub:"warm 38-40°C · cold 12-15°C", d:null, auto:null, sides:1,
     /* solo: it belongs after the session, in a different room, and it is longer
@@ -731,9 +855,12 @@ function dressPage(){
 
 dressPage();
 solveStates();
-PLANKS.forEach(function(x){ build(x, document.getElementById("planks")) });
-MOBILITY.forEach(function(x){ build(x, document.getElementById("mobility")) });
-RECOVERY.forEach(function(x){ build(x, document.getElementById("recovery")) });
+function buildAll(list, host, phase){
+  list.forEach(function(x){ x.phase = phase; build(x, document.getElementById(host)) });
+}
+buildAll(PLANKS,   "planks",   "post");
+buildAll(MOBILITY, "mobility", "post");
+buildAll(RECOVERY, "recovery", "post");
 
 /* legend, because colour now carries meaning */
 var leg = document.getElementById("legend");
@@ -757,12 +884,13 @@ function tally(){
   });
   document.getElementById("cDone").innerHTML = "<b>" + n.done + "</b> of " + ALL.length + " done";
 }
-function estimate(){
+function estimate(phase){
   var s = 0;
   /* solo items are not in the session, so they are not in its estimate either */
   ALL.forEach(function(el){
     var x = el._x;
     if (x.solo) return;
+    if (phase && x.phase !== phase) return;
     s += x.total ? x.total() : x.d ? x.d() * x.sides : 60;
   });
   return Math.round(s / 60);
@@ -861,12 +989,17 @@ function phasesFor(el){
   out[out.length - 1].last = true;
   return out;
 }
-function sessionQueue(){
-  var q = [];
-  ALL.forEach(function(el, n){
+/* Per phase, because they are three sessions and not one: you do the warm-up,
+   leave for the run, and come back. Chaining them would have the post-run
+   routine start while you are still lacing up. */
+function sessionQueue(phase){
+  var q = [], n = 0;
+  ALL.forEach(function(el){
     if (el.dataset.state === "done" || el._x.solo) return;
+    if (phase && el._x.phase !== phase) return;
     q.push({ card:el, label:"Get ready", s: n === 0 ? 5 : 8, kind:"prep" });
     q = q.concat(phasesFor(el));
+    n++;
   });
   return q;
 }
@@ -1109,13 +1242,14 @@ function renderProgress(){
 
 function run(el){ start(phasesFor(el), false); controls() }
 document.getElementById("runAll").onclick = function(){
-  var q = sessionQueue();
+  var q = sessionQueue("post");
   if (!q.length){ return }
   start(q, true);
   controls();
 };
 
 load();
+renderPlan();
 ALL.forEach(function(el){ setState(el, "todo") });
 setBase(DB.base || 60);
 renderProgress();
