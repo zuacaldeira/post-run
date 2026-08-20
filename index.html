@@ -793,9 +793,9 @@ function refreshPlan(){
     if (buildFromPlan(doc)){
       drawRainbow();
       ALL.forEach(function(el){ setState(el, "todo") });
-      refresh();
     }
     renderPlan();
+    refresh();          /* the day's total moves when the run does */
     openPhase(currentPhase());
   }).catch(function(err){
     /* Being offline is the normal case and says nothing. A failure once the
@@ -1244,7 +1244,10 @@ function tally(){
     rb.children[i].style.background = STYLE[st].seg;
     rb.children[i].style.transform  = st === "done" ? "scaleY(1.4)" : "none";
   });
-  document.getElementById("cDone").innerHTML = "<b>" + n.done + "</b> of " + ALL.length + " done";
+  /* Exercises, said plainly: the run is in the time above but cannot be ticked
+     off here, and "0 of 28 done" invited the question of what the 28 were. */
+  document.getElementById("cDone").innerHTML =
+    "<b>" + n.done + "</b> of " + ALL.length + " exercises";
   summarise();
 }
 function estimate(group){
@@ -1337,7 +1340,15 @@ function labelRuns(){
   });
 }
 function refresh(){
-  document.getElementById("cTime").innerHTML = "about <b>" + estimate() + " min</b>";
+  /* The day, not the exercises. Left as the sum of the cards this read "about
+     27 min" for a day whose largest part is a 40 minute run -- the one number
+     meant to describe the day omitting most of it. The run has no card to count
+     because it does not happen here, which is exactly why it has to be added by
+     hand. */
+  var today = planFor(todayISO()),
+      secs = estimate() * 60 + (today ? today.s : 0);
+  document.getElementById("cTime").innerHTML =
+    "about <b>" + fmtDur(secs) + "</b>" + (today ? " today" : "");
   labelRuns();
   ALL.forEach(function(el){
     var x = el._x;
