@@ -2,7 +2,7 @@ name: build image
 
 on:
   push:
-    branches: [main, claude/video-full-width-card-aueowt]
+    branches: [main]
     paths-ignore: ['README.md']
   workflow_dispatch:
 

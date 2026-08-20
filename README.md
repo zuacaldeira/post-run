@@ -1,24 +1,25 @@
 # Post-Run — install on your phone
 
-Two ways. Start with A; it takes about five minutes and needs nothing installed.
+Two ways. Start with A; it takes about a minute and needs nothing installed.
 
 ---
 
 ## A. Home-screen app (PWA) — recommended
 
-A service worker needs HTTPS, so the files have to be served from somewhere. GitHub Pages
-is free and quickest.
+The app is live at **https://postrun.zuacaldeira.com** — it runs on its own server, not
+on GitHub Pages any more, and the old `zuacaldeira.github.io/post-run` URL is gone.
 
-1. Create a new **public** repo (e.g. `post-run`) and upload every file in this folder to
-   the repo root — `index.html`, `bg.mp4`, `poster.jpg`, `sw.js`, `manifest.webmanifest`
-   and the three icons.
-2. Repo **Settings → Pages → Source: Deploy from a branch**, branch `main`, folder `/root`.
-   Wait ~1 minute for the URL: `https://<user>.github.io/post-run/`
-3. Open that URL in **Chrome on your phone** → menu (⋮) → **Add to Home screen** /
-   **Install app**.
+1. Open **https://postrun.zuacaldeira.com** in **Chrome on your phone**.
+2. Menu (⋮) → **Add to Home screen** / **Install app**.
 
 You get an icon, no browser chrome, and the whole routine cached offline. Only the
 YouTube demonstrations need a connection.
+
+If you installed it from the old GitHub Pages URL, that copy is orphaned — it still
+opens from cache but can never update. Delete it from the home screen and install
+again from the address above.
+
+Deploying it yourself, or moving it to another host, is `deploy/README.md`.
 
 ### What you lose versus the APK
 - The screen-awake flag is `navigator.wakeLock` instead of the native one — it works in
