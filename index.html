@@ -84,16 +84,34 @@ section{margin-bottom:28px}
   /* identity transforms on the base: applying one only on a state change would
      move the element into a new stacking context mid-transition */
   translate:0; rotate:0deg; scale:1}
-.faces{position:relative;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.2,.75,.2,1);
+.faces{position:relative;transform-style:preserve-3d;
+  transition:transform .65s cubic-bezier(.2,.75,.2,1),min-height .5s;
   transform:rotateY(0deg)}
-.ex.flipped{min-height:236px}
+/* The back is a video card: the clip runs edge to edge across the top of the tile
+   and the frame keeps 16/9, so YouTube never pillarboxes it. The card has to be
+   tall enough to hold that frame plus the caption strip, hence the min-height --
+   card width is the body column (620px cap) minus the 16px gutters either side. */
+.ex.flipped{min-height:calc((min(620px,100vw) - 32px) * 9 / 16 + 12px)}
+/* Same sum, but measured instead of assumed: 100cqw is the card's own content box,
+   so the tile keeps fitting the frame if the column width ever changes. The floor
+   lives on .faces because an element cannot query itself as a container. */
+@supports (container-type:inline-size){
+  .ex{container-type:inline-size}
+  .ex.flipped{min-height:0}
+  .ex.flipped .faces{min-height:calc((100cqw + 32px) * 9 / 16 + 12px)}
+}
 .ex.flipped .faces{transform:rotateY(180deg)}
 .front,.back{-webkit-backface-visibility:hidden;backface-visibility:hidden}
-.back{position:absolute;inset:0;transform:rotateY(180deg);border-radius:22px;overflow:hidden;
+/* -16px on every side cancels the card padding: the back face IS the card, so the
+   clip below it starts at the tile's own edge instead of inside a 16px gutter. */
+.back{position:absolute;inset:-16px;transform:rotateY(180deg);border-radius:25px;overflow:hidden;
   background:var(--solid);display:flex;flex-direction:column}
-.back .vid{position:relative;flex:1;background:#0E0A22}
+/* flex-basis comes from the aspect ratio, shrink 0 so a short card never squashes the
+   frame back into a letterbox; grow 1 so a tall one is filled by the clip, not by padding */
+.back .vid{position:relative;flex:1 0 auto;width:100%;aspect-ratio:16/9;background:#0E0A22}
 .back .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.back .cap{padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;
+.back .cap{padding:10px 16px;min-height:44px;flex:0 0 auto;
+  display:flex;justify-content:space-between;gap:10px;align-items:center;
   font-size:13px;font-weight:900;color:var(--nm)}
 .back .cap span{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--deep)}
 .back .fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:18px;
@@ -102,7 +120,10 @@ section{margin-bottom:28px}
   .faces{transition:none}
   .ex.flipped .faces{transform:none}
   .ex.flipped .front{display:none}
-  .back{transform:none;position:relative;inset:auto;min-height:200px}
+  /* no flip here, so the back is in flow: negative margins do the edge-to-edge job
+     that inset:-16px does above, and the 16/9 frame sets the height on its own */
+  .back{transform:none;position:relative;inset:auto;margin:-16px;width:auto;min-height:0}
+  .ex.flipped{min-height:0}
   .ex:not(.flipped) .back{display:none}
 }
 /* Interacting with a card makes it opaque: at rest it is a window onto the backdrop,
@@ -949,8 +970,66 @@ setBase(DB.base || 60);
 renderProgress();
 </script>
 <script>
-if ("serviceWorker" in navigator)
-  addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}) });
+/* ---------------------------------------------------------------
+   Self-update. The worker already revalidates in the background, so a
+   new build lands in the cache on its own; this is what gets it onto
+   the screen without the user having to know there was anything to do.
+
+   The one rule: never swap out from under a session. The log is in
+   localStorage and survives, but which cards are doing/done is only in
+   the DOM, so a reload mid-routine would silently reset the board. We
+   only ever reload from a clean slate -- and if the board is dirty, the
+   update just waits for the next cold start, which is where it would
+   have landed anyway.
+   --------------------------------------------------------------- */
+if ("serviceWorker" in navigator) addEventListener("load", function(){
+  var pending = false, reloaded = false;
+  var adopted = !!navigator.serviceWorker.controller;   /* false on a first-ever visit */
+
+  function clean(){
+    return !document.body.classList.contains("running") &&
+           !ALL.some(function(o){ return o.dataset.state !== "todo" });
+  }
+  function apply(){
+    if (!pending || reloaded || !clean()) return;
+    reloaded = true;
+    location.reload();
+  }
+
+  /* reg.update() only re-checks sw.js; ask() is what catches a changed page */
+  function ask(){
+    var sw = navigator.serviceWorker.controller;
+    if (sw) sw.postMessage({ type:"check-update", url:location.href });
+  }
+
+  navigator.serviceWorker.register("sw.js", { updateViaCache:"none" }).then(function(reg){
+    ask();
+    /* An installed PWA can go weeks without a cold start, so waiting for a
+       navigation to notice a new build is not good enough. */
+    setInterval(function(){ reg.update().catch(function(){}); ask() }, 3600000);
+    addEventListener("visibilitychange", function(){
+      if (document.hidden){ apply(); return }   /* swapping while hidden is invisible */
+      reg.update().catch(function(){});
+      ask();
+      apply();
+    });
+    /* the worker that answered this page may have arrived after it started loading */
+    navigator.serviceWorker.ready.then(ask).catch(function(){});
+  }).catch(function(){});
+
+  /* the worker saw the page it revalidated differ from the cached copy */
+  navigator.serviceWorker.addEventListener("message", function(e){
+    if (e.data && e.data.type === "update-ready"){ pending = true; apply() }
+  });
+
+  /* a new worker took over: the assets being served are not the ones this
+     document was parsed from. Ignore the claim on a first-ever visit --
+     that is the worker arriving, not a new version of it. */
+  navigator.serviceWorker.addEventListener("controllerchange", function(){
+    if (!adopted){ adopted = true; return }
+    pending = true; apply();
+  });
+});
 </script>
 </body>
 </html>

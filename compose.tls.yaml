@@ -1,0 +1,30 @@
+# TLS front, for the case where nothing is already terminating HTTPS on this box.
+#
+#   docker compose -f compose.yaml -f compose.tls.yaml up -d
+#
+# Caddy gets a certificate for $APP_DOMAIN from Let's Encrypt on first start and
+# renews it by itself; there is no certbot, cron job or renewal hook to forget.
+# Skip this file entirely if you already run Traefik, nginx-proxy or similar --
+# point that at post-run:80 on the shared `web` network instead, and see
+# deploy/README.md for the Traefik labels.
+services:
+  caddy:
+    image: caddy:alpine
+    container_name: post-run-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"       # http-01 challenge + the redirect to https
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data      # certificates live here -- keep this volume or you
+      - caddy_config:/config  # will re-issue on every recreate and hit rate limits
+    depends_on: [post-run]
+    networks: [web]
+
+volumes:
+  caddy_data:
+  caddy_config:
