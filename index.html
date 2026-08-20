@@ -334,6 +334,15 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
 </section>
 <section><h2>Mobility</h2><div id="mobility"></div></section>
 
+<section><h2>Recovery</h2><div id="recovery"></div>
+  <p class="note">Optional, and deliberately outside the session above — run it on
+  its own, after the mobility, while you are still warm. Cold damps the
+  inflammatory signal that <b>drives</b> adaptation, so it is a trade: take it when
+  the next run matters more than this one's gains — race week, back-to-back hard
+  days, after a test. Skip the cold and take a plain warm bath after the sessions
+  you want to adapt to: threshold, VO₂max, a long run with tempo in it.</p>
+</section>
+
 <section>
   <h2>Progress</h2>
   <div class="panel" id="progress"></div>
@@ -539,6 +548,34 @@ var MOBILITY = [
   {n:"Donkey kicks",  sub:"",                          d:null, auto:45,         dose:function(){return "as prescribed"}, sides:1, id:"CwjkF0994qo"},
   {n:"Foam rolling",  sub:"or other stretching",       d:null, auto:60,         dose:function(){return "as needed"},     sides:1, id:"JMMApNkdn7c"}
 ];
+
+/* Contrast bathing. Warm long enough to actually warm through, cold short enough
+   to stay in honestly, four cycles, ending cold.
+   The swap phases are the walk between bath and shower. Without them the cue to
+   change lands while you are still climbing out of the water, and every cycle
+   runs a few seconds short of what it claims. */
+var BATH = { warm:180, cold:60, swap:10, cycles:4 };
+var RECOVERY = [
+  { n:"Contrast bath", sub:"warm 38-40°C · cold 12-15°C", d:null, auto:null, sides:1,
+    /* solo: it belongs after the session, in a different room, and it is longer
+       than everything above it put together. Chaining it into "run the whole
+       session" would leave you standing in the bathroom watching a timer you
+       never asked for. */
+    solo:true,
+    dose:function(){ return BATH.cycles + " × " + (BATH.warm/60) + "min warm / " + (BATH.cold/60) + "min cold" },
+    total:function(){ return BATH.cycles * (BATH.warm + BATH.cold) + (BATH.cycles * 2 - 1) * BATH.swap },
+    phases:function(){
+      var out = [], i;
+      for (i = 0; i < BATH.cycles; i++){
+        if (i) out.push({ label:"Into the warm", s:BATH.swap, kind:"switch" });
+        out.push({ label:"Warm", s:BATH.warm });
+        out.push({ label:"Into the cold", s:BATH.swap, kind:"switch" });
+        out.push({ label:"Cold", s:BATH.cold });
+      }
+      return out;
+    }
+  }
+];
 var ALL = [], seq = 0;
 var LABEL = { todo:"To do", doing:"Doing", done:"Done" };
 var NEXT  = { todo:"doing", doing:"done", done:"todo" };
@@ -623,7 +660,8 @@ function build(x, host){
       '<button class="check"><span class="state">To do</span></button>' +
     '</div>' +
     '<div class="acts">' +
-      (x.d  ? '<button class="hold">▶ Hold ' + x.d() + 's</button>' : '') +
+      (x.d      ? '<button class="hold">▶ Hold ' + x.d() + 's</button>' :
+       x.phases ? '<button class="hold">▶ Start</button>' : '') +
       (x.id ? '<button class="watch">Show me</button>' : '') +
       (x.id ? '<a href="https://www.youtube.com/watch?v=' + x.id + '" target="_blank" rel="noopener">YouTube ↗</a>' : '') +
     '</div>' +
@@ -695,6 +733,7 @@ dressPage();
 solveStates();
 PLANKS.forEach(function(x){ build(x, document.getElementById("planks")) });
 MOBILITY.forEach(function(x){ build(x, document.getElementById("mobility")) });
+RECOVERY.forEach(function(x){ build(x, document.getElementById("recovery")) });
 
 /* legend, because colour now carries meaning */
 var leg = document.getElementById("legend");
@@ -720,7 +759,12 @@ function tally(){
 }
 function estimate(){
   var s = 0;
-  ALL.forEach(function(el){ var x = el._x; s += x.d ? x.d() * x.sides : 60 });
+  /* solo items are not in the session, so they are not in its estimate either */
+  ALL.forEach(function(el){
+    var x = el._x;
+    if (x.solo) return;
+    s += x.total ? x.total() : x.d ? x.d() * x.sides : 60;
+  });
   return Math.round(s / 60);
 }
 function refresh(){
@@ -798,7 +842,14 @@ function holdScreen(on){
 /* ---- build phases ---- */
 function phasesFor(el){
   var x = el._x, hold = x.d ? x.d() : x.auto, out = [];
-  if (x.sides === 2){
+  /* An item may spell its own phases out rather than being one hold, or two of
+     them with a switch between. The bath is four cycles of two temperatures. */
+  if (x.phases){
+    out = x.phases().map(function(p){
+      return { card:el, label:p.label, s:p.s, kind:p.kind || "hold" };
+    });
+  }
+  else if (x.sides === 2){
     out.push({ card:el, label:"Left side",    s:hold, kind:"hold" });
     out.push({ card:el, label:"Switch sides", s:5,    kind:"switch" });
     out.push({ card:el, label:"Right side",   s:hold, kind:"hold" });
@@ -811,7 +862,7 @@ function phasesFor(el){
 function sessionQueue(){
   var q = [];
   ALL.forEach(function(el, n){
-    if (el.dataset.state === "done") return;
+    if (el.dataset.state === "done" || el._x.solo) return;
     q.push({ card:el, label:"Get ready", s: n === 0 ? 5 : 8, kind:"prep" });
     q = q.concat(phasesFor(el));
   });
@@ -984,7 +1035,7 @@ function save(){
 function today(){ return new Date().toISOString().slice(0, 10) }
 function record(el){
   var x = el._x, now = new Date();
-  var secs = (x.d ? x.d() : x.auto || 0) * (x.sides || 1);
+  var secs = x.total ? x.total() : (x.d ? x.d() : x.auto || 0) * (x.sides || 1);
   var last = DB.log[DB.log.length - 1];
   /* toggling a card off and on again should not double-count */
   if (last && last.n === x.n && (now - new Date(last.at)) < 60000) return;
