@@ -1,5 +1,10 @@
 # Post-Run — install on your phone
 
+The backdrop photograph is by [Pierre-Antoine FRANCK on
+Unsplash](https://unsplash.com/photos/runners-in-a-race-with-motion-blur-OpDIYfAb4WQ),
+free to use under the Unsplash License. Attribution is not required by that
+licence; it is here because it costs nothing.
+
 Two ways. Start with A; it takes about a minute and needs nothing installed.
 
 ---

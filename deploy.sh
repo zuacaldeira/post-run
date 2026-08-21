@@ -6,14 +6,14 @@
 #
 #   ./deploy.sh
 #
-# --delete is deliberate: the target holds nothing but these files, so a rename
-# should remove the old name rather than leave it served forever. Only the app's
-# own files are listed, so the repo's git history, scripts and docs stay here.
+# No --delete. It only removes extraneous files when rsync is mirroring a
+# directory, and this passes a list of individual files, so it never deleted
+# anything -- which was discovered when bg.mp4 stayed on the server after the
+# backdrop stopped using it. A file dropped from the list below has to be
+# removed from the web root by hand.
 #
-# plan.json is the exception and has to be excluded by name. It is written on the
-# server by tools/stryd/sync.py, so it is exactly the "extraneous" file --delete
-# exists to remove -- and deploying the app would otherwise throw away the plan
-# every time.
+# That also means plan.json was never at risk: it is written on the server by
+# tools/stryd/sync.py and no deploy was ever going to remove it.
 set -euo pipefail
 
 HOST="${POSTRUN_HOST:-root@217.154.2.230}"
@@ -21,14 +21,14 @@ ROOT="/var/www/postrun.zuacaldeira.com"
 
 FILES=(index.html sw.js manifest.webmanifest
        icon-192.png icon-512.png icon-maskable-512.png
-       poster.jpg bg.mp4 chroma-js-LICENSE.txt)
+       bg.jpg chroma-js-LICENSE.txt)
 
 for f in "${FILES[@]}"; do
   [[ -f "$f" ]] || { echo "missing: $f" >&2; exit 1; }
 done
 
 ssh "$HOST" "mkdir -p $ROOT"
-rsync -av --delete --exclude=plan.json --chmod=F644 "${FILES[@]}" "$HOST:$ROOT/"
+rsync -av --chmod=F644 "${FILES[@]}" "$HOST:$ROOT/"
 ssh "$HOST" "chown -R www-data:www-data $ROOT"
 
 # index.html and sw.js are served no-cache, so a reload picks the new build up;

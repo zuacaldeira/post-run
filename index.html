@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{ --in-oklab: ; --pane:rgba(255,255,255,.62); --over-solid:#7B5CFF; --paper:#F5F2FF; --ink:#1B1440; --ink-2:#6C6392;
+:root{ --in-oklab: ; --pane:rgba(255,255,255,.62); --over-solid:#7B5CFF; --paper:#F5F2FF; --ink:#1B1440; --ink-2:#5C557D;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif; }
 @supports (background:linear-gradient(in oklab,white,black)){ :root{ --in-oklab:in oklab } }
 *{box-sizing:border-box}
@@ -22,13 +22,18 @@
   pointer-events:none;background:var(--paper)}
 #scrim{position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:linear-gradient(180deg var(--in-oklab),
-    rgba(245,242,255,.78) 0%,
-    rgba(245,242,255,.62) 34%,
-    rgba(245,242,255,.60) 100%)}
+    rgba(245,242,255,.84) 0%,
+    rgba(245,242,255,.87) 34%,
+    rgba(245,242,255,.88) 100%)}
 @media (prefers-reduced-motion:reduce){ #bg{display:none} #scrim{background:var(--paper)} }
 @media (prefers-reduced-transparency:reduce){ #bg{display:none} #scrim{background:var(--paper)} }
 @media (forced-colors:active){ #bg{display:none} #scrim{background:Canvas} }
-html,body{margin:0;color:var(--ink);font-family:var(--sans);background:var(--paper)}
+/* The paper goes on html alone. With it on body as well, body's own background
+   painted over #bg -- a negative z-index child paints before an in-flow
+   parent's background -- so the backdrop below has never actually been on
+   screen. */
+html{background:var(--paper)}
+html,body{margin:0;color:var(--ink);font-family:var(--sans)}
 body{padding:24px 16px calc(40px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;
   -webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;
   background-attachment:fixed}
@@ -409,9 +414,7 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
 </head>
 <body>
 
-<video id="bg" autoplay muted loop playsinline preload="auto" poster="poster.jpg" aria-hidden="true" tabindex="-1">
-  <source src="bg.mp4" type="video/mp4">
-</video>
+<img id="bg" src="bg.jpg" alt="" aria-hidden="true">
 <div id="scrim" aria-hidden="true"></div>
 
 <div class="topbar">
