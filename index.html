@@ -437,11 +437,12 @@ add a little every couple of weeks.</p>
   <h2 class="pht"><span class="t">Pre-run</span><span class="s">before you go out</span></h2>
   <div id="pre-groups"></div>
 
-  <p class="note">Whatever Stryd schedules as pre-run work for today. The warm-up
-  is not here: it is written into the run's own prescription — ten minutes easy, then
-  accelerations — which is something you do while running, not before you leave. It
-  sits behind the <b>i</b> on the run card. Each session keeps its prescription too,
-  and a card only states a dose it could actually read.</p>
+  <p class="note">Whatever Stryd schedules as pre-run work for this day. It keeps its
+  own calendar rather than following the runs — here it lands on Mondays and Fridays,
+  which is why drills turn up on rest days and why the long runs have none. The warm-up
+  is not here either: that is written into the run's own prescription — ten minutes
+  easy, then accelerations — which you do while running, not before you leave, and it
+  sits behind the <b>i</b> on the run card.</p>
 </section>
 
 <section class="ph" id="ph-run" data-phase="run">
@@ -1265,6 +1266,12 @@ function renderPlan(){
     { weekday:"long", day:"numeric", month:"long" });
   var sub = document.querySelector("#ph-run .pht .s");
   if (sub) sub.textContent = VIEW ? "from the Stryd plan" : "today, from the Stryd plan";
+  /* Stryd schedules its supplemental work on its own days -- Mondays and
+     Fridays here -- not on the days there is a run. So "before you go out" is
+     wrong on the eleven rest days that still carry drills, and the heading says
+     what is actually true instead. */
+  var preSub = document.querySelector("#ph-pre .pht .s");
+  if (preSub) preSub.textContent = w ? "before you go out" : "no run today — whenever suits";
   var back = document.getElementById("todayBtn");
   if (back){
     back.hidden = !VIEW;
