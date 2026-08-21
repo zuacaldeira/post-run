@@ -40,6 +40,27 @@ It expires. When it does, repeat — nothing here can renew it, and nothing here
 should try, because renewing means holding the password. `sync.py` says so
 plainly rather than failing with a 401.
 
+### The short way
+
+From the repo, on a machine that can reach the server:
+
+```sh
+./token <jwt>        # or ./token  to be prompted, or ./token -c  from the clipboard
+```
+
+It writes the token, waits for the path unit to fire the sync, and reports back:
+who the token is for, how long it lasts, whether the sync ran, and what
+plan.json now holds.
+
+`./token -b` prints a bookmarklet. Clicked on stryd.com while signed in, it
+finds the JWT among whatever keys Stryd is using and copies it, so the whole
+refresh is a click and `./token -c` -- no DevTools, no paste, and the token
+never reaches a shell history.
+
+What is deliberately *not* automated is the sign-in and the reading of the token
+by anything that would carry it somewhere else. A credential is worth the two
+seconds it costs to move by hand.
+
 Check what you placed without printing it:
 
 ```sh

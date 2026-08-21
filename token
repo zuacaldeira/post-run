@@ -4,6 +4,7 @@
 #   ./token eyJhbGciOi...          the token as an argument
 #   ./token                        paste it when asked, or pipe it in
 #   ./token -c                     take it from the clipboard
+#   ./token -b                     print a bookmarklet that copies it for you
 #
 # The sync starts by itself: a path unit on the server watches the token file,
 # so placing one is the whole job. Nothing else needs running.
@@ -36,6 +37,18 @@ case "${1:-}" in
       say "No clipboard tool found. Install wl-clipboard, or pass the token as an argument."
       exit 1
     fi ;;
+  -b|--bookmarklet)
+    # One click on stryd.com instead of digging through DevTools. Drag this to
+    # the bookmarks bar; it finds the JWT among whatever keys Stryd happens to
+    # use and puts it on the clipboard.
+    cat <<'BM'
+Make a bookmark with this as its URL, then click it while signed in to stryd.com:
+
+javascript:(function(){var t=Object.values(localStorage).find(function(v){return typeof v=='string'&&/^eyJ[\w-]+\.[\w-]+\./.test(v)});if(!t){alert('No Stryd token in local storage - are you signed in?');return}navigator.clipboard.writeText(t).then(function(){alert('Stryd token copied. Now run:  ./token -c')},function(){prompt('Copy this, then run ./token',t)})})()
+
+Then:  ./token -c        (needs wl-clipboard on this machine)
+BM
+    exit 0 ;;
   "")
     if [ -t 0 ]; then say "Paste the JWT, then press Enter and Ctrl-D:"; fi
     token=$(cat) ;;
