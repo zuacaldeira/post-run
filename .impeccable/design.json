@@ -1,0 +1,720 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-21T00:00:00Z",
+  "title": "Design System: Post-Run",
+  "extensions": {
+    "colorMeta": {
+      "first-light": {
+        "role": "neutral",
+        "displayName": "First Light",
+        "purpose": "The paper. Set on html alone, never on body.",
+        "canonical": "oklch(96.7% 0.0175 296.64)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0175 296.64)",
+          "oklch(26.4% 0.0175 296.64)",
+          "oklch(37.9% 0.0175 296.64)",
+          "oklch(49.3% 0.0175 296.64)",
+          "oklch(60.7% 0.0175 296.64)",
+          "oklch(72.1% 0.0175 296.64)",
+          "oklch(83.6% 0.0175 296.64)",
+          "oklch(95.0% 0.0175 296.64)"
+        ]
+      },
+      "midnight-violet": {
+        "role": "neutral",
+        "displayName": "Midnight Violet",
+        "purpose": "The ink, and the foreground on every light surface.",
+        "canonical": "oklch(23.0% 0.0802 285.49)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0802 285.49)",
+          "oklch(26.4% 0.0802 285.49)",
+          "oklch(37.9% 0.0802 285.49)",
+          "oklch(49.3% 0.0802 285.49)",
+          "oklch(60.7% 0.0802 285.49)",
+          "oklch(72.1% 0.0802 285.49)",
+          "oklch(83.6% 0.0802 285.49)",
+          "oklch(95.0% 0.0802 285.49)"
+        ]
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Resolved Secondary Ink",
+        "purpose": "inkFor(ink, worst-case, 4.5) — derived, not chosen.",
+        "canonical": "oklch(28.8% 0.0729 290.02)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0729 290.02)",
+          "oklch(26.4% 0.0729 290.02)",
+          "oklch(37.9% 0.0729 290.02)",
+          "oklch(49.3% 0.0729 290.02)",
+          "oklch(60.7% 0.0729 290.02)",
+          "oklch(72.1% 0.0729 290.02)",
+          "oklch(83.6% 0.0729 290.02)",
+          "oklch(95.0% 0.0729 290.02)"
+        ]
+      },
+      "frosted-heather": {
+        "role": "primary",
+        "displayName": "Frosted Heather",
+        "purpose": "Seed for the todo state. Survives only in the rim and badge.",
+        "canonical": "oklch(64.1% 0.0625 291.07)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0625 291.07)",
+          "oklch(26.4% 0.0625 291.07)",
+          "oklch(37.9% 0.0625 291.07)",
+          "oklch(49.3% 0.0625 291.07)",
+          "oklch(60.7% 0.0625 291.07)",
+          "oklch(72.1% 0.0625 291.07)",
+          "oklch(83.6% 0.0625 291.07)",
+          "oklch(95.0% 0.0625 291.07)"
+        ]
+      },
+      "frosted-heather-tint": {
+        "role": "primary",
+        "displayName": "Frosted Heather Tint",
+        "purpose": "tintOf() at L*94, chroma capped 26. What a resting card is actually made of.",
+        "canonical": "oklch(94.9% 0.0189 295.86)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0189 295.86)",
+          "oklch(26.4% 0.0189 295.86)",
+          "oklch(37.9% 0.0189 295.86)",
+          "oklch(49.3% 0.0189 295.86)",
+          "oklch(60.7% 0.0189 295.86)",
+          "oklch(72.1% 0.0189 295.86)",
+          "oklch(83.6% 0.0189 295.86)",
+          "oklch(95.0% 0.0189 295.86)"
+        ]
+      },
+      "signal-amber": {
+        "role": "primary",
+        "displayName": "Signal Amber",
+        "purpose": "The doing state. The one seed the solver leaves untouched — already 7.3:1 on ink.",
+        "canonical": "oklch(74.8% 0.1758 55.37)",
+        "tonalRamp": [
+          "oklch(15.0% 0.1758 55.37)",
+          "oklch(26.4% 0.1758 55.37)",
+          "oklch(37.9% 0.1758 55.37)",
+          "oklch(49.3% 0.1758 55.37)",
+          "oklch(60.7% 0.1758 55.37)",
+          "oklch(72.1% 0.1758 55.37)",
+          "oklch(83.6% 0.1758 55.37)",
+          "oklch(95.0% 0.1758 55.37)"
+        ]
+      },
+      "settled-green": {
+        "role": "primary",
+        "displayName": "Settled Green",
+        "purpose": "Seed for the done state. Never painted.",
+        "canonical": "oklch(69.6% 0.1488 162.43)",
+        "tonalRamp": [
+          "oklch(15.0% 0.1488 162.43)",
+          "oklch(26.4% 0.1488 162.43)",
+          "oklch(37.9% 0.1488 162.43)",
+          "oklch(49.3% 0.1488 162.43)",
+          "oklch(60.7% 0.1488 162.43)",
+          "oklch(72.1% 0.1488 162.43)",
+          "oklch(83.6% 0.1488 162.43)",
+          "oklch(95.0% 0.1488 162.43)"
+        ]
+      },
+      "settled-green-painted": {
+        "role": "primary",
+        "displayName": "Settled Green (painted)",
+        "purpose": "What fill() resolves the seed to so white clears 5.5:1. The surface you actually see.",
+        "canonical": "oklch(50.4% 0.1362 150.79)",
+        "tonalRamp": [
+          "oklch(15.0% 0.1362 150.79)",
+          "oklch(26.4% 0.1362 150.79)",
+          "oklch(37.9% 0.1362 150.79)",
+          "oklch(49.3% 0.1362 150.79)",
+          "oklch(60.7% 0.1362 150.79)",
+          "oklch(72.1% 0.1362 150.79)",
+          "oklch(83.6% 0.1362 150.79)",
+          "oklch(95.0% 0.1362 150.79)"
+        ]
+      },
+      "worst-case-backdrop": {
+        "role": "neutral",
+        "displayName": "Worst-Case Backdrop",
+        "purpose": "Pure black under a 60% scrim. Not paintable — it is what every contrast solve is run against.",
+        "canonical": "oklch(66.1% 0.0119 297.50)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0119 297.50)",
+          "oklch(26.4% 0.0119 297.50)",
+          "oklch(37.9% 0.0119 297.50)",
+          "oklch(49.3% 0.0119 297.50)",
+          "oklch(60.7% 0.0119 297.50)",
+          "oklch(72.1% 0.0119 297.50)",
+          "oklch(83.6% 0.0119 297.50)",
+          "oklch(95.0% 0.0119 297.50)"
+        ]
+      },
+      "session-violet": {
+        "role": "tertiary",
+        "displayName": "Session Violet",
+        "purpose": "Chart fallback anchor before the solver runs. The last trace of the original fixed palette.",
+        "canonical": "oklch(59.8% 0.2300 285.87)",
+        "tonalRamp": [
+          "oklch(15.0% 0.2300 285.87)",
+          "oklch(26.4% 0.2300 285.87)",
+          "oklch(37.9% 0.2300 285.87)",
+          "oklch(49.3% 0.2300 285.87)",
+          "oklch(60.7% 0.2300 285.87)",
+          "oklch(72.1% 0.2300 285.87)",
+          "oklch(83.6% 0.2300 285.87)",
+          "oklch(95.0% 0.2300 285.87)"
+        ]
+      },
+      "stale-red": {
+        "role": "tertiary",
+        "displayName": "Stale Red",
+        "purpose": "The plan-age line when the sync has expired. The only warning colour in the system.",
+        "canonical": "oklch(43.9% 0.1245 23.76)",
+        "tonalRamp": [
+          "oklch(15.0% 0.1245 23.76)",
+          "oklch(26.4% 0.1245 23.76)",
+          "oklch(37.9% 0.1245 23.76)",
+          "oklch(49.3% 0.1245 23.76)",
+          "oklch(60.7% 0.1245 23.76)",
+          "oklch(72.1% 0.1245 23.76)",
+          "oklch(83.6% 0.1245 23.76)",
+          "oklch(95.0% 0.1245 23.76)"
+        ]
+      },
+      "letterbox-black": {
+        "role": "tertiary",
+        "displayName": "Letterbox Black",
+        "purpose": "Behind YouTube frames, so a loading video is a violet void rather than a grey box.",
+        "canonical": "oklch(16.6% 0.0484 287.59)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0484 287.59)",
+          "oklch(26.4% 0.0484 287.59)",
+          "oklch(37.9% 0.0484 287.59)",
+          "oklch(49.3% 0.0484 287.59)",
+          "oklch(60.7% 0.0484 287.59)",
+          "oklch(72.1% 0.0484 287.59)",
+          "oklch(83.6% 0.0484 287.59)",
+          "oklch(95.0% 0.0484 287.59)"
+        ]
+      },
+      "read-paper": {
+        "role": "neutral",
+        "displayName": "Cool Paper",
+        "purpose": "The Read register ground.",
+        "canonical": "oklch(93.9% 0.0092 258.34)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0092 258.34)",
+          "oklch(26.4% 0.0092 258.34)",
+          "oklch(37.9% 0.0092 258.34)",
+          "oklch(49.3% 0.0092 258.34)",
+          "oklch(60.7% 0.0092 258.34)",
+          "oklch(72.1% 0.0092 258.34)",
+          "oklch(83.6% 0.0092 258.34)",
+          "oklch(95.0% 0.0092 258.34)"
+        ]
+      },
+      "read-card": {
+        "role": "neutral",
+        "displayName": "Card",
+        "purpose": "The single tonal step above paper. The whole depth vocabulary of the Read register.",
+        "canonical": "oklch(97.8% 0.0045 258.32)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0045 258.32)",
+          "oklch(26.4% 0.0045 258.32)",
+          "oklch(37.9% 0.0045 258.32)",
+          "oklch(49.3% 0.0045 258.32)",
+          "oklch(60.7% 0.0045 258.32)",
+          "oklch(72.1% 0.0045 258.32)",
+          "oklch(83.6% 0.0045 258.32)",
+          "oklch(95.0% 0.0045 258.32)"
+        ]
+      },
+      "read-rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "purpose": "Every hairline.",
+        "canonical": "oklch(86.7% 0.0193 255.54)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0193 255.54)",
+          "oklch(26.4% 0.0193 255.54)",
+          "oklch(37.9% 0.0193 255.54)",
+          "oklch(49.3% 0.0193 255.54)",
+          "oklch(60.7% 0.0193 255.54)",
+          "oklch(72.1% 0.0193 255.54)",
+          "oklch(83.6% 0.0193 255.54)",
+          "oklch(95.0% 0.0193 255.54)"
+        ]
+      },
+      "read-ink": {
+        "role": "neutral",
+        "displayName": "Print Ink",
+        "purpose": "Body text and the masthead rule.",
+        "canonical": "oklch(20.1% 0.0218 251.84)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0218 251.84)",
+          "oklch(26.4% 0.0218 251.84)",
+          "oklch(37.9% 0.0218 251.84)",
+          "oklch(49.3% 0.0218 251.84)",
+          "oklch(60.7% 0.0218 251.84)",
+          "oklch(72.1% 0.0218 251.84)",
+          "oklch(83.6% 0.0218 251.84)",
+          "oklch(95.0% 0.0218 251.84)"
+        ]
+      },
+      "read-ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "purpose": "Secondary text and legends.",
+        "canonical": "oklch(50.5% 0.0268 252.36)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0268 252.36)",
+          "oklch(26.4% 0.0268 252.36)",
+          "oklch(37.9% 0.0268 252.36)",
+          "oklch(49.3% 0.0268 252.36)",
+          "oklch(60.7% 0.0268 252.36)",
+          "oklch(72.1% 0.0268 252.36)",
+          "oklch(83.6% 0.0268 252.36)",
+          "oklch(95.0% 0.0268 252.36)"
+        ]
+      },
+      "read-ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "purpose": "Captions, week labels, axis, eyebrows. Raised from a 2.58:1 grey that looked right to a measured 4.59:1.",
+        "canonical": "oklch(52.0% 0.0206 253.46)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0206 253.46)",
+          "oklch(26.4% 0.0206 253.46)",
+          "oklch(37.9% 0.0206 253.46)",
+          "oklch(49.3% 0.0206 253.46)",
+          "oklch(60.7% 0.0206 253.46)",
+          "oklch(72.1% 0.0206 253.46)",
+          "oklch(83.6% 0.0206 253.46)",
+          "oklch(95.0% 0.0206 253.46)"
+        ]
+      },
+      "zone-easy": {
+        "role": "secondary",
+        "displayName": "Zone 1 — Easy",
+        "purpose": "Coolest band of the intensity ramp.",
+        "canonical": "oklch(71.7% 0.0362 249.69)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0362 249.69)",
+          "oklch(26.4% 0.0362 249.69)",
+          "oklch(37.9% 0.0362 249.69)",
+          "oklch(49.3% 0.0362 249.69)",
+          "oklch(60.7% 0.0362 249.69)",
+          "oklch(72.1% 0.0362 249.69)",
+          "oklch(83.6% 0.0362 249.69)",
+          "oklch(95.0% 0.0362 249.69)"
+        ]
+      },
+      "zone-steady": {
+        "role": "secondary",
+        "displayName": "Zone 2 — Steady",
+        "purpose": "Still cool: an easy week stays quiet.",
+        "canonical": "oklch(60.5% 0.0745 246.68)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0745 246.68)",
+          "oklch(26.4% 0.0745 246.68)",
+          "oklch(37.9% 0.0745 246.68)",
+          "oklch(49.3% 0.0745 246.68)",
+          "oklch(60.7% 0.0745 246.68)",
+          "oklch(72.1% 0.0745 246.68)",
+          "oklch(83.6% 0.0745 246.68)",
+          "oklch(95.0% 0.0745 246.68)"
+        ]
+      },
+      "zone-tempo": {
+        "role": "secondary",
+        "displayName": "Zone 3 — Tempo",
+        "purpose": "First warm band.",
+        "canonical": "oklch(74.3% 0.1299 77.32)",
+        "tonalRamp": [
+          "oklch(15.0% 0.1299 77.32)",
+          "oklch(26.4% 0.1299 77.32)",
+          "oklch(37.9% 0.1299 77.32)",
+          "oklch(49.3% 0.1299 77.32)",
+          "oklch(60.7% 0.1299 77.32)",
+          "oklch(72.1% 0.1299 77.32)",
+          "oklch(83.6% 0.1299 77.32)",
+          "oklch(95.0% 0.1299 77.32)"
+        ]
+      },
+      "zone-threshold": {
+        "role": "secondary",
+        "displayName": "Zone 4 — Threshold",
+        "purpose": "Warm. Visible from across the room.",
+        "canonical": "oklch(64.7% 0.1626 44.36)",
+        "tonalRamp": [
+          "oklch(15.0% 0.1626 44.36)",
+          "oklch(26.4% 0.1626 44.36)",
+          "oklch(37.9% 0.1626 44.36)",
+          "oklch(49.3% 0.1626 44.36)",
+          "oklch(60.7% 0.1626 44.36)",
+          "oklch(72.1% 0.1626 44.36)",
+          "oklch(83.6% 0.1626 44.36)",
+          "oklch(95.0% 0.1626 44.36)"
+        ]
+      },
+      "zone-max": {
+        "role": "secondary",
+        "displayName": "Zone 5 — Max",
+        "purpose": "Hottest band. Only the top two zones are allowed to be warm.",
+        "canonical": "oklch(53.6% 0.1757 30.89)",
+        "tonalRamp": [
+          "oklch(15.0% 0.1757 30.89)",
+          "oklch(26.4% 0.1757 30.89)",
+          "oklch(37.9% 0.1757 30.89)",
+          "oklch(49.3% 0.1757 30.89)",
+          "oklch(60.7% 0.1757 30.89)",
+          "oklch(72.1% 0.1757 30.89)",
+          "oklch(83.6% 0.1757 30.89)",
+          "oklch(95.0% 0.1757 30.89)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Read-register masthead. Antonio 600, uppercase, on a 2px ink rule."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The selected day's title in the Read register."
+      },
+      "clock": {
+        "displayName": "Clock",
+        "purpose": "The session timer. Largest element on screen, always — it is read from the floor, mid-hold."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "An exercise name on a card."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Notes, verdicts and the prescription in Execute. Held to a 42ch measure."
+      },
+      "prescription": {
+        "displayName": "Prescription",
+        "purpose": "Stryd's own prose, quoted pre-wrap in mono. Never restyled."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Every section heading. h2 and h3 are visually identical by design."
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "Axis figures, week strips, eyebrows, step count."
+      }
+    },
+    "shadows": [
+      {
+        "name": "rest",
+        "value": "0 1px 0 rgba(255,255,255,.45) inset, 0 10px 26px -20px rgba(27,20,64,.6)",
+        "purpose": "A lit top edge and the faintest possible anchor to the page. The default for a glass card."
+      },
+      {
+        "name": "doing",
+        "value": "0 1px 0 rgba(255,255,255,.5) inset, 0 16px 34px -18px var(--solid)",
+        "purpose": "Tinted with the card's own amber. Paired with scale:1.015. Signals state, not height."
+      },
+      {
+        "name": "done",
+        "value": "0 1px 0 rgba(255,255,255,.22) inset, 0 12px 30px -20px var(--solid)",
+        "purpose": "Tinted green with a dimmer inset — a finished card recedes."
+      },
+      {
+        "name": "inset-rim",
+        "value": "0 0 0 1px rgba(255,255,255,.5) inset",
+        "purpose": "A one-pixel highlight standing in for a border on translucent panels, chips and pills."
+      },
+      {
+        "name": "session-bar",
+        "value": "0 -18px 40px -24px rgba(14,10,34,.8)",
+        "purpose": "Upward, separating the bar from the content it is deliberately not covering."
+      }
+    ],
+    "blurs": [
+      {
+        "name": "card",
+        "value": "blur(20px) saturate(1.8)",
+        "purpose": "Exercise cards."
+      },
+      {
+        "name": "panel",
+        "value": "blur(16px) saturate(1.6)",
+        "purpose": "Panels and the hold dial."
+      },
+      {
+        "name": "chip",
+        "value": "blur(14px) saturate(1.6)",
+        "purpose": "Chips and notes."
+      },
+      {
+        "name": "session-bar",
+        "value": "blur(26px) saturate(1.5)",
+        "purpose": "The heaviest blur in the system — the bar must stay legible over anything at all."
+      }
+    ],
+    "motion": [
+      {
+        "name": "flip",
+        "value": "transform .65s cubic-bezier(.2,.75,.2,1)",
+        "purpose": "The card face swap. Replaced outright, not slowed, under prefers-reduced-motion."
+      },
+      {
+        "name": "bar-enter",
+        "value": "transform .34s cubic-bezier(.2,.85,.25,1)",
+        "purpose": "The session bar rising from translateY(100%)."
+      },
+      {
+        "name": "block-rise",
+        "value": "transform .5s cubic-bezier(.2,.8,.3,1) backwards",
+        "purpose": "The Read block building itself once on arrival, from scaleY(.04)."
+      },
+      {
+        "name": "spotlight",
+        "value": "opacity .35s ease, filter .35s ease",
+        "purpose": "Everything that is not the active card receding toward the paper."
+      },
+      {
+        "name": "press",
+        "value": "transform .12s",
+        "purpose": "translateY(2px). The single interaction physic in the app — there is no hover-lift."
+      },
+      {
+        "name": "state-swap",
+        "value": "background .25s, box-shadow .3s, scale .2s",
+        "purpose": "A card changing state."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "* { transition: none !important }",
+        "purpose": "Global. Not a degradation — the flip and the block are re-authored as static states."
+      }
+    ],
+    "dimTokens": [
+      {
+        "name": "--dim-o",
+        "value": ".3",
+        "purpose": "Opacity of everything that is not the active card during a session."
+      },
+      {
+        "name": "--dim-s",
+        "value": "saturate(.5)",
+        "purpose": "Filter on the same."
+      },
+      {
+        "name": "--dim-bg-o",
+        "value": ".4",
+        "purpose": "The backdrop photograph calms with them."
+      },
+      {
+        "name": "--dim-bg-f",
+        "value": "saturate(.25)",
+        "purpose": "Filter on the backdrop."
+      },
+      {
+        "name": "forced-colors reset",
+        "value": "1 / none / 1 / none",
+        "purpose": "In forced colours the palette is the user's, and dimming it is not ours to do."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow-phone",
+        "value": "360px"
+      },
+      {
+        "name": "execute-column",
+        "value": "620px"
+      },
+      {
+        "name": "read-collapse",
+        "value": "900px"
+      },
+      {
+        "name": "read-max",
+        "value": "1440px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Exercise Card — Todo",
+      "kind": "card",
+      "refersTo": "card-exercise",
+      "description": "The resting state. Thin frosted glass so the backdrop reads through it; opacity is never raised to protect text, because the scrim already bounds how dark the backdrop can get.",
+      "html": "<div class=\"ds-ex\"><div class=\"ds-ex-hd\"><div class=\"ds-badge\">60s</div><div class=\"ds-ex-txt\"><div class=\"ds-nm\">Front plank</div><div class=\"ds-dose\">60 seconds</div></div><button class=\"ds-check\">Done</button></div><div class=\"ds-acts\"><button class=\"ds-hold\">Hold 60s</button><button class=\"ds-watch\">Watch</button></div></div>",
+      "css": ".ds-ex{position:relative;border-radius:26px;padding:16px;background:linear-gradient(152deg,rgba(247,245,252,.20) 0%,rgba(239,236,250,.34) 100%);-webkit-backdrop-filter:blur(20px) saturate(1.8);backdrop-filter:blur(20px) saturate(1.8);border:1px solid rgba(226,223,240,.85);box-shadow:0 1px 0 rgba(255,255,255,.45) inset,0 10px 26px -20px rgba(27,20,64,.6);transition:background .25s,box-shadow .3s,scale .2s;font-family:system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif}.ds-ex:hover,.ds-ex:focus-within{background:linear-gradient(152deg,#F7F5FC 0%,#EFECFA 100%)}.ds-ex-hd{display:flex;gap:13px;align-items:center}.ds-badge{flex:0 0 auto;width:44px;height:44px;border-radius:15px;background:#8C86B0;color:#1B1440;display:grid;place-items:center;font-weight:900;font-size:16px;letter-spacing:-.02em}.ds-ex-txt{flex:1;min-width:0}.ds-nm{font-size:19px;font-weight:900;letter-spacing:-.02em;line-height:1.15;color:#1A1836}.ds-dose{font-size:13px;font-weight:600;color:#3B3957;margin-top:3px}.ds-check{flex:0 0 auto;border:0;border-radius:99px;padding:8px 12px;background:rgba(255,255,255,.62);color:#5F5A81;cursor:pointer;font:900 11px/1 inherit;letter-spacing:.09em;text-transform:uppercase;box-shadow:0 0 0 1px rgba(255,255,255,.45) inset}.ds-acts{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.ds-acts button{border:0;border-radius:99px;padding:11px 17px;font:800 13px/1 inherit;cursor:pointer;background:rgba(255,255,255,.62);color:#5F5A81;box-shadow:0 0 0 1px rgba(255,255,255,.45) inset;transition:transform .12s}.ds-acts button:active{transform:translateY(2px)}.ds-ex :focus-visible{outline:3px solid #1B1440;outline-offset:3px}"
+    },
+    {
+      "name": "Exercise Card — Doing",
+      "kind": "card",
+      "refersTo": "card-exercise-doing",
+      "description": "The loudest thing on the page, and the only element allowed to hold amber. Stops being glass entirely during a session, because a translucent card would blur the darkened backdrop through itself and dim along with everything else.",
+      "html": "<div class=\"ds-ex-doing\"><div class=\"ds-ex-hd\"><div class=\"ds-badge-doing\">45s</div><div class=\"ds-ex-txt\"><div class=\"ds-nm-doing\">Side plank</div><div class=\"ds-dose-doing\">30 seconds each side</div></div><button class=\"ds-check-doing\">Done</button></div></div>",
+      "css": ".ds-ex-doing{border-radius:26px;padding:16px;background:radial-gradient(120% 80% at 12% 0%,rgba(255,255,255,.30) 0%,rgba(0,0,0,0) 55%),linear-gradient(142deg,#FFA24E 0%,#FF8A1F 55%,#D96A00 100%);border:1px solid rgba(176,95,0,.55);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 16px 34px -18px #FF8A1F;scale:1.015;font-family:system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif}.ds-ex-doing .ds-ex-hd{display:flex;gap:13px;align-items:center}.ds-badge-doing{flex:0 0 auto;width:44px;height:44px;border-radius:15px;background:rgba(255,255,255,.22);color:#1B1440;display:grid;place-items:center;font-weight:900;font-size:16px}.ds-nm-doing{font-size:19px;font-weight:900;letter-spacing:-.02em;line-height:1.15;color:#1B1440}.ds-dose-doing{font-size:13px;font-weight:600;color:#4A3A18;margin-top:3px}.ds-check-doing{border:0;border-radius:99px;padding:8px 12px;background:rgba(255,255,255,.22);color:#1B1440;cursor:pointer;font:900 11px/1 inherit;letter-spacing:.09em;text-transform:uppercase}.ds-check-doing:active{transform:translateY(2px)}"
+    },
+    {
+      "name": "Exercise Card — Done",
+      "kind": "card",
+      "refersTo": "card-exercise-done",
+      "description": "The seed green (#12B981) is never painted. fill() drives it to #007938 so white clears 5.5:1, leaving headroom for the sheen and the veils laid over it. The tick is generated by state, not added as a second icon.",
+      "html": "<div class=\"ds-ex-done\"><div class=\"ds-ex-hd\"><div class=\"ds-badge-done\">60s</div><div class=\"ds-ex-txt\"><div class=\"ds-nm-done\">Front plank</div><div class=\"ds-dose-done\">60 seconds</div></div><button class=\"ds-check-done\">Done</button></div></div>",
+      "css": ".ds-ex-done{border-radius:26px;padding:16px;background:radial-gradient(120% 80% at 12% 0%,rgba(255,255,255,.18) 0%,rgba(0,0,0,0) 55%),linear-gradient(142deg,#0E8F45 0%,#007938 45%,#004C22 100%);border:1px solid rgba(90,200,140,.5);box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 12px 30px -20px #007938;font-family:system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif}.ds-ex-done .ds-ex-hd{display:flex;gap:13px;align-items:center}.ds-badge-done{flex:0 0 auto;width:44px;height:44px;border-radius:15px;background:rgba(255,255,255,.10);color:#fff;display:grid;place-items:center;font-weight:900;font-size:16px}.ds-nm-done{font-size:19px;font-weight:900;letter-spacing:-.02em;line-height:1.15;color:#fff}.ds-dose-done{font-size:13px;font-weight:600;color:#BFE6CE;margin-top:3px}.ds-check-done{border:0;border-radius:99px;padding:8px 12px;background:rgba(255,255,255,.10);color:#fff;cursor:pointer;font:900 11px/1 inherit;letter-spacing:.09em;text-transform:uppercase}.ds-check-done::before{content:\"\\2713 \"}"
+    },
+    {
+      "name": "Phase Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "One phase on screen at a time, chosen from a scrolling strip rather than by folding four headers. A fold answers “what else is there” by making you open things; a strip answers it at a glance.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Before<span class=\"ds-tab-n\">4</span></button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"true\">Run<span class=\"ds-tab-n\">1</span></button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">After<span class=\"ds-tab-n\">9</span></button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Log</button></div>",
+      "css": ".ds-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;font-family:system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif}.ds-tabs::-webkit-scrollbar{display:none}.ds-tab{flex:none;display:flex;align-items:baseline;gap:7px;cursor:pointer;padding:10px 14px;border-radius:99px;border:1px solid transparent;background:rgba(255,255,255,.42);-webkit-backdrop-filter:blur(14px) saturate(1.6);backdrop-filter:blur(14px) saturate(1.6);color:#2B234C;font:900 13.5px/1 inherit;letter-spacing:-.01em;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}.ds-tab-n{font-size:11px;font-weight:800;opacity:.8}.ds-tab[aria-selected=\"true\"]{background:#1B1440;color:#fff;border-color:#1B1440}.ds-tab:focus-visible{outline:3px solid #1B1440;outline-offset:3px}"
+    },
+    {
+      "name": "Glass Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "The Execute register's container for anything that is not an exercise: the log, the device list, the data notes.",
+      "html": "<div class=\"ds-panel\"><h3>Recent</h3><ul class=\"ds-log\"><li><b>Front plank</b><span>60s</span></li><li><b>Side plank</b><span>2 &times; 30s</span></li><li><b>Calf stretch</b><span>30s</span></li></ul></div>",
+      "css": ".ds-panel{background:rgba(255,255,255,.42);border-radius:22px;padding:16px 17px;-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);box-shadow:0 0 0 1px rgba(255,255,255,.5) inset;font-family:system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif;color:#1B1440}.ds-panel h3{font-size:12px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#2B234C;margin:0 0 10px}.ds-log{list-style:none;margin:0;padding:0}.ds-log li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;font-size:13.5px;font-weight:600;border-top:1px solid rgba(27,20,64,.10)}.ds-log li:first-child{border-top:0}.ds-log b{font-weight:900}.ds-log span{color:#2B234C;font-weight:700;font-size:12px;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Session Bar",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The signature component. A slim fixed bar, not a sheet — what the shape buys is the screen behind it, so the exercise being timed stays visible while the timer runs. Progress is the bar's own top edge. Glyphs are inline SVG inheriting currentColor, never the pause/next characters, which render as colour emoji on many Androids.",
+      "html": "<div class=\"ds-over\"><span class=\"ds-ring\"></span><div class=\"ds-phase\">Holding</div><div class=\"ds-step\">Step 3 of 9</div><div class=\"ds-what\">Side plank &mdash; left</div><div class=\"ds-digits\">0:38</div><div class=\"ds-ctl\"><button aria-label=\"Pause\"><svg viewBox=\"0 0 16 16\"><rect x=\"3\" y=\"2\" width=\"3.5\" height=\"12\" rx=\"1\"/><rect x=\"9.5\" y=\"2\" width=\"3.5\" height=\"12\" rx=\"1\"/></svg></button><button class=\"ds-go\" aria-label=\"Next\"><svg viewBox=\"0 0 16 16\"><path d=\"M3 2l8 6-8 6z\"/><rect x=\"11.5\" y=\"2\" width=\"2.5\" height=\"12\" rx=\"1\"/></svg></button></div></div>",
+      "css": ".ds-over{position:relative;display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto auto;align-items:center;column-gap:10px;row-gap:1px;border-radius:18px 18px 0 0;padding:12px 14px 13px;color:#fff;background:linear-gradient(168deg,rgba(214,106,0,.9) 0%,rgba(255,138,31,.9) 34%,rgba(198,96,0,.9) 70%,rgba(140,68,0,.9) 100%);-webkit-backdrop-filter:blur(26px) saturate(1.5);backdrop-filter:blur(26px) saturate(1.5);box-shadow:0 -18px 40px -24px rgba(14,10,34,.8);font-family:system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif}.ds-ring{position:absolute;left:0;top:0;height:3px;background:rgba(255,255,255,.6);width:42%}.ds-phase{grid-row:1;grid-column:1;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-step{grid-row:1;grid-column:2;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-step::before{content:\"\\00B7\";opacity:.55;margin-right:6px}.ds-what{grid-row:2;grid-column:1/3;font-size:clamp(15px,4.2vw,18px);font-weight:900;letter-spacing:-.01em;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-digits{grid-row:1/3;grid-column:3;align-self:center;font-size:clamp(34px,10.5vw,46px);font-weight:900;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums;text-align:right}.ds-ctl{grid-row:1/3;grid-column:4;align-self:center;display:flex;gap:7px}.ds-ctl button{flex:none;width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:99px;border:1px solid rgba(255,255,255,.35);cursor:pointer;background:rgba(255,255,255,.20);color:inherit;transition:transform .12s}.ds-ctl button svg{width:16px;height:16px;fill:currentColor;display:block}.ds-ctl button.ds-go{background:#fff;color:#1B1440}.ds-ctl button:active{transform:translateY(2px)}"
+    },
+    {
+      "name": "Hold Dial",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The progressive plank duration. Five-second steps, 46px circular targets, a tabular readout that cannot reflow as the number changes.",
+      "html": "<div class=\"ds-dial\"><span class=\"ds-dial-lab\">Front plank hold<small>Side planks follow at half</small></span><button aria-label=\"Five seconds less\">&minus;</button><output>60s</output><button aria-label=\"Five seconds more\">+</button></div>",
+      "css": ".ds-dial{display:flex;align-items:center;gap:12px;border-radius:26px;padding:14px 14px 14px 20px;background:rgba(255,255,255,.42);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);border:1px solid rgba(255,255,255,.6);box-shadow:0 1px 0 rgba(255,255,255,.5) inset;color:#1B1440;font-family:system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif}.ds-dial-lab{flex:1;font-size:13px;font-weight:800;line-height:1.35}.ds-dial-lab small{display:block;font-weight:600;color:#2B234C;font-size:11.5px;margin-top:2px}.ds-dial button{width:46px;height:46px;border-radius:50%;border:0;color:#fff;background:#1B1440;font-size:24px;font-weight:700;line-height:1;cursor:pointer;transition:transform .12s}.ds-dial button:active{transform:translateY(2px)}.ds-dial output{font-size:28px;font-weight:900;min-width:66px;text-align:center;letter-spacing:-.03em;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Read Panel",
+      "kind": "card",
+      "refersTo": "panel-read",
+      "description": "The Read register's entire depth vocabulary: one tonal step above paper plus a 1px rule. No radius, no shadow.",
+      "html": "<div class=\"ds-rpanel\"><p class=\"ds-eyebrow\">Thursday 21 August</p><h2 class=\"ds-rtitle\">Threshold intervals</h2><div class=\"ds-figs\"><div><b>68</b><span>Minutes</span></div><div><b>214</b><span>Avg power</span></div><div><b>92</b><span>Load</span></div></div></div>",
+      "css": ".ds-rpanel{background:#F6F8FB;border:1px solid #CBD4E0;padding:22px 24px;color:#0F1720;font-family:\"IBM Plex Sans\",system-ui,sans-serif}.ds-eyebrow{font-family:\"IBM Plex Mono\",ui-monospace,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#616A75;margin:0 0 8px}.ds-rtitle{font-family:Antonio,system-ui,sans-serif;font-size:clamp(26px,3vw,38px);line-height:1;text-transform:uppercase;margin:0 0 14px;letter-spacing:.01em;font-weight:600}.ds-figs{display:flex;gap:22px;flex-wrap:wrap}.ds-figs div{font-family:\"IBM Plex Mono\",ui-monospace,monospace}.ds-figs b{display:block;font-size:22px;font-weight:500;letter-spacing:-.01em}.ds-figs span{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#616A75}"
+    },
+    {
+      "name": "The Block",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Six weeks of prescribed training as one row of columns: height is the day's load, the stacked fill is where that load was spent on the intensity ramp, a rest day is a dotted baseline rather than a gap. Dashed gridlines carry the scale, because a shape without a scale is decoration.",
+      "html": "<div class=\"ds-block\"><button class=\"ds-day\"><span class=\"ds-stack\"><i style=\"height:60%;background:#93A6BA\"></i><i style=\"height:40%;background:#5C86AC\"></i></span></button><button class=\"ds-day\"><span class=\"ds-stack\"><i style=\"height:100%;background:#93A6BA\"></i></span></button><button class=\"ds-day ds-rest\"><span class=\"ds-stack\"></span></button><button class=\"ds-day ds-on\"><span class=\"ds-stack\"><i style=\"height:45%;background:#93A6BA\"></i><i style=\"height:20%;background:#D9A03F\"></i><i style=\"height:35%;background:#DC672C\"></i></span></button><button class=\"ds-day\"><span class=\"ds-stack\"><i style=\"height:70%;background:#93A6BA\"></i><i style=\"height:30%;background:#BE3624\"></i></span></button><button class=\"ds-day ds-rest\"><span class=\"ds-stack\"></span></button><button class=\"ds-day\"><span class=\"ds-stack\"><i style=\"height:100%;background:#93A6BA\"></i></span></button></div>",
+      "css": ".ds-block{display:flex;align-items:flex-end;gap:2px;height:150px;border-bottom:1px solid #0F1720;background:#E7EBF1;padding:8px 8px 0}.ds-day{flex:1 1 0;min-width:0;position:relative;display:flex;flex-direction:column;justify-content:flex-end;height:100%;background:none;border:0;padding:0;cursor:pointer}.ds-day .ds-stack{display:flex;flex-direction:column-reverse;width:100%;overflow:hidden;height:72%}.ds-day .ds-stack i{display:block}.ds-day:nth-child(2) .ds-stack{height:38%}.ds-day:nth-child(4) .ds-stack{height:96%}.ds-day:nth-child(5) .ds-stack{height:64%}.ds-day:nth-child(7) .ds-stack{height:88%}.ds-day.ds-rest .ds-stack{border-bottom:2px dotted #616A75;height:3px}.ds-day:hover .ds-stack{filter:brightness(1.06)}.ds-day.ds-on::after{content:\"\";position:absolute;inset:-4px -3px -1px;border:1.5px solid #0F1720;border-bottom-width:3px;pointer-events:none}.ds-day:focus-visible{outline:2px solid #0F1720;outline-offset:3px}"
+    },
+    {
+      "name": "Intensity Legend",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "The Read register's key. Cool through hot, only the top two bands warm, so a hard day is visible from across the room.",
+      "html": "<div class=\"ds-legend\"><span><i style=\"background:#93A6BA\"></i>Easy</span><span><i style=\"background:#5C86AC\"></i>Steady</span><span><i style=\"background:#D9A03F\"></i>Tempo</span><span><i style=\"background:#DC672C\"></i>Threshold</span><span><i style=\"background:#BE3624\"></i>Max</span></div>",
+      "css": ".ds-legend{display:flex;gap:14px;flex-wrap:wrap;font-family:\"IBM Plex Mono\",ui-monospace,monospace;font-size:10.5px;color:#5A6674;background:#E7EBF1;padding:10px}.ds-legend span{display:flex;align-items:center;gap:6px}.ds-legend i{width:9px;height:9px;display:block}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Solved Surface",
+    "overview": "Nothing in the Execute register is picked by eye. The palette is a seed of five authored colors and a set of solvers that derive every surface, rim, label and veil from them at boot, each one proven against the worst case the backdrop can produce — a pure black video frame under the thinnest part of the scrim. The identity of this system is that rigour. A card is amber because a movement is being done, and it is that amber because that is the lightest amber which still carries Midnight Violet at 7:1. The look is a consequence of the constraint, not a decoration applied over it.\n\nThe system runs in two deliberate registers, and they are allowed to look unrelated because they answer different questions in different rooms. Execute (index.html) is a phone held in a wet hand immediately after a run: glass panes float over a photograph, corners are generous (26px), type is heavy and short, and color carries exactly one meaning — what state a movement is in. Read (web/index.html) is a desk and a training block seen whole: ink on cool paper, zero radius, hairline rules, Antonio over IBM Plex, and color carries exactly one meaning — how hard the effort is.\n\nWhat binds them is method, not appearance: contrast is solved rather than guessed (the Read register raises a caption grey from a measured 2.58:1 to 4.59:1 for exactly the same reason the Execute register runs a solver); color means one thing at a time; and every motion, transparency and forced-color preference is honoured rather than assumed.",
+    "keyCharacteristics": [
+      "Two registers, one method — glass and runtime solving to execute, ink and print to read.",
+      "Color is a state channel, never an identity or a decoration.",
+      "Contrast is computed against a paranoid worst case, never eyeballed.",
+      "Depth reports state; it does not simulate height.",
+      "Every reduced-motion, reduced-transparency and forced-colors path is a designed state, not a fallback.",
+      "Legibility at arm's length, from the floor, mid-hold, wins every tie."
+    ],
+    "rules": [
+      {
+        "name": "The One Meaning Rule",
+        "body": "Within a register, hue answers exactly one question. In Execute that question is “what state is this movement in”; in Read it is “how hard is this”. A color introduced to distinguish, brand, or enliven anything is a defect, not a variation.",
+        "section": "colors"
+      },
+      {
+        "name": "The Worst-Case Rule",
+        "body": "No foreground colour is authored. Every one is derived by solver (inkFor, fade, fill) against Worst-Case Backdrop, not against the colour a surface appears to be. Adding a hand-picked hex to a glass surface bypasses the only thing keeping the app legible over arbitrary footage.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quantised Check Rule",
+        "body": "Contrast is validated on the rounded 8-bit hex, never on the float. Rounding costs about 0.01 and was landing values at 4.4999 against a 4.5 target.",
+        "section": "colors"
+      },
+      {
+        "name": "The Floor-Read Rule",
+        "body": "The running clock is read from the floor, mid-hold, a couple of feet away. It is the one element allowed to consume height, and nothing may grow past it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight-Not-Size Rule",
+        "body": "Execute establishes hierarchy with weight (900 against 500) and tracking, not with a type scale. There are only four real sizes on a card — 19, 13.5, 12, 11 — and adding a fifth flattens the three that matter.",
+        "section": "typography"
+      },
+      {
+        "name": "The Ellipsis Rule",
+        "body": "Single-line elements in the session bar truncate; they never wrap. A long exercise name must not grow the bar and push the screen behind it out of view.",
+        "section": "typography"
+      },
+      {
+        "name": "The 620 Rule",
+        "body": "The Execute column never exceeds 620px, on any viewport. The flipped card's minimum height is derived from that number, so widening the column silently breaks the video frame — and where container queries are available the card measures itself with 100cqw instead of trusting the constant.",
+        "section": "layout"
+      },
+      {
+        "name": "The One Phase Rule",
+        "body": "Exactly one phase section is displayed at a time. Two open sections is not a denser layout, it is a lost tab strip.",
+        "section": "layout"
+      },
+      {
+        "name": "Shadow Is State, Not Height",
+        "body": "Surfaces are flat at rest. A shadow appears because a movement is being done or has been completed, and it is tinted with that state's own colour. A shadow added to signal importance, hierarchy, or hoverability is wrong here.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Spotlight Rule",
+        "body": "While a session runs, everything that is not the active card recedes toward the paper and the backdrop photograph calms with them. Dimming is done element by element, never with an overlay — these cards are glass, and a scrim laid behind them would be sampled by their own backdrop-filter, darkening the one card the spotlight exists to keep lit. Under forced-colors the dim tokens reset: the palette is the user's, and dimming it is not ours to do.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Two-Radius Rule",
+        "body": "A surface is either a 26px glass card or a 0px printed panel. Nothing in this system has an 8px corner. Choosing a radius means choosing a register.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Pill Rule",
+        "body": "If it can be pressed and it holds a word, it is a 99px pill. If it holds a glyph, it is a circle. Rectangular buttons exist only in the end-of-session prompt row, where the words would not fit a 34px circle.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do derive every foreground from a solver against Worst-Case Backdrop (#939199). inkFor for text on glass, fade for a secondary tone, fill for a surface that must carry a known foreground.",
+      "Do keep hue meaning one thing per register: state in Execute, intensity in Read.",
+      "Do tint state shadows with the surface's own solid (var(--solid)), never with black.",
+      "Do press with translateY(2px) over 120ms — the single interaction physic in the app.",
+      "Do write every prefers-reduced-motion, prefers-reduced-transparency and forced-colors branch as a designed state. Glass has no meaning in forced colours; those branches replace it with Canvas plus a CanvasText border, and mark active and done cards with Highlight and LinkText borders instead of fills.",
+      "Do ship a @supports not (backdrop-filter) path that falls back to opaque panels.",
+      "Do quote Stryd's prescription with pre-wrap and leave its own formatting intact.",
+      "Do keep small Read-register text at or above 4.59:1 — the measured value, not the one that looks right."
+    ],
+    "donts": [
+      "Don't author a foreground hex on a glass surface. It bypasses the only thing keeping the app legible over arbitrary footage.",
+      "Don't colour anything by identity. Nine cards must never mean nine hues.",
+      "Don't introduce a dark theme, a neon accent, or a carbon-fibre texture. This is a light interface on pale paper; dimming during a session recedes toward the paper, and darkening it would invert the whole app for the length of a hold.",
+      "Don't add streaks, badges, confetti, closing rings or congratulatory copy. The app reports what happened.",
+      "Don't use an 8px radius. Pick a register.",
+      "Don't put a background on body — it paints over the negative-z-index backdrop.",
+      "Don't dim with an overlay. Glass samples what is behind it, so an overlay darkens the very card the spotlight exists to keep lit.",
+      "Don't let anything on the session bar wrap, or grow past the clock.",
+      "Don't add a hover-lift, a second press physic, or a shadow that signals importance rather than state.",
+      "Don't widen the Execute column past 620px without moving the flipped card's height derivation with it."
+    ]
+  }
+}
