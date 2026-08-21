@@ -91,7 +91,15 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
   letter-spacing:-.01em;white-space:nowrap;
   transition:background .2s,color .2s,border-color .2s}
 .tab .n{font-size:11px;font-weight:800;opacity:.8}
-.tab.gear{margin-left:auto;padding:10px 12px;font-size:15px}
+.topbar{display:flex;align-items:center;gap:12px}
+/* Settings is not part of the day, so it sits above the day rather than among
+   its phases -- and the strip gets its full width back for four tabs that only
+   just fit. */
+.gearbtn{margin-left:auto;flex:none;width:38px;height:38px;border-radius:99px;cursor:pointer;
+  border:1px solid var(--rim);background:var(--pane);color:var(--ink-2);font-size:16px;
+  line-height:1;transition:background .2s,color .2s}
+.gearbtn[aria-expanded="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+#devPanels .panel{margin-bottom:10px}
 .tab[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
 .tab[aria-selected="true"] .n{opacity:.75}
 @media (forced-colors:active){
@@ -399,7 +407,10 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
 </video>
 <div id="scrim" aria-hidden="true"></div>
 
-<p class="hi" id="hi">Today</p>
+<div class="topbar">
+  <p class="hi" id="hi">Today</p>
+  <button class="gearbtn" id="tabSettings" type="button" aria-label="Settings" aria-expanded="false">⚙</button>
+</div>
 <h1>Core &amp;<br><span id="mark">Mobility</span></h1>
 <p class="lede">The day in three parts: the warm-up out of today's Stryd plan, the run
 itself, and the core and mobility session afterwards. Hold what you can hold well, then
@@ -412,9 +423,7 @@ add a little every couple of weeks.</p>
   <span class="chip" id="cTime">about <b>9 min</b></span>
 </div>
 
-<nav class="tabs" id="tabs" role="tablist" aria-label="Phases of the day">
-  <button class="tab gear" id="tabSettings" type="button" aria-label="Settings">⚙</button>
-</nav>
+<nav class="tabs" id="tabs" role="tablist" aria-label="Phases of the day"></nav>
 
 <section class="ph" id="ph-pre" data-phase="pre">
   <h2 class="pht"><span class="t">Pre-run</span><span class="s">before you go out</span></h2>
@@ -454,15 +463,16 @@ add a little every couple of weeks.</p>
 </section>
 
 <section class="ph" id="ph-settings" data-phase="settings">
-  <h2 class="pht"><span class="t">Settings</span><span class="s">the pod, and what it says</span></h2>
+  <h2 class="pht"><span class="t">Settings</span><span class="s">devices, and what they say</span></h2>
 
-  <h3>Stryd pod</h3>
-  <div class="panel" id="podPanel"></div>
-  <p class="note">The pod is read over Bluetooth, straight from the device — nothing
-  goes to Stryd and nothing leaves the phone. Chrome on Android can do this; Safari on
-  iOS cannot, and says so below rather than offering a button that does nothing.
-  Pairing has to start from a tap: the browser will not let a page go looking for
-  devices on its own.</p>
+  <h3>Devices</h3>
+  <div id="devPanels"></div>
+  <p class="note">Both are read over Bluetooth, straight from the device — nothing goes
+  to Stryd and nothing leaves the phone. The strap is paired by the standard heart rate
+  service, so any chest strap works, not only one brand. Chrome on Android can do this;
+  Safari on iOS cannot, and says so rather than offering a button that does nothing.
+  Pairing has to start from a tap: a page is not allowed to go looking for devices on
+  its own.</p>
 
   <h3>Data</h3>
   <div class="panel" id="dataPanel"></div>
@@ -841,158 +851,190 @@ function refreshPlan(){
   });
 }
 
-/* ---- the pod ------------------------------------------------------------
-   Read over Web Bluetooth, straight from the device. Nothing here talks to
-   Stryd's servers: this is the footpod's own GATT, so it works with no signal
-   and no token, which is the opposite of everything else in this file.
+/* ---- the devices --------------------------------------------------------
+   Read over Web Bluetooth, straight from each device's own GATT. Nothing here
+   talks to Stryd's servers: no token, no signal, which is the opposite of
+   everything else in this file that reads Stryd.
 
-   Stryd advertises the standard Running Speed and Cadence service, and reports
-   running power through the Cycling Power service -- there is no BLE service
-   for running power, so that is where every reader looks for it.
+   Two devices, one connector. They differ only in which services they carry,
+   so the difference lives in a table rather than in two copies of the same
+   connect-and-subscribe dance.
 
-   Chrome on Android implements Web Bluetooth. Safari on iOS does not, at all,
-   so the panel says why rather than offering a button that cannot work. */
+   Stryd advertises the standard Running Speed and Cadence service and reports
+   running power through Cycling Power -- there is no BLE service for running
+   power, so that is where every reader looks. A chest strap advertises Heart
+   Rate, which is a real service and means any strap works, not only one brand. */
 
-var RSC_SERVICE = 0x1814, RSC_MEASURE = 0x2A53,
-    PWR_SERVICE = 0x1818, PWR_MEASURE = 0x2A63,
-    BATT_SERVICE = 0x180F, BATT_LEVEL = 0x2A19;
+var SVC = { rsc:0x1814, rscMeasure:0x2A53, pwr:0x1818, pwrMeasure:0x2A63,
+            hr:0x180D, hrMeasure:0x2A37, batt:0x180F, battLevel:0x2A19 };
 
-var POD = { device:null, live:{}, state:"idle", error:"" };
+var LINKS = {
+  pod: { title:"Stryd pod", hint:"power, cadence, stride",
+         filters:[{ services:[SVC.rsc] }], optional:[SVC.pwr, SVC.batt],
+         subs:[[SVC.rsc, SVC.rscMeasure, "onRsc"], [SVC.pwr, SVC.pwrMeasure, "onPower"]],
+         state:"idle", live:{}, device:null, error:"" },
+  hr:  { title:"Heart rate strap", hint:"any strap, not only one brand",
+         filters:[{ services:[SVC.hr] }], optional:[SVC.batt],
+         subs:[[SVC.hr, SVC.hrMeasure, "onHeart"]],
+         state:"idle", live:{}, device:null, error:"" }
+};
 
-function podSupported(){
+var PARSERS = {};
+
+function btSupported(){
   return typeof navigator !== "undefined" && !!navigator.bluetooth;
 }
 
-function podSet(state, err){
-  POD.state = state;
-  POD.error = err || "";
+function linkSet(key, state, err){
+  LINKS[key].state = state;
+  LINKS[key].error = err || "";
   renderSettings();
 }
 
-function connectPod(){
-  if (!podSupported()) return;
-  podSet("asking");
-  navigator.bluetooth.requestDevice({
-    filters: [{ services:[RSC_SERVICE] }],
-    /* asked for up front because GATT refuses anything not declared here */
-    optionalServices: [PWR_SERVICE, BATT_SERVICE]
-  }).then(function(dev){
-    POD.device = dev;
-    dev.addEventListener("gattserverdisconnected", function(){ podSet("lost") });
-    podSet("connecting");
-    return dev.gatt.connect();
-  }).then(function(server){
-    DB.pod = POD.device.name || "Stryd";
-    save();
-    /* Each service is optional in practice: a pod in an odd firmware state can
-       expose one and not another, and losing cadence should not cost power. */
-    return Promise.all([
-      notify(server, RSC_SERVICE, RSC_MEASURE, onRsc),
-      notify(server, PWR_SERVICE, PWR_MEASURE, onPower),
-      readBattery(server)
-    ]);
-  }).then(function(){
-    podSet("live");
-  }).catch(function(err){
-    /* the user closing the chooser is a decision, not a failure */
-    podSet(err && err.name === "NotFoundError" ? "idle" : "error",
-           err && err.message ? err.message : String(err));
-  });
+function connectLink(key){
+  var L = LINKS[key];
+  if (!btSupported()) return;
+  linkSet(key, "asking");
+  navigator.bluetooth.requestDevice({ filters:L.filters, optionalServices:L.optional })
+    .then(function(dev){
+      L.device = dev;
+      dev.addEventListener("gattserverdisconnected", function(){ linkSet(key, "lost") });
+      linkSet(key, "connecting");
+      return dev.gatt.connect();
+    })
+    .then(function(server){
+      DB.paired = DB.paired || {};
+      DB.paired[key] = L.device.name || L.title;
+      save();
+      /* Each subscription is independent: a device that exposes one service and
+         not another should give what it has rather than failing whole. */
+      var jobs = L.subs.map(function(sub){
+        return notifyOn(server, sub[0], sub[1], PARSERS[sub[2]], key);
+      });
+      jobs.push(readBattery(server, key));
+      return Promise.all(jobs);
+    })
+    .then(function(){ linkSet(key, "live") })
+    .catch(function(err){
+      /* closing the chooser is a decision, not a failure */
+      linkSet(key, err && err.name === "NotFoundError" ? "idle" : "error",
+              err && err.message ? err.message : String(err));
+    });
 }
 
-function notify(server, service, characteristic, handler){
+function notifyOn(server, service, characteristic, handler, key){
   return server.getPrimaryService(service)
     .then(function(s){ return s.getCharacteristic(characteristic) })
     .then(function(c){
       c.addEventListener("characteristicvaluechanged", function(e){
-        try { handler(e.target.value) } catch (err) {}
-        renderPodLive();
+        try { handler(e.target.value, LINKS[key].live) } catch (err) {}
+        renderLive(key);
       });
       return c.startNotifications();
     })
-    .catch(function(){ return null });     /* absent service: carry on */
-}
-
-function readBattery(server){
-  return server.getPrimaryService(BATT_SERVICE)
-    .then(function(s){ return s.getCharacteristic(BATT_LEVEL) })
-    .then(function(c){ return c.readValue() })
-    .then(function(v){ POD.live.battery = v.getUint8(0) })
     .catch(function(){ return null });
 }
 
-/* RSC measurement: flags, speed (u16, 1/256 m/s), cadence (u8, steps/min). */
-function onRsc(v){
+function readBattery(server, key){
+  return server.getPrimaryService(SVC.batt)
+    .then(function(s){ return s.getCharacteristic(SVC.battLevel) })
+    .then(function(c){ return c.readValue() })
+    .then(function(v){ LINKS[key].live.battery = v.getUint8(0) })
+    .catch(function(){ return null });
+}
+
+/* RSC: flags, speed (u16, 1/256 m/s), cadence (u8 spm), stride when flagged. */
+PARSERS.onRsc = function(v, live){
   var flags = v.getUint8(0);
-  POD.live.speed = v.getUint16(1, true) / 256;
-  POD.live.cadence = v.getUint8(3);
-  if (flags & 0x01) POD.live.stride = v.getUint16(4, true) / 100;
+  live.speed = v.getUint16(1, true) / 256;
+  live.cadence = v.getUint8(3);
+  if (flags & 0x01) live.stride = v.getUint16(4, true) / 100;
+};
+/* Cycling power: flags (u16) then instantaneous power, signed, in watts. */
+PARSERS.onPower = function(v, live){ live.power = v.getInt16(2, true) };
+/* Heart rate: bit 0 of the flags says whether the value is 8 or 16 bit, and a
+   strap will use either -- reading it as u8 always works until it does not. */
+PARSERS.onHeart = function(v, live){
+  var flags = v.getUint8(0);
+  live.hr = (flags & 0x01) ? v.getUint16(1, true) : v.getUint8(1);
+  if (flags & 0x04) live.contact = !!(flags & 0x02);
+};
+
+function disconnectLink(key){
+  var L = LINKS[key];
+  try { if (L.device && L.device.gatt.connected) L.device.gatt.disconnect() } catch (e){}
+  L.live = {};
+  linkSet(key, "idle");
 }
 
-/* Cycling power measurement: flags (u16), instantaneous power (s16, watts). */
-function onPower(v){
-  POD.live.power = v.getInt16(2, true);
-}
+/* label after the number, except the battery, where the number alone reads as a
+   measurement rather than as how much is left */
+var UNITS = [["hr", "bpm", 0], ["power", "W", 0], ["cadence", "spm", 0],
+             ["speed", "m/s", 2], ["stride", "m stride", 2], ["battery", "% battery", 0]];
 
-function disconnectPod(){
-  try { if (POD.device && POD.device.gatt.connected) POD.device.gatt.disconnect() } catch (e){}
-  POD.live = {};
-  podSet("idle");
-}
-
-function renderPodLive(){
-  var el = document.getElementById("podLive");
+function renderLive(key){
+  var el = document.getElementById("live-" + key);
   if (!el) return;
-  var l = POD.live, bits = [];
-  if (l.power != null)   bits.push('<span class="chip"><b>' + l.power + '</b> W</span>');
-  if (l.cadence != null) bits.push('<span class="chip"><b>' + l.cadence + '</b> spm</span>');
-  if (l.speed != null)   bits.push('<span class="chip"><b>' + l.speed.toFixed(2) + '</b> m/s</span>');
-  if (l.stride != null)  bits.push('<span class="chip"><b>' + l.stride.toFixed(2) + '</b> m stride</span>');
-  if (l.battery != null) bits.push('<span class="chip">battery <b>' + l.battery + '%</b></span>');
+  var live = LINKS[key].live, bits = [];
+  UNITS.forEach(function(u){
+    var v = live[u[0]];
+    if (v == null) return;
+    bits.push('<span class="chip"><b>' + (u[2] ? v.toFixed(u[2]) : v) + '</b> ' + u[1] + '</span>');
+  });
+  if (live.contact === false) bits.push('<span class="chip">poor contact</span>');
   el.innerHTML = bits.length ? bits.join("")
-    : '<span class="quiet">Connected. Waiting for the pod to send something — it reports once you move.</span>';
+    : '<span class="quiet">Connected. Nothing sent yet — these report once you move.</span>';
+}
+
+function renderLink(key){
+  var L = LINKS[key],
+      known = (DB.paired && DB.paired[key]) ? "last paired with <b>" + esc(DB.paired[key]) + "</b>" : "",
+      label = { idle:L.title, asking:"Choose the device…", connecting:"Connecting…",
+                live:L.title + " — connected", lost:L.title + " — out of range",
+                error:L.title }[L.state] || L.title;
+  return '<div class="panel">' +
+    '<div class="plan-head"><div class="plan-t">' + esc(label) + '</div></div>' +
+    '<div class="zcap" style="margin-top:4px">' + esc(L.hint) + '</div>' +
+    '<div class="plan-m" id="live-' + key + '"></div>' +
+    '<div class="acts" style="margin-top:14px">' +
+      '<button class="hold" data-link="' + key + '">' +
+        (L.state === "live" ? "Disconnect" : L.state === "lost" ? "▶ Reconnect" : "▶ Connect") +
+      '</button></div>' +
+    (L.error ? '<div class="quiet" style="margin-top:10px">' + esc(L.error) + '</div>' : "") +
+    (known ? '<div class="zcap">' + known + '</div>' : "") +
+  '</div>';
 }
 
 function renderSettings(){
-  var pod = document.getElementById("podPanel"),
+  var host = document.getElementById("devPanels"),
       data = document.getElementById("dataPanel");
-  if (!pod) return;
+  if (!host) return;
 
-  if (!podSupported()){
-    pod.innerHTML = '<div class="quiet">This browser cannot talk to Bluetooth devices. ' +
-      'Chrome on Android can; Safari on iOS cannot, and an installed home-screen app ' +
-      'on iOS uses Safari underneath, so it cannot either.</div>';
+  if (!btSupported()){
+    host.innerHTML = '<div class="panel quiet">This browser cannot talk to Bluetooth ' +
+      'devices. Chrome on Android can; Safari on iOS cannot, and a home-screen app on ' +
+      'iOS is Safari underneath, so it cannot either.</div>';
   } else {
-    var s = POD.state, known = DB.pod ? "last paired with <b>" + esc(DB.pod) + "</b>" : "",
-        label = { idle:"Connect the pod", asking:"Choose your pod…", connecting:"Connecting…",
-                  live:"Connected", lost:"Reconnect", error:"Try again" }[s] || "Connect the pod";
-    pod.innerHTML =
-      '<div class="plan-head"><div class="plan-t">' + label + '</div></div>' +
-      '<div class="plan-m" id="podLive"></div>' +
-      '<div class="acts" style="margin-top:14px">' +
-        '<button class="hold" id="podBtn">' + (s === "live" ? "Disconnect" : "▶ Connect") + '</button>' +
-      '</div>' +
-      (s === "lost" ? '<div class="quiet" style="margin-top:10px">The pod went out of range or went to sleep.</div>' : "") +
-      (POD.error ? '<div class="quiet" style="margin-top:10px">' + esc(POD.error) + '</div>' : "") +
-      (known ? '<div class="zcap">' + known + '</div>' : "");
-    document.getElementById("podBtn").onclick = s === "live" ? disconnectPod : connectPod;
-    renderPodLive();
+    host.innerHTML = renderLink("pod") + renderLink("hr");
+    [].forEach.call(host.querySelectorAll("[data-link]"), function(b){
+      var k = b.getAttribute("data-link");
+      b.onclick = function(){ LINKS[k].state === "live" ? disconnectLink(k) : connectLink(k) };
+    });
+    renderLive("pod"); renderLive("hr");
   }
 
   if (data){
     var d = PLAN_META;
-    data.innerHTML =
-      '<div class="pre">' +
-        (d ? "Plan synced " + span(Date.now() - Date.parse(d.fetched)) + " ago from Stryd.\n"
-           : "Using the plan built into this app; no sync on this server yet.\n") +
-        (d && d.tokenExpires
-           ? "Token " + (Date.parse(d.tokenExpires) - Date.now() > 0
-               ? "valid for " + span(Date.parse(d.tokenExpires) - Date.now())
-               : "expired " + span(Date.now() - Date.parse(d.tokenExpires)) + " ago") + ".\n"
-           : "") +
-        "Plan covers " + PLAN_FROM + " to " + PLAN_TO + ".\n" +
-        DB.log.length + " sessions logged on this phone." +
-      '</div>';
+    data.innerHTML = '<div class="pre">' +
+      (d ? "Plan synced " + span(Date.now() - Date.parse(d.fetched)) + " ago from Stryd.\n"
+         : "Using the plan built into this app; no sync on this server yet.\n") +
+      (d && d.tokenExpires
+         ? "Token " + (Date.parse(d.tokenExpires) - Date.now() > 0
+             ? "valid for " + span(Date.parse(d.tokenExpires) - Date.now())
+             : "expired " + span(Date.now() - Date.parse(d.tokenExpires)) + " ago") + ".\n"
+         : "") +
+      "Plan covers " + PLAN_FROM + " to " + PLAN_TO + ".\n" +
+      DB.log.length + " sessions logged on this phone." + '</div>';
   }
 }
 
@@ -1647,9 +1689,12 @@ function buildTabs(){
     b.setAttribute("aria-selected", "false");
     b.innerHTML = TAB_NAMES[k] + '<span class="n"></span>';
     b.onclick = function(){ openPhase(k) };
-    strip.insertBefore(b, document.getElementById("tabSettings"));
+    strip.appendChild(b);
   });
-  document.getElementById("tabSettings").onclick = function(){ openPhase("settings") };
+  document.getElementById("tabSettings").onclick = function(){
+    /* a toggle: the gear got you in, the gear gets you out */
+    openPhase(ACTIVE === "settings" ? currentPhase() : "settings");
+  };
 }
 
 var ACTIVE = null;
@@ -1659,7 +1704,7 @@ function openPhase(key){
      and a page showing none of its four sections is a page showing nothing. */
   if (!key || !document.getElementById("ph-" + key)) key = PHASES[0];
   var gear = document.getElementById("tabSettings");
-  if (gear) gear.setAttribute("aria-selected", key === "settings" ? "true" : "false");
+  if (gear) gear.setAttribute("aria-expanded", key === "settings" ? "true" : "false");
   PHASES.forEach(function(k){
     var sec = document.getElementById("ph-" + k), tab = document.getElementById("tab-" + k);
     if (!sec) return;
