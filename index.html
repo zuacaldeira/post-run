@@ -99,9 +99,10 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
 /* One line where there were four. The title is small because it is the same
    every day; the date is the part that changes. */
 .topbar{display:flex;align-items:baseline;gap:10px;padding-top:2px}
-.topbar h1{font-size:17px;font-weight:900;letter-spacing:-.02em;line-height:1.1;margin:0;
+.topbar h1{font-size:16px;font-weight:900;letter-spacing:-.02em;line-height:1.1;margin:0;
   color:var(--ink);white-space:nowrap}
-.topbar .hi{font-size:11.5px;letter-spacing:.1em}
+.topbar .hi{font-size:11.5px;letter-spacing:.08em;white-space:nowrap;margin-right:auto}
+.topbar .todaybtn{margin-left:0}
 /* Only there when you are not on today, because a button that says "today"
    while you are looking at today is a button that does nothing. */
 .todaybtn{margin-left:auto;flex:none;padding:8px 13px;border-radius:99px;cursor:pointer;
@@ -1266,8 +1267,9 @@ function renderPlan(){
   var day = viewISO(), w = planFor(day),
       hi = document.getElementById("hi"),
       run = document.getElementById("runplan");
+  /* short, because it now shares one line with the title and two buttons */
   hi.textContent = new Date(day + "T12:00:00").toLocaleDateString(undefined,
-    { weekday:"long", day:"numeric", month:"long" });
+    { weekday:"short", day:"numeric", month:"short" });
   var sub = document.querySelector("#ph-run .pht .s");
   if (sub) sub.textContent = VIEW ? "from the Stryd plan" : "today, from the Stryd plan";
   /* Stryd schedules its supplemental work on its own days -- Mondays and
@@ -1279,9 +1281,9 @@ function renderPlan(){
   var back = document.getElementById("todayBtn");
   if (back){
     back.hidden = !VIEW;
-    var off = VIEW ? Math.round((Date.parse(VIEW) - Date.parse(todayISO())) / 86400000) : 0;
-    back.textContent = off === 1 ? "Tomorrow · today" : off === -1 ? "Yesterday · today"
-                     : off ? (off > 0 ? "+" : "") + off + " days · today" : "Today";
+    /* the date beside it already says which day you are on, so this only has to
+       offer the way back */
+    back.textContent = "Today";
   }
   if (!w){
     /* Say which of the two it is. "Nothing today" reads as a bug when the real
