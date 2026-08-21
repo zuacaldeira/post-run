@@ -29,6 +29,9 @@ done
 
 ssh "$HOST" "mkdir -p $ROOT"
 rsync -av --chmod=F644 "${FILES[@]}" "$HOST:$ROOT/"
+# the desktop view and its self-hosted faces, which live in their own directory
+rsync -av --chmod=F644,D755 web/ "$HOST:$ROOT/web/"
+
 ssh "$HOST" "chown -R www-data:www-data $ROOT"
 
 # index.html and sw.js are served no-cache, so a reload picks the new build up;
