@@ -1263,6 +1263,8 @@ function renderPlan(){
       run = document.getElementById("runplan");
   hi.textContent = new Date(day + "T12:00:00").toLocaleDateString(undefined,
     { weekday:"long", day:"numeric", month:"long" });
+  var sub = document.querySelector("#ph-run .pht .s");
+  if (sub) sub.textContent = VIEW ? "from the Stryd plan" : "today, from the Stryd plan";
   var back = document.getElementById("todayBtn");
   if (back){
     back.hidden = !VIEW;
@@ -1805,8 +1807,10 @@ function refresh(){
      hand. */
   var today = planFor(viewISO()),
       secs = estimate() * 60 + (today ? today.s : 0);
+  /* "today" is only true when it is: the same total on a swiped day would be
+     claiming to describe a day you are not looking at */
   document.getElementById("cTime").innerHTML =
-    "about <b>" + fmtDur(secs) + "</b>" + (today ? " today" : "");
+    "about <b>" + fmtDur(secs) + "</b>" + (today && !VIEW ? " today" : "");
   labelRuns();
   ALL.forEach(function(el){
     var x = el._x;
