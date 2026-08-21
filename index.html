@@ -40,6 +40,20 @@ h1{font-size:clamp(36px,11vw,50px);line-height:.95;letter-spacing:-.035em;font-w
 h1 span{background-image:var(--mark);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lede{color:var(--ink-2);font-size:15px;line-height:1.5;margin:12px 0 0;font-weight:500;max-width:42ch}
 
+/* The board belongs to a day, so the day has to be on screen -- swiping between
+   days you cannot see is just the board changing under you for no reason. */
+.daybar{display:flex;align-items:center;gap:8px;margin:18px 0 0}
+.daybar button{border:0;cursor:pointer;background:var(--pane);color:var(--ink);
+  -webkit-backdrop-filter:blur(14px) saturate(1.6);backdrop-filter:blur(14px) saturate(1.6);
+  box-shadow:0 0 0 1px rgba(255,255,255,.55) inset}
+.daybar button:active{transform:translateY(1px)}
+.daybar #dayPrev,.daybar #dayNext{width:38px;height:38px;border-radius:50%;
+  font-size:20px;font-weight:700;line-height:1;flex:0 0 auto}
+.daylabel{flex:1;border-radius:99px;padding:10px 14px;font-size:13px;font-weight:800;
+  letter-spacing:.04em;text-align:center;font-family:inherit}
+/* off today the label doubles as the way back, so it has to look pressable */
+.daylabel.away{background:var(--run-bg);color:var(--run-fg)}
+.daylabel.away::after{content:" · back to today";font-weight:700;opacity:.75}
 .rainbow{display:flex;gap:4px;margin:20px 0 6px}
 .rainbow i{flex:1;height:10px;border-radius:99px;transition:background .4s,transform .4s,box-shadow .4s}
 .stats{display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
@@ -240,6 +254,12 @@ body.running{padding-bottom:calc(58vh + env(safe-area-inset-bottom))}
 <p class="hi">Evening session</p>
 <h1>Core &amp;<br><span id="mark">Mobility</span></h1>
 <p class="lede">A short session after your run. Hold what you can hold well, then add a little every couple of weeks.</p>
+
+<div class="daybar">
+  <button id="dayPrev" aria-label="Previous day">‹</button>
+  <button class="daylabel" id="dayLabel" aria-live="polite"></button>
+  <button id="dayNext" aria-label="Next day">›</button>
+</div>
 
 <div class="rainbow" id="rainbow"></div>
 <button class="run" id="runAll">▶ Run the whole session<small>hands free · with sound cues</small></button>
@@ -528,7 +548,8 @@ function setState(el, state, restoring){
   if (!restoring){
     /* Keyed by name, like the log already is: the identity of an exercise is
        what it is called, not where it happens to sit in the list today. */
-    DB.status[el._x.n] = state;
+    if (!DB.status[day]) DB.status[day] = {};
+    DB.status[day][el._x.n] = state;
     save();
     if (state === "done" && typeof record === "function") record(el);
   }
@@ -877,10 +898,10 @@ function finish(){
    --------------------------------------------------------------- */
 var KEY = "postrun.v1";
 /* `log` is the history -- every completion, append-only, feeding the progress
-   panel. `status` is the board: where each exercise stands right now. They are
-   separate on purpose. Marking something done twice is one status and two log
-   entries, and re-opening a finished exercise must not erase the fact that it
-   was finished. */
+   panel. `status` is the board, one bucket per day: where each exercise stood on
+   that date. They are separate on purpose. Marking something done twice is one
+   status and two log entries, and re-opening a finished exercise must not erase
+   the fact that it was finished. */
 var DB  = { base:60, lastBump:null, log:[], status:{} };
 var CAP = 120;          /* seconds; past this, progress by variation, not duration */
 var GAP_DAYS = 14;      /* the plan's own interval */
@@ -893,18 +914,60 @@ function load(){
   } catch (e){ /* private mode or a sandboxed frame: stay in memory */ }
   if (!DB.log) DB.log = [];
   if (!DB.status) DB.status = {};   /* absent in stores written before this existed */
+
+  /* The previous version kept one flat name->state map with no day attached. It
+     described whatever day it was last touched on, and today is the only day we
+     can honestly attribute it to. */
+  var flat = [], k;
+  for (k in DB.status) if (typeof DB.status[k] === "string") flat.push(k);
+  if (flat.length){
+    var t = today();
+    if (!DB.status[t]) DB.status[t] = {};
+    flat.forEach(function(name){ DB.status[t][name] = DB.status[name]; delete DB.status[name] });
+    /* Write it back immediately. Left in memory this runs again on every launch,
+       and tomorrow it would re-file the same marks under a different day. */
+    save();
+  }
+
+  /* one small object per day, but days do not stop arriving */
+  var days = Object.keys(DB.status).sort();
+  if (days.length > 400)
+    days.slice(0, days.length - 400).forEach(function(d){ delete DB.status[d] });
 }
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(DB)) } catch (e){}
 }
-function today(){ return new Date().toISOString().slice(0, 10) }
+/* Local calendar day, not UTC. The old version sliced a UTC ISO string, which in
+   summer put anything done between midnight and 02:00 on the day before. That was
+   survivable while the day was implicit; it is not once you can navigate days. */
+function dayKey(d){
+  d = d || new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+function today(){ return dayKey() }
+/* noon, so a day step never lands on a DST seam and stays put */
+function shiftDay(key, n){
+  var p = key.split("-"), d = new Date(+p[0], +p[1] - 1, +p[2], 12);
+  d.setDate(d.getDate() + n);
+  return dayKey(d);
+}
+/* keep the wall-clock time, move the calendar date: a tick added to yesterday
+   belongs to yesterday in the history too, not to the moment it was typed */
+function stampFor(key){
+  var now = new Date(), p = key.split("-");
+  now.setFullYear(+p[0], +p[1] - 1, +p[2]);
+  return now.toISOString();
+}
+var day = today();          /* the day on screen */
 function record(el){
-  var x = el._x, now = new Date();
+  var x = el._x, at = stampFor(day), t = new Date(at);
   var secs = (x.d ? x.d() : x.auto || 0) * (x.sides || 1);
   var last = DB.log[DB.log.length - 1];
-  /* toggling a card off and on again should not double-count */
-  if (last && last.n === x.n && (now - new Date(last.at)) < 60000) return;
-  DB.log.push({ n:x.n, at:now.toISOString(), s:secs });
+  /* toggling a card off and on again should not double-count. Compared against
+     the stamp we are about to write, not the clock: on a backdated day the two
+     are days apart and every toggle would slip through. */
+  if (last && last.n === x.n && Math.abs(t - new Date(last.at)) < 60000) return;
+  DB.log.push({ n:x.n, at:at, s:secs });
   if (DB.log.length > 600) DB.log = DB.log.slice(-600);
   save();
   renderProgress();
@@ -912,9 +975,12 @@ function record(el){
 function byDay(){
   var days = {};
   DB.log.forEach(function(e){
-    var d = e.at.slice(0, 10);
+    var d = dayKey(new Date(e.at));
     if (!days[d]) days[d] = { d:d, n:0, s:0, last:e.at };
-    days[d].n++; days[d].s += e.s; days[d].last = e.at;
+    days[d].n++; days[d].s += e.s;
+    /* backdated ticks land at the end of the log, so the newest entry for a day
+       is not necessarily the last one seen */
+    if (e.at > days[d].last) days[d].last = e.at;
   });
   return Object.keys(days).sort().reverse().map(function(k){ return days[k] });
 }
@@ -978,10 +1044,68 @@ document.getElementById("runAll").onclick = function(){
   controls();
 };
 
+/* ---------------------------------------------------------------
+   Days
+
+   The board is the record of one day. Swipe left for the day before, right for
+   the day after -- the direction the user asked for, which is the opposite of a
+   page turn, so it is worth not "fixing" by accident later.
+   --------------------------------------------------------------- */
+var dayLabel = document.getElementById("dayLabel");
+
+function paintDay(){
+  var t = today(), d = new Date(day + "T12:00:00");
+  var txt = day === t                ? "Today"
+          : day === shiftDay(t, -1)  ? "Yesterday"
+          : day === shiftDay(t,  1)  ? "Tomorrow"
+          : d.toLocaleDateString(undefined, { weekday:"short", day:"numeric", month:"short" });
+  dayLabel.textContent = txt;
+  dayLabel.classList.toggle("away", day !== t);
+  dayLabel.setAttribute("aria-label", txt + (day === t ? "" : ", back to today"));
+}
+
+function showDay(key){
+  /* A session owns the board it started on; moving the day under a running
+     clock would send its ticks to a date the user is no longer looking at. */
+  if (document.body.classList.contains("running")) return;
+  day = key;
+  var map = DB.status[day] || {};
+  ALL.forEach(function(el){ setState(el, map[el._x.n] || "todo", true) });
+  paintDay();
+}
+
+document.getElementById("dayPrev").onclick = function(){ showDay(shiftDay(day, -1)) };
+document.getElementById("dayNext").onclick = function(){ showDay(shiftDay(day,  1)) };
+dayLabel.onclick = function(){ showDay(today()) };
+
+/* Keyboard gets the same move: a gesture nobody can reach is not a control. */
+addEventListener("keydown", function(e){
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "ArrowLeft")  showDay(shiftDay(day, -1));
+  if (e.key === "ArrowRight") showDay(shiftDay(day,  1));
+});
+
+var sx = 0, sy = 0, st = 0, swiping = false;
+addEventListener("touchstart", function(e){
+  swiping = e.touches.length === 1;
+  if (!swiping) return;
+  sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+}, { passive:true });
+addEventListener("touchend", function(e){
+  if (!swiping) return;
+  swiping = false;
+  var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+  /* Everything else on this screen scrolls or taps, so a day change has to be
+     unmistakably sideways and quick -- otherwise a slow diagonal scroll would
+     throw the user into another date. */
+  if (Date.now() - st > 700) return;
+  if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 2) return;
+  showDay(shiftDay(day, dx < 0 ? -1 : 1));
+}, { passive:true });
+
 load();
-/* The board is part of the record now, not a blank sheet every launch. Anything with
-   no stored status -- a new exercise, a first run -- starts at todo. */
-ALL.forEach(function(el){ setState(el, DB.status[el._x.n] || "todo", true) });
+day = today();
+showDay(day);
 setBase(DB.base || 60);
 renderProgress();
 </script>
