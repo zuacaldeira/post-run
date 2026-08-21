@@ -480,6 +480,12 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
 <symbol id="p-foam" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="7" cy="11" r="4.5"/></g><path d="M10 14 L26 30"/><path d="M10 14 V24"/><path d="M24 32 H38"/><path d="M31 28 V36"/></symbol>
 <symbol id="p-bath" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="22" cy="15" r="4.5"/></g><path d="M8 22 V34 H36 V22"/><path d="M8 26 H36"/><path d="M22 20 V26"/></symbol>
 <symbol id="p-figure" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="22" cy="10" r="4.5"/></g><path d="M22 15 V27"/><path d="M22 27 L14 36"/><path d="M22 27 L30 36"/><path d="M14 19 H30"/></symbol>
+<symbol id="p-boxjump" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="11" cy="7" r="4.5"/></g><path d="M11 12 V21"/><path d="M11 21 L17 27"/><path d="M17 27 L11 32"/><path d="M11 16 L19 9"/><path d="M24 28 H40"/><path d="M24 28 V38"/><path d="M40 28 V38"/><path d="M24 38 H40"/></symbol>
+<symbol id="p-hop" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="20" cy="7" r="4.5"/></g><path d="M20 12 V25"/><path d="M20 25 V38"/><path d="M20 25 L28 31"/><path d="M28 31 V35"/><path d="M14 18 H26"/></symbol>
+<symbol id="p-bound" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="14" cy="7" r="4.5"/></g><path d="M14 12 V22"/><path d="M14 22 L6 32"/><path d="M14 22 L26 30"/><path d="M26 30 H34"/><path d="M14 15 L24 9"/><path d="M14 17 L6 14"/></symbol>
+<symbol id="p-askip" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="18" cy="7" r="4.5"/></g><path d="M18 12 V24"/><path d="M18 24 L26 18"/><path d="M26 18 H32"/><path d="M18 24 V38"/><path d="M18 15 L10 9"/><path d="M18 17 L26 23"/></symbol>
+<symbol id="p-highknee" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="20" cy="7" r="4.5"/></g><path d="M20 12 V23"/><path d="M20 23 H28"/><path d="M28 23 V31"/><path d="M20 23 V38"/><path d="M20 15 L12 21"/><path d="M20 15 L28 9"/></symbol>
+<symbol id="p-pose" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="10" cy="9" r="4.5"/></g><path d="M10 14 L20 24"/><path d="M20 24 H34"/><path d="M20 24 L14 34"/><path d="M14 34 H8"/><path d="M34 24 V34"/></symbol>
 </svg>
 
 <img id="bg" src="bg.jpg" alt="" aria-hidden="true">
@@ -1482,12 +1488,21 @@ var UI = {
    shorter key that happens to be a prefix of it. */
 var PICTO = [
   ["front step lunge","lunge-front"], ["back step lunge","lunge-back"],
-  ["side step lunge","lunge-side"],   ["hip flexor","hipflexor"],
-  ["front plank","front-plank"],      ["side plank","side-plank"],
-  ["fence drill","fence"],            ["glute/hip thrust","thrust"],
-  ["donkey kick","donkey"],           ["calf","calf"],
-  ["glute stretch","glute"],          ["hamstring","hamstring"],
-  ["quad","quad"],                    ["foam roll","foam"],
+  ["side step lunge","lunge-side"],
+  ["single leg","hop"],               ["hops","hop"],
+  ["box jump","boxjump"],             ["bounding","bound"],
+  ["a-skip","askip"],                 ["a skip","askip"],
+  ["high knee","highknee"],
+  ["runner's pose","pose"],           ["runners pose","pose"],
+  ["hip flexor","hipflexor"],
+  ["side plank","side-plank"],        ["front plank","front-plank"],
+  ["plank","front-plank"],
+  ["fence","fence"],                  ["front side","fence"],
+  ["back side","fence"],
+  ["glute/hip thrust","thrust"],      ["donkey kick","donkey"],
+  ["calf","calf"],                    ["glute stretch","glute"],
+  ["hamstring","hamstring"],          ["quad","quad"],
+  ["foam roll","foam"],               ["stretching as needed","foam"],
   ["contrast bath","bath"],           ["bath","bath"]
 ];
 function pictoFor(name){

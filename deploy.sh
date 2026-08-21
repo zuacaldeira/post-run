@@ -26,9 +26,14 @@ FILES=(index.html sw.js manifest.webmanifest
 for f in "${FILES[@]}"; do
   [[ -f "$f" ]] || { echo "missing: $f" >&2; exit 1; }
 done
+[[ -f fonts/archivo-var.woff2 ]] || { echo "missing: fonts/archivo-var.woff2" >&2; exit 1; }
 
 ssh "$HOST" "mkdir -p $ROOT"
 rsync -av --chmod=F644 "${FILES[@]}" "$HOST:$ROOT/"
+# The app's own face. It is not optional: the whole type system is one variable
+# font with a width axis, and without it the page falls back to Helvetica and
+# every width the design uses collapses to one. Its own directory, like web/.
+rsync -av --chmod=F644,D755 fonts/ "$HOST:$ROOT/fonts/"
 # the desktop view and its self-hosted faces, which live in their own directory
 rsync -av --chmod=F644,D755 web/ "$HOST:$ROOT/web/"
 
