@@ -91,11 +91,18 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
   letter-spacing:-.01em;white-space:nowrap;
   transition:background .2s,color .2s,border-color .2s}
 .tab .n{font-size:11px;font-weight:800;opacity:.8}
-.topbar{display:flex;align-items:center;gap:12px}
+.topbar{display:flex;align-items:center;gap:10px}
+/* Only there when you are not on today, because a button that says "today"
+   while you are looking at today is a button that does nothing. */
+.todaybtn{margin-left:auto;flex:none;padding:8px 13px;border-radius:99px;cursor:pointer;
+  border:1px solid var(--rim);background:var(--pane);color:var(--ink-2);
+  font:800 12px/1 var(--sans);letter-spacing:.02em}
+.todaybtn[hidden]{display:none}
+.topbar .hi{margin-right:auto}
 /* Settings is not part of the day, so it sits above the day rather than among
    its phases -- and the strip gets its full width back for four tabs that only
    just fit. */
-.gearbtn{margin-left:auto;flex:none;width:38px;height:38px;border-radius:99px;cursor:pointer;
+.gearbtn{margin-left:0;flex:none;width:38px;height:38px;border-radius:99px;cursor:pointer;
   border:1px solid var(--rim);background:var(--pane);color:var(--ink-2);font-size:16px;
   line-height:1;transition:background .2s,color .2s}
 .gearbtn[aria-expanded="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -409,6 +416,7 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
 
 <div class="topbar">
   <p class="hi" id="hi">Today</p>
+  <button class="todaybtn" id="todayBtn" type="button" hidden>Today</button>
   <button class="gearbtn" id="tabSettings" type="button" aria-label="Settings" aria-expanded="false">⚙</button>
 </div>
 <h1>Core &amp;<br><span id="mark">Mobility</span></h1>
@@ -746,6 +754,34 @@ function todayISO(){
   /* local, not toISOString: at 22:00 UTC+2 that would already say tomorrow */
   return n.getFullYear() + "-" + p(n.getMonth() + 1) + "-" + p(n.getDate());
 }
+/* The day on screen. Null means today, so a phone left open overnight rolls
+   over on its own rather than sitting on yesterday. */
+var VIEW = null, PLAN_DOC = null;
+
+function viewISO(){ return VIEW || todayISO() }
+
+function shiftDay(n){
+  var d = new Date(viewISO() + "T12:00:00");   /* midday: no DST edge to fall off */
+  d.setDate(d.getDate() + n);
+  var iso = d.toISOString().slice(0, 10);
+  VIEW = iso === todayISO() ? null : iso;
+  renderDay();
+}
+
+function goToday(){ VIEW = null; renderDay() }
+
+/* Everything the day decides: which cards exist, which run is shown, what the
+   header says. Kept in one place so a swipe and a page load take the same path. */
+function renderDay(){
+  if (PLAN_DOC) buildDay(PLAN_DOC);
+  drawRainbow();
+  ALL.forEach(function(el){ setState(el, "todo") });
+  renderPlan();
+  refresh();
+  if (!document.getElementById("ph-" + ACTIVE) || ACTIVE === "settings") openPhase(currentPhase());
+  else openPhase(ACTIVE);
+}
+
 function planFor(day){
   for (var i = 0; i < PLAN.length; i++) if (PLAN[i].d === day) return PLAN[i];
   return null;
@@ -836,13 +872,8 @@ function refreshPlan(){
     /* The cards are the plan's too, not just the run. Rebuilding is safe
        because nothing about a card survives a reload anyway: only the log and
        the plank length are persisted, and both are keyed by name. */
-    if (buildFromPlan(doc)){
-      drawRainbow();
-      ALL.forEach(function(el){ setState(el, "todo") });
-    }
-    renderPlan();
-    refresh();          /* the day's total moves when the run does */
-    openPhase(currentPhase());
+    PLAN_DOC = doc;
+    renderDay();
   }).catch(function(err){
     /* Being offline is the normal case and says nothing. A failure once the
        document is in hand is a bug in this file, and swallowing it silently
@@ -1227,11 +1258,18 @@ function zoneChart(zones){
 }
 
 function renderPlan(){
-  var day = todayISO(), w = planFor(day),
+  var day = viewISO(), w = planFor(day),
       hi = document.getElementById("hi"),
       run = document.getElementById("runplan");
-  hi.textContent = new Date().toLocaleDateString(undefined,
+  hi.textContent = new Date(day + "T12:00:00").toLocaleDateString(undefined,
     { weekday:"long", day:"numeric", month:"long" });
+  var back = document.getElementById("todayBtn");
+  if (back){
+    back.hidden = !VIEW;
+    var off = VIEW ? Math.round((Date.parse(VIEW) - Date.parse(todayISO())) / 86400000) : 0;
+    back.textContent = off === 1 ? "Tomorrow · today" : off === -1 ? "Yesterday · today"
+                     : off ? (off > 0 ? "+" : "") + off + " days · today" : "Today";
+  }
   if (!w){
     /* Say which of the two it is. "Nothing today" reads as a bug when the real
        answer is that the plan ran out three weeks ago. */
@@ -1572,9 +1610,9 @@ function buildGroup(host, sess, key, phase){
 
 /* Everything Stryd scheduled for today, in the phase it belongs to. Returns
    false if the document had nothing for today, so the baked cards stand. */
-function buildFromPlan(doc){
-  var day = doc && doc.days && doc.days[todayISO()];
-  if (!day || !day.sessions || !day.sessions.length) return false;
+function buildDay(doc){
+  var day = doc && doc.days && doc.days[viewISO()],
+      sessions = (day && day.sessions) || [];
 
   var hosts = { pre: document.getElementById("pre-groups"),
                 post: document.getElementById("post-groups") };
@@ -1584,13 +1622,14 @@ function buildFromPlan(doc){
   seq = 0;
 
   var built = 0;
-  day.sessions.forEach(function(key){
+  sessions.forEach(function(key){
     var sess = doc.sessions && doc.sessions[key];
     if (!sess) return;
     var phase = sess.when === "pre" ? "pre" : "post";
     built += buildGroup(hosts[phase], sess, key, phase);
   });
-  if (!built) return false;
+  /* A day with nothing prescribed keeps its empty sections rather than falling
+     back to another day's cards, which is what looking at a rest day means. */
 
   /* the recovery card was built first and keeps its number; renumber so the
      badges read down the page as they are now ordered */
@@ -1598,7 +1637,7 @@ function buildFromPlan(doc){
     return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
   });
   ALL.forEach(function(el, i){ el.querySelector(".badge").textContent = pad(i + 1) });
-  return true;
+  return built;
 }
 
 buildAll(PRERUN,    "pre-groups",  "pre",  "predrill");
@@ -1729,7 +1768,7 @@ function summarise(){
 function summaryFor(key){
   if (key === "settings") return "";
   if (key === "run"){
-    var w = planFor(todayISO());
+    var w = planFor(viewISO());
     return w ? fmtDur(w.s) : "rest";
   }
   if (key === "progress") return "";
@@ -1748,7 +1787,7 @@ function currentPhase(){
     });
   };
   if (left("pre")) return "pre";
-  if (left("post")) return planFor(todayISO()) ? "run" : "post";
+  if (left("post")) return planFor(viewISO()) ? "run" : "post";
   return "progress";
 }
 
@@ -1764,7 +1803,7 @@ function refresh(){
      meant to describe the day omitting most of it. The run has no card to count
      because it does not happen here, which is exactly why it has to be added by
      hand. */
-  var today = planFor(todayISO()),
+  var today = planFor(viewISO()),
       secs = estimate() * 60 + (today ? today.s : 0);
   document.getElementById("cTime").innerHTML =
     "about <b>" + fmtDur(secs) + "</b>" + (today ? " today" : "");
@@ -2118,6 +2157,39 @@ function renderProgress(){
 
 function run(el){ openPhase(el._x.phase); start(phasesFor(el), false); controls() }
 
+/* ---- swipe between days -------------------------------------------------
+   Left for the next day, right for the last one, which is the direction the
+   content would move if it were a strip you were dragging.
+
+   Two things are deliberately not swipes: a mostly-vertical drag is a scroll,
+   and a drag that starts on the tab strip is that strip scrolling, since it
+   scrolls sideways itself on a narrow phone. Getting either wrong would make
+   the page feel like it was fighting the thumb. */
+(function swipes(){
+  var x0 = 0, y0 = 0, live = false;
+  document.addEventListener("touchstart", function(e){
+    if (e.touches.length !== 1) return;
+    if (e.target.closest && e.target.closest(".tabs, iframe, .hist")) return;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; live = true;
+  }, { passive:true });
+  document.addEventListener("touchend", function(e){
+    if (!live) return;
+    live = false;
+    var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 2) return;
+    shiftDay(dx < 0 ? 1 : -1);
+  }, { passive:true });
+
+  /* the same on a keyboard, because this is also opened on a laptop */
+  document.addEventListener("keydown", function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable)) return;
+    if (e.key === "ArrowRight") shiftDay(1);
+    else if (e.key === "ArrowLeft") shiftDay(-1);
+  });
+})();
+
 load();
 renderPlan();
 /* After load, not during it. The first paint should not be racing a network
@@ -2125,6 +2197,7 @@ renderPlan();
 if (document.readyState === "complete") refreshPlan();
 else window.addEventListener("load", refreshPlan);
 buildTabs();
+document.getElementById("todayBtn").onclick = goToday;
 ALL.forEach(function(el){ setState(el, "todo") });
 setBase(DB.base || 60);
 renderProgress();
