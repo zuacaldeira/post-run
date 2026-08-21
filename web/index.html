@@ -382,9 +382,12 @@ function buildBlock(){
   });
 }
 
-function select(i){
+function select(i, quiet){
   if (i < 0 || i >= DAYS.length) return;
   SEL = i;
+  /* the day goes in the address, so a session can be linked to and a reload
+     comes back to the day you were reading rather than to today */
+  if (!quiet && DAYS[i]) history.replaceState(null, "", "#" + DAYS[i].iso);
   [].forEach.call(document.querySelectorAll(".day"), function(el, n){
     el.classList.toggle("on", n === i);
   });
@@ -501,12 +504,19 @@ fetch("../plan.json", { cache:"no-cache" }).then(function(r){
   /* open on today when the block contains it, and on the first day otherwise */
   var today = new Date(), p = function(v){ return (v < 10 ? "0" : "") + v };
   var iso = today.getFullYear() + "-" + p(today.getMonth()+1) + "-" + p(today.getDate());
-  var i = DAYS.findIndex(function(d){ return d.iso === iso });
-  select(i >= 0 ? i : 0);
+  var asked = (location.hash || "").slice(1);
+  var i = DAYS.findIndex(function(d){ return d.iso === asked });
+  if (i < 0) i = DAYS.findIndex(function(d){ return d.iso === iso });
+  select(i >= 0 ? i : 0, true);
 
   document.getElementById("foot").innerHTML =
     "Plan synced " + esc(doc.fetched_at) + " · source " + esc(doc.source) +
     " · <span>← → to move between days</span>";
+  window.addEventListener("hashchange", function(){
+    var want = (location.hash || "").slice(1);
+    var n = DAYS.findIndex(function(d){ return d.iso === want });
+    if (n >= 0 && n !== SEL) select(n, true);
+  });
 }).catch(function(err){
   document.getElementById("meta").textContent = "No plan.json alongside this page.";
   document.getElementById("dayTitle").textContent = "Nothing to show";
