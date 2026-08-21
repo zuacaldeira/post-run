@@ -1,527 +1,591 @@
 ---
-name: Post-Run
-description: Two registers of one system — glass solved at runtime for executing the day, ink on paper for reading the block.
+name: Post-run
+description: The day as a printed programme — hue names the channel, treatment names the state.
 colors:
-  first-light: "#F5F2FF"
-  midnight-violet: "#1B1440"
-  frosted-heather: "#8C86B0"
-  signal-amber: "#FF8A1F"
-  settled-green: "#12B981"
-  settled-green-painted: "#007938"
-  frosted-heather-tint: "#EFECFA"
-  ink-secondary: "#2B234C"
-  worst-case-backdrop: "#939199"
-  glass-pane: "rgba(255,255,255,0.42)"
-  chip-veil: "rgba(255,255,255,0.62)"
-  session-violet: "#7B5CFF"
-  stale-red: "#8A2F2F"
-  letterbox-black: "#0E0A22"
-  read-paper: "#E7EBF1"
-  read-card: "#F6F8FB"
-  read-rule: "#CBD4E0"
-  read-ink: "#0F1720"
-  read-ink-2: "#5A6674"
-  read-ink-3: "#616A75"
-  zone-easy: "#93A6BA"
-  zone-steady: "#5C86AC"
-  zone-tempo: "#D9A03F"
-  zone-threshold: "#DC672C"
-  zone-max: "#BE3624"
+  silver: "#D9DDD9"
+  plane: "#EFF1EE"
+  plane-spent: "#E1E4E0"
+  ink: "#191E1B"
+  rule: "#5A605C"
+  name-ink: "#4C524E"
+  channel-pre: "#5FA842"
+  channel-run: "#569ADF"
+  channel-post: "#E8842A"
+  channel-log: "#A587D0"
+  channel-settings: "#8E9893"
+  band-pre: "#077900"
+  band-run: "#006BB3"
+  band-post: "#AF4600"
+  band-log: "#775BA3"
+  band-settings: "#5B6560"
 typography:
   display:
-    fontFamily: "Antonio, system-ui, sans-serif"
-    fontSize: "clamp(30px, 4vw, 46px)"
-    fontWeight: 600
-    lineHeight: 0.9
-    letterSpacing: "0.01em"
-  headline:
-    fontFamily: "Antonio, system-ui, sans-serif"
-    fontSize: "clamp(26px, 3vw, 38px)"
-    fontWeight: 600
-    lineHeight: 1
-    letterSpacing: "0.01em"
-  clock:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, sans-serif"
+    fontFamily: "Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif"
     fontSize: "clamp(34px, 10.5vw, 46px)"
-    fontWeight: 900
+    fontWeight: 700
     lineHeight: 1
-    letterSpacing: "-0.04em"
+    letterSpacing: "-0.03em"
+    fontVariation: "'wdth' 112"
     fontFeature: "tabular-nums"
+  headline:
+    fontFamily: "Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    fontSize: "26px"
+    fontWeight: 600
+    lineHeight: 1.12
+    letterSpacing: "-0.012em"
+    fontVariation: "'wdth' 100"
   title:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, sans-serif"
+    fontFamily: "Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif"
     fontSize: "19px"
-    fontWeight: 900
-    lineHeight: 1.15
-    letterSpacing: "-0.02em"
+    fontWeight: 600
+    lineHeight: 1.12
+    letterSpacing: "-0.012em"
+    fontVariation: "'wdth' 100"
   body:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, sans-serif"
+    fontFamily: "Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif"
     fontSize: "13.5px"
-    fontWeight: 500
+    fontWeight: 400
     lineHeight: 1.6
-  prescription:
-    fontFamily: "IBM Plex Mono, ui-monospace, monospace"
-    fontSize: "12.5px"
-    fontWeight: 400
-    lineHeight: 1.72
+    letterSpacing: "normal"
+    fontVariation: "'wdth' 100"
   label:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, sans-serif"
-    fontSize: "12px"
-    fontWeight: 900
+    fontFamily: "Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    fontSize: "11px"
+    fontWeight: 600
     lineHeight: 1
-    letterSpacing: "0.18em"
-  micro:
-    fontFamily: "IBM Plex Mono, ui-monospace, monospace"
+    letterSpacing: "0.16em"
+    fontVariation: "'wdth' 87"
+  counter:
+    fontFamily: "Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif"
     fontSize: "10.5px"
-    fontWeight: 400
-    lineHeight: 1.4
+    fontWeight: 500
+    lineHeight: 1
     letterSpacing: "0.12em"
+    fontVariation: "'wdth' 75"
+    fontFeature: "tabular-nums"
 rounded:
   none: "0"
-  bar: "3px"
-  key: "5px"
-  badge: "15px"
-  action: "16px"
-  video: "20px"
-  panel: "22px"
-  card: "26px"
-  sheet: "18px 18px 0 0"
-  pill: "99px"
 spacing:
-  hair: "2px"
-  xs: "4px"
-  sm: "8px"
-  gutter: "10px"
-  md: "14px"
-  card: "16px"
-  lg: "22px"
-  group: "26px"
-  section: "34px"
+  gutter: "2px"
+  1: "4px"
+  2: "8px"
+  3: "12px"
+  4: "16px"
+  5: "20px"
+  6: "24px"
+  8: "32px"
+  10: "40px"
 components:
-  card-exercise:
-    backgroundColor: "{colors.glass-pane}"
-    textColor: "{colors.midnight-violet}"
+  row-todo:
+    backgroundColor: "{colors.plane}"
+    textColor: "{colors.name-ink}"
     typography: "{typography.title}"
-    rounded: "{rounded.card}"
-    padding: "16px"
-  card-exercise-doing:
-    backgroundColor: "{colors.signal-amber}"
-    textColor: "{colors.midnight-violet}"
-    rounded: "{rounded.card}"
-    padding: "16px"
-  card-exercise-done:
-    backgroundColor: "{colors.settled-green-painted}"
-    textColor: "#FFFFFF"
-    rounded: "{rounded.card}"
-    padding: "16px"
-  badge:
-    backgroundColor: "{colors.frosted-heather}"
-    textColor: "{colors.midnight-violet}"
-    rounded: "{rounded.badge}"
-    height: "44px"
-    width: "44px"
-  button-check:
-    backgroundColor: "{colors.chip-veil}"
-    textColor: "{colors.midnight-violet}"
-    rounded: "{rounded.pill}"
-    padding: "8px 12px"
-  button-hold:
-    backgroundColor: "{colors.chip-veil}"
-    textColor: "{colors.midnight-violet}"
-    rounded: "{rounded.pill}"
-    padding: "11px 17px"
-  tab:
-    backgroundColor: "{colors.glass-pane}"
-    textColor: "{colors.midnight-violet}"
-    rounded: "{rounded.pill}"
-    padding: "10px 14px"
-  tab-selected:
-    backgroundColor: "{colors.midnight-violet}"
-    textColor: "{colors.first-light}"
-    rounded: "{rounded.pill}"
-    padding: "10px 14px"
-  panel:
-    backgroundColor: "{colors.glass-pane}"
-    textColor: "{colors.midnight-violet}"
-    rounded: "{rounded.panel}"
-    padding: "16px 17px"
-  panel-read:
-    backgroundColor: "{colors.read-card}"
-    textColor: "{colors.read-ink}"
     rounded: "{rounded.none}"
-    padding: "22px 24px"
+    padding: "12px"
+  row-doing:
+    backgroundColor: "{colors.channel-post}"
+    textColor: "{colors.ink}"
+    typography: "{typography.headline}"
+    rounded: "{rounded.none}"
+    padding: "12px"
+  row-done:
+    backgroundColor: "{colors.plane-spent}"
+    textColor: "{colors.rule}"
+    typography: "{typography.title}"
+    rounded: "{rounded.none}"
+    padding: "12px"
+  badge:
+    backgroundColor: "{colors.plane}"
+    textColor: "{colors.name-ink}"
+    rounded: "{rounded.none}"
+    width: "44px"
+    height: "44px"
+  badge-doing:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.none}"
+    width: "104px"
+    height: "104px"
+  tab:
+    backgroundColor: "{colors.plane}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.none}"
+    padding: "8px 8px 6px"
+    height: "48px"
+  tab-selected:
+    backgroundColor: "{colors.channel-post}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.none}"
+    padding: "8px 8px 6px"
+    height: "48px"
+  button-run:
+    backgroundColor: "{colors.channel-post}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.none}"
+    padding: "16px"
+    height: "64px"
+  button-hold:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.plane}"
+    rounded: "{rounded.none}"
+    padding: "8px 14px"
+    height: "48px"
+  button-watch:
+    backgroundColor: "transparent"
+    textColor: "{colors.rule}"
+    rounded: "{rounded.none}"
+    padding: "8px 14px"
+    height: "48px"
+  chip-state:
+    backgroundColor: "{colors.plane}"
+    textColor: "{colors.rule}"
+    typography: "{typography.counter}"
+    rounded: "{rounded.none}"
+    padding: "8px 10px"
+    height: "48px"
+  section-marker:
+    backgroundColor: "{colors.channel-post}"
+    textColor: "{colors.ink}"
+    typography: "{typography.label}"
+    rounded: "{rounded.none}"
+    padding: "5px 8px"
+  panel:
+    backgroundColor: "{colors.plane}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.none}"
+    padding: "16px"
+  carriage:
+    backgroundColor: "{colors.channel-post}"
+    textColor: "{colors.ink}"
+    typography: "{typography.display}"
+    rounded: "{rounded.none}"
+    padding: "12px 14px 13px"
 ---
 
-# Design System: Post-Run
+# Design System: Post-run
 
 ## Overview
 
-**Creative North Star: "The Solved Surface"**
+**Creative North Star: "The Printed Programme"**
 
-Nothing in the Execute register is picked by eye. The palette is a seed of five
-authored colors and a set of solvers that derive every surface, rim, label and veil
-from them at boot, each one proven against the worst case the backdrop can produce —
-a pure black video frame under the thinnest part of the scrim. The identity of this
-system is that rigour. A card is amber because a movement is being done, and it is
-*that* amber because that is the lightest amber which still carries Midnight Violet at
-7:1. The look is a consequence of the constraint, not a decoration applied over it.
+This is Otl Aicher's 1972 Munich programme applied to a training day. The page is
+not a stack of cards on a background; it is a sheet of silver paper with bands
+printed on it. There is no glass, no blur, no lift, no rounded corner and no
+drop shadow anywhere in the build. What separates one thing from another is a
+value step, a 1–2px inset rule, and two pixels of bare ground. Everything sits
+on a 4px unit and a single variable grotesque whose *width* axis — not its
+weight — does most of the expressive work.
 
-The system runs in **two deliberate registers**, and they are allowed to look
-unrelated because they answer different questions in different rooms.
+Two variables carry all the meaning and never trade jobs. **Hue names the
+channel**: which part of the day you are looking at. **Treatment names the
+state**: outlined is waiting, flooded is happening, receded is finished. A green
+day and an orange day are the same design proved twice, not two palettes.
 
-- **Execute** (`index.html`) is a phone held in a wet hand immediately after a run.
-  Glass panes float over a photograph, corners are generous (26px), type is heavy and
-  short, and color carries exactly one meaning: what state a movement is in. Everything
-  is solved at runtime.
-- **Read** (`web/index.html`) is a desk and a training block seen whole. Ink on cool
-  paper, zero radius, hairline rules, Antonio over IBM Plex, and color carries exactly
-  one meaning: how hard the effort is. Everything is authored and static.
+The palette itself is the system's real signature: almost nothing in it is
+authored. Five seeds are pushed through contrast solvers at boot and again on
+every channel change, and what reaches the screen is the solved output. Two of
+the four channel seeds never appear on screen at all. The document below records
+what is painted, and names the seed separately where they differ.
 
-What binds them is method, not appearance: contrast is solved rather than guessed (the
-Read register raises a caption grey from a measured 2.58:1 to 4.59:1 for exactly the
-same reason the Execute register runs a solver); color means one thing at a time; and
-every motion, transparency and forced-color preference is honoured rather than assumed.
+The world it refuses is the one this file replaced: translucent violet cards
+floating over a photograph, with radii and shadows doing the separating.
 
 **Key Characteristics:**
-- Two registers, one method — glass and runtime solving to execute, ink and print to read.
-- Color is a state channel, never an identity or a decoration.
-- Contrast is computed against a paranoid worst case, never eyeballed.
-- Depth reports state; it does not simulate height.
-- Every reduced-motion, reduced-transparency and forced-colors path is a designed state, not a fallback.
-- Legibility at arm's length, from the floor, mid-hold, wins every tie.
+- Silver ground (#D9DDD9), never white, never a dark field
+- Square corners everywhere — `border-radius: 0` without a single exception
+- 4px unit; a 2px gutter of bare ground between adjacent bands
+- One self-hosted variable font; four width stops (75 / 87 / 100 / 112)
+- Every colour solved against its ground before it ships, never chosen by eye
+- No shadows, no blur, no backdrop-filter — inset rules only
+- 22 authored pictograms on a 0/45/90 raster, one per movement
+- Accessibility branches are designed states, not fallbacks
 
 ## Colors
 
-Two palettes, one rule each: in Execute, hue means state; in Read, hue means intensity.
+Aicher's 1972 spectrum on a silver ground: light blue, green, orange, violet —
+no red, and no black field. Nothing here is a decorative hue; every colour is
+either the ground, the ink, or a channel.
 
 ### Primary
 
-- **Signal Amber** (`#FF8A1F`, painted as authored): the state of *doing*. It is the one seed
-  the solver leaves alone — it already carries Midnight Violet at 7.3:1, so `fill()` exits on
-  its first check. It is the highest-luminance thing on the page, carrying dark text, so the
-  movement you are actually on is where the eye lands.
-  It is never used decoratively, and only one element on screen can hold it at a time.
-  It is also the anchor the run histogram and zone bar mix from, so a hard segment and an
-  active card read as the same kind of loud.
-- **Settled Green** (`#12B981` seed → `#007938` painted): the state of *done*, and the clearest
-  demonstration of how this system works. The authored hex is **never painted**. `fill()`
-  darkens and saturates it through 90 possible steps until white clears 5.5:1 — not 4.5:1,
-  specifically so the surface sheen and the translucent veils laid over it cannot push white
-  back under the threshold — and what lands on screen is a far deeper forest green at 5.54:1.
-  Editing the seed changes where the solve starts, not what you see.
-- **Frosted Heather** (`#8C86B0` seed → `#EFECFA` tint): the state of *todo*. Never used at
-  full strength — `tintOf()` lifts it to L\*94 with chroma capped at 26 before it becomes a
-  surface, so a resting card is a pale window rather than a coloured object. Nine waiting
-  cards must not read as nine things. The seed itself survives only in the rim and the badge.
+The four channels. Each has two painted forms: the **field** (solved to carry
+ink at 5.5:1, used for flooded rows, tabs, the run button and the session
+carriage) and the **band** (the same seed solved to carry white at 5.5:1, used
+only for the poster band at the top of the page). Exactly one channel is on
+screen at a time.
+
+- **Drill Green** — field `{colors.channel-pre}` / band `{colors.band-pre}`: the
+  pre-run channel. Seed and field are identical; the seed already carried ink.
+- **Run Blue** — field `{colors.channel-run}` / band `{colors.band-run}`: the run
+  channel. **Seed `#2E7CBF` is never painted** — it fails 5.5:1 against ink and
+  the solver brightens it to the field value.
+- **Mobility Orange** — field `{colors.channel-post}` / band `{colors.band-post}`:
+  the post-run core and mobility channel. Seed and field are identical.
+- **Log Violet** — field `{colors.channel-log}` / band `{colors.band-log}`: the
+  progress channel. **Seed `#7E63A8` is never painted**; the solver brightens it.
+
+### Secondary
+
+- **Device Grey** — field `{colors.channel-settings}` / band
+  `{colors.band-settings}`: the settings channel. It is a channel by mechanism
+  but deliberately the only desaturated one, because settings is not part of the
+  day. Seed `#5B6560` is painted only as the band; the field is brightened.
 
 ### Neutral
 
-- **First Light** (`#F5F2FF`): the paper. Set on `html` alone — never on `body` as well,
-  because `body`'s own background paints over a negative-z-index child and the backdrop
-  photograph would never actually be seen.
-- **Midnight Violet** (`#1B1440`): the ink, and the foreground on every light surface. Its
-  secondary tone is not a chosen grey: `inkFor()` resolves it to `#2B234C` against the
-  worst-case backdrop at 4.5:1.
-- **Worst-Case Backdrop** (`#939199`): not a paintable color. It is the darkest composite
-  the glass can ever sit on — pure black under a 60% scrim — and it is the background every
-  contrast solve is run against. Deliberately more pessimistic than the real scrim (which
-  bottoms out at 84%), so the whole palette stays valid if different footage is dropped in.
-- **Glass Pane** (`rgba(255,255,255,0.42)`) and **Chip Veil** (`rgba(255,255,255,0.62)`):
-  the two translucency levels. Panels and tabs take the first; pressable chips take the second.
-
-### Tertiary
-
-- **Session Violet** (`#7B5CFF`): the fallback anchor for charts and the solid backing for
-  the session bar before the solver has run. It is the last trace of the app's original
-  fixed palette and should not spread.
-- **Stale Red** (`#8A2F2F`): the plan-age line when the sync has gone stale. An expired token
-  is not decoration — it is the reason tomorrow's plan will not arrive — so it is the one
-  place a warning color is allowed.
-- **Letterbox Black** (`#0E0A22` / `#160F35`): behind YouTube frames only, so a loading
-  video is a dark violet void rather than a grey rectangle.
-
-### Read register
-
-- **Cool Paper** (`#E7EBF1`), **Card** (`#F6F8FB`), **Rule** (`#CBD4E0`): the ground, the
-  raised panel, and every hairline.
-- **Print Ink** (`#0F1720`), **Ink 2** (`#5A6674`), **Ink 3** (`#616A75`): body, secondary,
-  and small text. Ink 3 is the deliberate one — it carries captions, week labels, the axis
-  and the eyebrows, all small, and it sits at 4.59:1 on paper rather than at the grey that
-  looked right and measured 2.58:1.
-- **The intensity ramp** — Easy (`#93A6BA`), Steady (`#5C86AC`), Tempo (`#D9A03F`),
-  Threshold (`#DC672C`), Max (`#BE3624`): cool through hot, with only the top two zones
-  allowed to be warm, so a hard day is visible from across the room and an easy week
-  stays quiet.
+- **Silver** `{colors.silver}`: Aicher's *silber*. The page ground, the
+  scrollbar track, and the value every foreground in the system is proved
+  against. The page is grey, not white.
+- **Plane** `{colors.plane}`: the raised sheet a waiting row, panel or note is
+  printed on. One step lighter than the ground.
+- **Spent Plane** `{colors.plane-spent}`: a finished row. Deliberately *between*
+  the ground and the plane — a done row recedes toward the paper, never away
+  from it.
+- **Ink** `{colors.ink}`: all body copy, all rules of weight, the hold button
+  field, and the carriage's progress rule. Near-black with a green cast; never
+  pure black.
+- **Rule** `{colors.rule}`: solved at 3:1 against the silver for non-text
+  boundaries — rims, chip outlines, dividers. The same solved value also carries
+  secondary text at 4.69:1, so one painted grey serves both jobs.
+- **Name Ink** `{colors.name-ink}`: solved at 7:1 on the plane. Movement names
+  and other primary text inside a waiting row.
 
 ### Named Rules
 
-**The One Meaning Rule.** Within a register, hue answers exactly one question. In Execute
-that question is "what state is this movement in"; in Read it is "how hard is this". A
-color introduced to distinguish, brand, or enliven anything is a defect, not a variation.
+**The Solved-Not-Chosen Rule.** No colour ships as authored. `dressPage()`,
+`setChannel()` and `solveStates()` push every seed through `fill`, `inkFor` and
+`fade` — walking the value until it clears its contrast target against its
+actual ground — and the walked value is what is painted. If a hue cannot carry
+its type, it is moved until it can; it is never shipped and excused. Record and
+reuse the painted value, never the seed.
 
-**The Worst-Case Rule.** No foreground colour is authored. Every one is derived by solver
-(`inkFor`, `fade`, `fill`) against Worst-Case Backdrop, not against the colour a surface
-appears to be. Adding a hand-picked hex to a glass surface bypasses the only thing keeping
-the app legible over arbitrary footage.
+**The One Channel Rule.** Exactly one channel hue is on screen at a time. The
+tab strip is the single licensed exception: it is the one place all four appear
+at once, because it is the map. Anywhere else, two channel hues in the same
+viewport means the system is contradicting its own first rule.
 
-**The Quantised Check Rule.** Contrast is validated on the rounded 8-bit hex, never on the
-float. Rounding costs about 0.01 and was landing values at 4.4999 against a 4.5 target.
+**The No-Red Rule.** Aicher removed red from the 1972 spectrum and nothing here
+needs it, because hue names *which channel you are in* and never *how urgent
+something is*. Urgency carries by weight and rule instead: the expired-token
+line goes to full ink, weight 700, with a 2px underline. No red is authored
+anywhere in the stylesheet or the app script.
 
 ## Typography
 
-**Display Font:** Antonio 600 (Read register only, self-hosted woff2)
-**Body Font:** `system-ui` stack (Execute) / IBM Plex Sans 400·600 (Read)
-**Label/Mono Font:** IBM Plex Mono 400·500 (Read register)
+**Display Font:** Archivo Variable, self-hosted (`fonts/archivo-var.woff2`),
+weight axis 100–900, width axis 62–125%
+**Body Font:** the same face
+**Label/Mono Font:** the same face, condensed, with `font-variant-numeric:
+tabular-nums`
 
-**Character:** Execute has no typeface of its own on purpose — it uses the platform's UI
-face at weight 900 with tight negative tracking, so it reads as part of the phone rather
-than as a document, and it costs nothing to load offline. Read is the opposite argument:
-a condensed uppercase display face against a humanist body and a mono for every figure,
-because a training block is a printed thing you study, not a control you operate.
+**Character:** Univers is Aicher's face and is not free; Archivo is the closest
+grotesque with a real width axis, and the width axis is the part that matters —
+the 1972 programme is a width/weight *matrix*, not one cut. One family does
+every job here; `font-synthesis: none` means the browser is never allowed to
+fake a stop the file does not have.
 
 ### Hierarchy
 
-- **Display** (Antonio 600, `clamp(30px, 4vw, 46px)`, line-height .9, uppercase): the Read
-  masthead, sitting on a 2px ink rule.
-- **Headline** (Antonio 600, `clamp(26px, 3vw, 38px)`, line-height 1, uppercase): the
-  selected day's title.
-- **Clock** (900, `clamp(34px, 10.5vw, 46px)`, tracking -.04em, tabular): the session
-  timer. The largest thing on the screen, always.
-- **Title** (900, 19px, line-height 1.15, tracking -.02em): an exercise name on a card.
-- **Body** (500, 13.5px, line-height 1.6): notes, verdicts, the prescription in Execute.
-  Held to a 42ch measure where it runs long.
-- **Prescription** (IBM Plex Mono 400, 12.5px, line-height 1.72): Stryd's own prose in the
-  Read register. Quoted with `white-space: pre-wrap`, never restyled — it arrives with its
-  own line breaks and indented lists and they are meaningful.
-- **Label** (900, 12px, tracking .18em, uppercase): every section heading. `h2` and `h3`
-  are visually identical by design — stepping down a level changes the outline, not the look.
-- **Micro** (Plex Mono, 10.5px, tracking .12em, uppercase): axis figures, week strips,
-  eyebrows, the step count.
+- **Display** (700, `clamp(34px, 10.5vw, 46px)`, wdth 112, -0.03em, tabular):
+  the session clock in the carriage, and the dial's second-count at 28px. The
+  only extended cut in the system, reserved for numerals read at arm's length.
+- **Headline** (600, 26px, wdth 100, -0.012em): the movement name in a row that
+  is being done. Steps down to 22px below 360px.
+- **Title** (600, 19px, wdth 100, -0.012em / 1.12): the movement name at rest,
+  the plan title, the run button (17px).
+- **Body** (400, 13.5px / 1.6): notes, prescriptions, verdicts, log entries.
+  Doses run at 13px.
+- **Label** (600, 11px, wdth 87, 0.16em, lowercase): section markers, `h2`,
+  `h3`, the greeting line. The system's own speaking voice.
+- **Counter** (500, 10.5px, wdth 75, 0.12em, tabular): tab counts, the carriage
+  step count, the row sequence number at 10px/0.14em. Machine metadata.
 
 ### Named Rules
 
-**The Floor-Read Rule.** The running clock is read from the floor, mid-hold, a couple of
-feet away. It is the one element allowed to consume height, and nothing may grow past it.
+**The Width-Axis Rule.** Emphasis moves along the width axis before it moves
+along weight. Four stops, and each means something: **75%** is machine metadata
+(counts, sequence numbers), **87%** is the system's own voice (every label,
+every button word, every heading), **100%** is content (movement names, prose),
+**112%** is the clock. A new size that does not land on one of these four stops
+is not part of the ramp.
 
-**The Weight-Not-Size Rule.** Execute establishes hierarchy with weight (900 against 500)
-and tracking, not with a type scale. There are only four real sizes on a card — 19, 13.5,
-12, 11 — and adding a fifth flattens the three that matter.
-
-**The Ellipsis Rule.** Single-line elements in the session bar (`what`, `phase`, `stepcount`)
-truncate; they never wrap. A long exercise name must not grow the bar and push the screen
-behind it out of view.
+**The Lowercase Programme Rule.** Every system label is `text-transform:
+lowercase` — the masthead, headings, tabs, buttons, state chips. Content is not:
+an exercise name keeps the capitals the plan gave it. Lowercase is how the
+interface signals that it is the interface talking.
 
 ## Layout
 
-**Execute** is a single 620px column, centred, with 16px gutters and 24px of top padding,
-plus `env(safe-area-inset-bottom)` on every bottom edge. One phase is on screen at a time,
-chosen from a horizontally scrolling tab strip rather than by folding four headers — a fold
-answers "what else is there" by making you open things; a strip answers it at a glance. At
-360px, the common narrow phone, the four tabs just miss fitting: the strip scrolls and the
-type shrinks by half a step rather than being shaved until it cannot be read. While a
-session runs, `body` gains `padding-bottom: calc(max(120px, 12vh) + safe-area)` so the
-fixed session bar never covers the card it is timing.
+One column, capped at **620px**, centred at every viewport width. There are no
+`min-width` breakpoints: widening the phone app would make a worse phone app,
+not a web one. The only responsive branch is a **360px** step-down that tightens
+tab padding and drops the flooded row's headline from 26px to 22px and its
+pictogram from 104px to 80px.
 
-Vertical rhythm is coarse and consistent: 34px between phases, 26px between groups, 16px
-between cards, 10–14px inside them.
+The rhythm is a **4px unit** (`--u`) and every measure is a multiple of it: body
+side padding 16px, row padding 12px, section spacing 28–32px, group spacing
+24px, the bottom safe-area reserve 40px plus `env(safe-area-inset-bottom)`.
+Touch targets are 44px minimum and 48px for anything hit mid-session; the run
+button is 64px.
 
-**Read** is a 1440px page with fluid `clamp(16px, 4vw, 56px)` side padding, built from a
-two-column detail grid (`minmax(0,1.15fr)` against `minmax(0,1fr)`, 26px gap) and an
-auto-fitting card row at `minmax(280px, 1fr)`. It collapses to one column at 900px, where
-the block's own height drops from 190px to 150px.
+The one measure that is not a multiple of the unit is the **2px gutter** between
+adjacent bands — rows, tabs, action buttons, panels, chips. It is a printer's
+gutter, not a margin: two pixels of bare silver showing between two printed
+things.
+
+The poster band is a fixed **132px** at the top of the page: the running
+photograph, desaturated and printed in the channel's band ink via
+`mix-blend-mode: multiply`, with the masthead knocked out of it in white. It is
+the largest field on screen and it obeys the first rule — it re-solves whenever
+the channel changes.
 
 ### Named Rules
 
-**The 620 Rule.** The Execute column never exceeds 620px, on any viewport. The flipped
-card's minimum height is derived from that number (`(min(620px,100vw) - 32px) * 9/16`),
-so widening the column silently breaks the video frame — and where container queries are
-available the card measures itself with `100cqw` instead of trusting the constant.
+**The Two-Pixel Gutter Rule.** Adjacent surfaces are separated by 2px of ground,
+never by a margin and never by a border between them. Bands touch the column
+edge; the gutter is the only thing between them.
 
-**The One Phase Rule.** Exactly one phase section is displayed at a time. Two open sections
-is not a denser layout, it is a lost tab strip.
+**The Single Column Rule.** One 620px column at every width. Do not introduce a
+wide-viewport grid, a sidebar, or a two-up layout on this surface.
 
 ## Elevation & Depth
 
-Depth in the Execute register is a **material** — translucency, blur and saturation over a
-photograph — and shadow on top of it is **a state report, not a height cue**. A card at rest
-carries only a hairline inset highlight and a shadow so tight it is nearly invisible
-(`-20px` spread). A card that is *being done* gains a larger, closer shadow tinted with its
-own solid amber and scales to 1.015. A card that is *done* keeps a tinted green drop at
-lower opacity. Nothing is elevated because of where it sits in a hierarchy; things are
-elevated because something is true of them.
+**This system has no elevation.** There is not one drop shadow, one blur radius,
+or one `backdrop-filter` in the file. Every `box-shadow` declaration is
+`inset 0 0 0 Npx` — a printed rule drawn inside the box, occupying no space and
+casting nothing.
 
-Three levels of glass, deliberately distinct: cards blur 20px at 1.8 saturation, panels and
-the settings dial 16px at 1.6, chips and notes 14px, and the session bar 26px at 1.5 —
-the bar is the only element that must stay legible over anything at all.
+Depth is entirely a **value step on the silver**, in three positions:
 
-The Read register has **no shadows whatsoever**. Depth there is a single tonal step (card
-`#F6F8FB` on paper `#E7EBF1`) plus a 1px rule, and that is the entire vocabulary.
+- **Plane** `{colors.plane}` — forward. A waiting row, a panel, a note.
+- **Ground** `{colors.silver}` — the paper. What shows through the gutters.
+- **Spent** `{colors.plane-spent}` — back. A finished row, sitting between the
+  ground and the plane so it recedes toward the paper rather than turning into
+  the heaviest field on the page.
+
+A flooded row escapes the value system entirely: it drops its inset rule and
+becomes a solid field of the channel, which is what makes it read as *on* rather
+than *raised*.
 
 ### Shadow Vocabulary
 
-- **Rest** (`0 1px 0 rgba(255,255,255,.45) inset, 0 10px 26px -20px rgba(27,20,64,.6)`):
-  a lit top edge and the faintest possible anchor to the page.
-- **Doing** (`0 1px 0 rgba(255,255,255,.5) inset, 0 16px 34px -18px var(--solid)`): tinted
-  with the card's own amber, paired with `scale: 1.015`.
-- **Done** (`0 1px 0 rgba(255,255,255,.22) inset, 0 12px 30px -20px var(--solid)`): tinted
-  green, dimmer inset — a finished card recedes.
-- **Inset rim** (`0 0 0 1px rgba(255,255,255,.5) inset`): panels, chips and pills. A
-  one-pixel highlight standing in for a border on translucent surfaces.
-- **Session bar** (`0 -18px 40px -24px rgba(14,10,34,.8)`): upward, separating the bar from
-  the content it is deliberately not covering.
+- **Hairline rim** (`box-shadow: inset 0 0 0 1px {colors.rule}`): the boundary
+  of a waiting or finished row, a chip, a panel.
+- **Heavy rim** (`box-shadow: inset 0 0 0 2px`): the pictogram block's outline
+  and the dial's frame — the two places a boundary is structural rather than
+  incidental.
 
 ### Named Rules
 
-**Shadow Is State, Not Height.** Surfaces are flat at rest. A shadow appears because a
-movement is being done or has been completed, and it is tinted with that state's own colour.
-A shadow added to signal importance, hierarchy, or hoverability is wrong here.
+**The No-Shadow Rule.** Nothing in this system casts. If a surface needs to read
+as separate, give it a value step, an inset rule, or 2px of gutter. A
+`box-shadow` with a non-zero offset or blur is a bug in this world, not a style
+choice.
 
-**The Spotlight Rule.** While a session runs, everything that is not the active card recedes
-toward the paper (`opacity: .3`, `saturate(.5)`) and the backdrop photograph calms with them
-(`opacity: .4`, `saturate(.25)`). Dimming is done element by element, never with an overlay —
-these cards are glass, and a scrim laid behind them would be sampled by their own
-backdrop-filter, darkening the one card the spotlight exists to keep lit. The active card
-stops being glass and goes fully opaque for the same reason. Under `forced-colors` the dim
-tokens reset to `1` and `none`: the palette is the user's, and dimming it is not ours to do.
+**The Three-Value Rule.** Depth has exactly three positions — plane, ground,
+spent — and they are already spent. Do not introduce a fourth surface value.
 
 ## Shapes
 
-Two form languages, and nothing between them.
+`border-radius: 0` on every element in the file: rows, buttons, tabs, chips,
+inputs, the video frame, the carriage, the pictogram block, the chart bars, the
+legend swatches. There is no radius scale because there is no radius.
 
-**Execute** is soft and continuous: 26px cards, 22px panels and notes, 20px video frames,
-16px block actions, 15px badges, and full 99px pills for every control that can be pressed —
-tabs, chips, the check, the hold, the gear, the transport buttons. Borders are mostly
-absent; where a card needs an edge it is a 1px rim derived from the state colour at 72%
-toward white, or a white inset highlight. The session bar is the one asymmetric shape in
-the system (`18px 18px 0 0`), because it is attached to the bottom of the screen.
+Boundaries are **rules, not outlines**: 1px inset for incidental separation, 2px
+for structural, 3px for the tab's top edge (the one place a channel hue appears
+as a line rather than a field). The section heading is a filled ink chip of the
+channel colour with lowercase label type knocked out of it.
 
-**Read** is rectilinear and printed: zero radius everywhere, 1px `#CBD4E0` rules, a 2px ink
-rule under the masthead, dashed gridlines for the load axis, and a selection state drawn as
-a 1.5px box with a 3px bottom edge rather than a fill. Bars in the block chart are plain
-rectangles; only the Execute histogram rounds its bar tops (3px, top corners only).
+The system's recurring silhouette is the **band**: a full-width rectangle, 12px
+of padding, a 44px square pictogram block at the left, name and dose in the
+centre, a state chip at the right. Everything on the page is either a band, a
+chip, or a rule.
 
 ### Named Rules
 
-**The Two-Radius Rule.** A surface is either a 26px glass card or a 0px printed panel.
-Nothing in this system has an 8px corner. Choosing a radius means choosing a register.
+**The Square Corner Rule.** Every corner in this world is square. There is no
+"just this one" — a single rounded element reads as an element from a different
+system that wandered in.
 
-**The Pill Rule.** If it can be pressed and it holds a word, it is a 99px pill. If it holds
-a glyph, it is a circle. Rectangular buttons exist only in the end-of-session prompt row,
-where the words would not fit a 34px circle.
+**The Raster Rule.** Pictograms are drawn on a 44×44 grid using strokes at 0°,
+45° and 90° only, one 4px stroke width throughout, `stroke-linecap: butt`,
+`stroke-linejoin: miter`, and a filled circle for the head. Twenty-two are
+authored, one for every movement the plan can name; the generic figure is the
+fallback and is itself drawn.
 
 ## Components
 
+### The Movement Row (signature component)
+
+A printed band, not a card. It is the primary action: the row *is* the control.
+Square corners, 12px padding, 2px of gutter below it, and a state that is
+carried by treatment rather than by hue.
+
+- **To do (outlined):** plane field `{colors.plane}` with a 1px inset rule in
+  `{colors.rule}`. The pictogram block is 44px, plane-filled, outlined in the
+  **channel** colour at 2px — the channel marks the work still waiting, not the
+  work already done, because in a session the eye has to land on the next undone
+  thing. Name at Title, dose at 13px in `{colors.rule}`, sequence number at
+  Counter.
+- **Doing (flooded):** the entire band floods with the channel field and the
+  inset rule is removed. Everything on it is knocked out in ink. The pictogram
+  goes to **104px**, the name to Headline (26px), the dose to 16px, and the
+  block's fill drops to transparent with an ink outline. Mid-hold the row is
+  read at arm's length by someone breathing hard, so what is on screen is the
+  movement rather than a caption about it.
+- **Done (receded):** the band drops to `{colors.plane-spent}`, keeps its 1px
+  rule, carries **no hue at all**, and loses its shelf of action buttons. It
+  keeps the state chip — the work has to be undoable — and the chip grows a
+  drawn tick (two 2px borders rotated -45°, not a glyph). A finished row is a
+  record, not a target.
+- **Flip:** tapping *Show me* rotates the band 180° on Y over 550ms
+  (`cubic-bezier(.2,.75,.2,1)`) to a demonstration clip on the back face. Under
+  `prefers-reduced-motion` the rotation is replaced by a straight
+  front/back swap with no transform at all.
+
+### The Channel Tabs
+
+Four tabs, `flex: 1 1 0`, 2px apart, 48px tall, left-aligned, lowercase at
+12.5px/wdth 87. Each carries a **3px top rule in its own channel colour** at all
+times — this is the only place all four hues coexist. The selected tab fills
+with its channel colour; the others stay plane. A count sits under each name at
+Counter (10.5px/wdth 75). The strip carries 5px of internal padding so an
+outline focus ring is not clipped by its own overflow scroller.
+
 ### Buttons
 
-- **Shape:** fully round pills (99px) for words, circles for glyphs. No borders on filled
-  actions; a white inset hairline (`0 0 0 1px rgba(255,255,255,.45) inset`) instead.
-- **Primary — the hold / watch action:** Chip Veil background, foreground solved against
-  that composite at 4.5:1, 11px 17px padding, 13px/800 type.
-- **Check:** the same veil, 8px 12px padding, 11px/900 uppercase at .09em tracking. Gains a
-  `✓ ` prefix via `::before` when done — the tick is content generated by state, not a
-  second icon.
-- **Press:** `transform: translateY(2px)` over 120ms. Every pressable thing in the app uses
-  this and only this. There is no hover-lift.
-- **Focus:** `3px solid` Midnight Violet at 3px offset, globally, via `:focus-visible`.
-- **Transport (session bar):** 34px circles, `rgba(255,255,255,.20)` on a 35% white border,
-  with inline SVG glyphs filled `currentColor`. Never `⏸`/`⏭` as text — those render as
-  colour emoji on many Androids, which fights the glass and ignores the button's colour.
-  The primary transport button inverts to solid white and gets dark icons for free.
+- **Shape:** square (0 radius), universally.
+- **Run it (primary):** the loudest field in the column — full-width, 64px
+  minimum, flooded in the channel colour with ink type at 17px/wdth 100, a
+  lowercase Counter-voice sub-label beneath, and a drawn play triangle. It
+  inverts on press (ink field, channel type).
+- **Hold / Start:** ink field, plane type, 48px, 13px/wdth 87. Inverts to the
+  channel colour on press.
+- **Show me / YouTube (ghost):** transparent with a 2px inset rule in
+  `{colors.rule}`; inverts to a solid ink field on press.
+- **State chip:** 48px, 2px solid rule, plane field, Counter voice, lowercase.
+  It always spells the state in words.
+- **Carriage controls:** 48px squares, transparent, 2px `currentColor` border,
+  with inline-SVG transport glyphs. The primary control fills with ink and takes
+  the channel colour for its icon.
+- **Focus:** a 3px solid ink outline at 2px offset everywhere — except on the
+  poster band, where the ink ring measured 1.22:1 and the ring switches to
+  white.
 
-### Cards / Containers
+### The Session Carriage (signature component)
 
-- **Corner Style:** 26px (`.ex`), with the flipped back face at 25px to sit inside the rim.
-- **Background:** a 152° linear gradient in OKLAB from the state tint mixed 55% toward white,
-  down to the tint itself — at 24% alpha at rest. Doing and Done add a
-  `radial-gradient(120% 80% at 12% 0%)` white sheen at 18–30%.
-- **Interaction:** at rest a card is a window onto the backdrop; on hover, focus-within,
-  active or pinned it swaps to the strictly-lighter opaque gradient, so the same solved text
-  colour still holds. Opacity is never raised to protect text — the scrim already bounds
-  how dark the backdrop can get, so the text is solved against the resting composite instead.
-- **Internal Padding:** 16px, with the flipped back face using `inset: -16px` to cancel it
-  exactly, so the video runs edge to edge from the tile's own boundary.
-- **Badge:** 44px square, 15px radius, filled with the state colour raised until it carries
-  Midnight Violet at 4.5:1.
+A fixed bottom bar, one row deep, that appears when a session starts. It is a
+**flat field of the channel's own ink** — no gradient, because Aicher's posters
+have none. It slides up on a 300ms `cubic-bezier(.2,.85,.25,1)` translate and
+sits at the bottom so the movement being timed stays on screen.
 
-### Navigation
+Four-column grid: phase label (Label voice, faded ink at 4.5:1) and step count
+top-left, movement name below, the clock at Display scale (up to 46px, wdth 112,
+tabular) at the right, transport controls at the far right. Progress drives a
+**4px ink rule along the top edge** — a bar, not a hue shift nobody can read
+mid-hold. *Stop* gets its own 12px gutter away from *Pause*, because two pixels
+apart with wet hands is a mis-tap that costs the work.
 
-- **Tabs:** a horizontally scrolling pill strip with hidden scrollbars, 10px 14px padding,
-  900 weight at 13.5px. Unselected is glass on Ink-2; selected inverts to solid Midnight
-  Violet on white. Under `forced-colors` the selected tab becomes a 2px `Highlight` border
-  on `Canvas` rather than a fill, because a fill would be stripped.
-- **Top bar:** one line — a 16px title that never changes, the date that does, then a Today
-  button that exists only when you are not on today, and the gear. A button that says
-  "today" while you are looking at today is a button that does nothing.
+### The Hold Dial
 
-### Panels & Notes
+A plane band framed by a 2px inset ink rule. Two 44px ink squares flanking a
+Display-scale numeral (28px, weight 700, wdth 112, tabular, 72px minimum width
+so the number does not shift the layout as it counts). The label sits between
+them at 13px with a 11.5px sub-line.
 
-- **Panel:** Glass Pane at 22px radius, 16px 17px padding, white inset hairline, blur 16px.
-- **Note:** the same material at 14px blur with a `rgba(255,255,255,.55)` border. Notes carry
-  explanatory prose at 13.5px/500 with bold in Midnight Violet for the load-bearing clause.
+### Panels and Notes
 
-### Signature Component — The Session Bar
+- **Panel:** plane field, 16px padding, 1px inset rule. Its `h3` carries a 2px
+  ink underline. Stacked panels are 2px apart.
+- **Note:** plane field, 16px padding, and a **2px ink rule along the top edge
+  only** — the one asymmetric treatment in the system, and it marks editorial
+  voice rather than data.
 
-A slim fixed bar, not a sheet. Everything is one row deep: a phase label and step count on
-the top row, the exercise name below them, and the clock and transport held against the
-right across both rows. What the shape buys is the screen behind it — the exercise being
-timed stays visible while the timer runs, which a full-height sheet made impossible. Column
-two is `minmax(0, 1fr)` so a long name shrinks and ellipses instead of shoving the clock off
-the edge. Progress is drawn as a 3px line along the bar's own top edge, so it reads as the
-bar filling rather than as one more widget. Its gradient is generated per session by `sky()`,
-which rotates hue with progress and re-solves its own foreground each time. It enters with
-`transform: translateY(100%)` over 340ms on `cubic-bezier(.2,.85,.25,1)`.
+### Charts
 
-### Signature Component — The Flip
+Both the power histogram and the zone bar are drawn as a **single-hue ramp of
+the current channel**, mixed in LCH from white toward the flooded-row colour
+(0.22 → 1.0 for the histogram, 0.25 → 1.0 for the zone bar). Bars are square,
+1px apart, on a 2px ink baseline; the critical-power line is a dashed 2px ink
+rule. There is no categorical palette anywhere in this system.
 
-An exercise card swaps to a video face by rotating 650ms on `cubic-bezier(.2,.75,.2,1)`
-with `preserve-3d`. Identity transforms (`translate: 0; rotate: 0deg; scale: 1`) sit on the
-base state deliberately — applying one only on a state change would move the element into a
-new stacking context mid-transition. Under `prefers-reduced-motion` the flip is not slowed,
-it is **replaced**: the back face drops into normal flow with negative margins doing the
-edge-to-edge job that `inset: -16px` does in the animated version.
+### The Spotlight (signature behaviour)
 
-### Signature Component — The Block (Read register)
+While a session is running, `body.running` drops everything that is not the
+movement being done to **opacity 0.34 and `saturate(0.35)`**, and the poster
+band further to **opacity 0.45 / `saturate(0.2)`**, over a 300ms linear fade.
+The flooded row stays at full strength, so the only thing at full colour on the
+page is the thing you are doing.
 
-Six weeks of prescribed training as one row of flexible columns: height is the day's load,
-the stacked fill is where that load was spent on the intensity ramp, and a rest day is a
-3px dotted baseline rather than a gap. Dashed gridlines carry the load scale, because a
-shape without a scale is decoration. It builds itself once on arrival — `scaleY(.04)` to
-full over 500ms from the bottom edge — and only under `prefers-reduced-motion: no-preference`.
+This is behaviour, not decoration. It is the visual half of the product's whole
+promise — a session completed with the phone on the floor and never touched — and
+it runs alongside a screen wake lock and audio cues so the page can be read from
+across the room without being woken. It recedes toward the **silver**, never
+toward black: this is a light interface and inverting it for the length of a hold
+would be worse. Under `forced-colors` the dimming tokens are set to
+opacity 1 / `none`, because dimming in a user's own two colours destroys legibility
+rather than focusing it.
+
+### Accessibility States
+
+These are designed states, not degradations, and each one is a legitimate
+expression of the world.
+
+- **`prefers-reduced-motion`**: all transitions off; the row's 3D flip becomes a
+  face swap; the carriage appears without sliding.
+- **`prefers-reduced-transparency`**: the poster photograph is removed and the
+  band becomes a flat field of channel ink — still an Aicher poster.
+- **`forced-colors`**: backgrounds strip to `Canvas`, type to `CanvasText`, and
+  the whole system falls back to a border language that still separates. A
+  flooded row becomes a 3px `Highlight` border; a done row becomes 3px
+  `LinkText`. Chart bars and the pictogram block set `forced-color-adjust: none`
+  so the drawing survives. The spotlight's dimming is switched off entirely.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** derive every foreground from a solver against Worst-Case Backdrop (`#939199`).
-  `inkFor` for text on glass, `fade` for a secondary tone, `fill` for a surface that must
-  carry a known foreground.
-- **Do** keep hue meaning one thing per register: state in Execute, intensity in Read.
-- **Do** tint state shadows with the surface's own solid (`var(--solid)`), never with black.
-- **Do** press with `translateY(2px)` over 120ms — the single interaction physic in the app.
-- **Do** write every `prefers-reduced-motion`, `prefers-reduced-transparency` and
-  `forced-colors` branch as a designed state. Glass has no meaning in forced colours; those
-  branches replace it with `Canvas` plus a `CanvasText` border, and mark active and done
-  cards with `Highlight` and `LinkText` borders instead of fills.
-- **Do** ship a `@supports not (backdrop-filter)` path that falls back to opaque panels.
-- **Do** quote Stryd's prescription with `pre-wrap` and leave its own formatting intact.
-- **Do** keep small Read-register text at or above 4.59:1 — the measured value, not the
-  one that looks right.
+- **Do** solve every new colour against its actual ground before shipping it —
+  text at 4.5:1, primary text at 7:1, non-text boundaries at 3:1, and anything
+  on a flooded channel field at 5.5:1. Use `fill`, `inkFor` and `fade`; do not
+  eyeball a value.
+- **Do** record and reuse the **painted** value, never the seed. `#2E7CBF` and
+  `#7E63A8` are inputs to the solver and appear nowhere on screen.
+- **Do** put one channel hue on screen at a time, and let the tab strip be the
+  only place all four meet.
+- **Do** signal state by treatment — outlined, flooded, receded — and always
+  spell the state out in words as well.
+- **Do** move emphasis along the width axis (75 / 87 / 100 / 112) before
+  reaching for another weight.
+- **Do** set every system label in lowercase, and leave content's capitals alone.
+- **Do** separate surfaces with 2px of bare ground, a value step, or an inset
+  rule.
+- **Do** draw new icons and pictograms on the 0/45/90 raster at one 4px stroke
+  width, and give every movement its own.
+- **Do** keep touch targets at 44px minimum, 48px for anything used mid-session.
+- **Do** ship the reduced-motion, reduced-transparency and forced-colors
+  branches with any new surface. They are part of the design, not a cleanup pass.
 
 ### Don't:
 
-- **Don't** author a foreground hex on a glass surface. It bypasses the only thing keeping
-  the app legible over arbitrary footage.
-- **Don't** colour anything by identity. Nine cards must never mean nine hues.
-- **Don't** introduce a dark theme, a neon accent, or a carbon-fibre texture. This is a
-  light interface on pale paper; dimming during a session recedes *toward* the paper, and
-  darkening it would invert the whole app for the length of a hold.
-- **Don't** add streaks, badges, confetti, closing rings or congratulatory copy. The app
-  reports what happened.
-- **Don't** use an 8px radius. Pick a register.
-- **Don't** put a background on `body` — it paints over the negative-z-index backdrop.
-- **Don't** dim with an overlay. Glass samples what is behind it, so an overlay darkens the
-  very card the spotlight exists to keep lit.
-- **Don't** let anything on the session bar wrap, or grow past the clock.
-- **Don't** add a hover-lift, a second press physic, or a shadow that signals importance
-  rather than state.
-- **Don't** widen the Execute column past 620px without moving the flipped card's height
-  derivation with it.
+- **Don't** add a `border-radius`. Anywhere. The vocabulary is one value: 0.
+- **Don't** add a drop shadow, a blur, or a `backdrop-filter`. Every shadow in
+  this system is `inset 0 0 0 Npx` and casts nothing.
+- **Don't** introduce red. Hue names the channel, never urgency; urgency carries
+  by weight, full ink, and a rule.
+- **Don't** signal state by changing hue, or by colour alone.
+- **Don't** put a categorical palette in a chart. Charts are a single-hue ramp
+  of the channel currently on screen.
+- **Don't** paint a dark field. The poster band is the one dark thing in the
+  system, and the spotlight recedes toward the silver, never toward black.
+- **Don't** let a letter, digit or emoji stand in for a drawn mark.
+- **Don't** widen the column past 620px or add a wide-viewport grid to this
+  surface.
+- **Don't** invent a type size outside the ramp, and don't let the browser
+  synthesise a weight or width the font file does not carry
+  (`font-synthesis: none`).
+
+<!-- Scope: this file documents the phone application at ./index.html. The
+     desktop surface at web/index.html is a separate artifact with its own type
+     pairing and is not governed by this system. -->
