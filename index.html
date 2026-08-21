@@ -5,150 +5,297 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Post-run · core &amp; mobility</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#F5F2FF">
+<meta name="theme-color" content="#D9DDD9">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preload" href="fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-:root{ --in-oklab: ; --pane:rgba(255,255,255,.62); --over-solid:#7B5CFF; --paper:#F5F2FF; --ink:#1B1440; --ink-2:#5C557D;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif; }
+/* ── the system ───────────────────────────────────────────────────────
+   Otl Aicher's 1972 programme, applied. Two rules do all the work:
+   HUE NAMES THE CHANNEL -- which part of the day you are in -- and
+   TREATMENT NAMES THE STATE -- outlined, flooded, or filled. Neither
+   variable ever carries the other's meaning. Every colour below is a
+   seed; solveStates() derives what is painted and proves it against the
+   ground before it ships.                                              */
+:root{
+  --u:4px;
+  --band:#0A4A80;                       /* one unit. every measure is a multiple */
+  --silver:#D9DDD9;              /* Aicher's silber: the page is grey, not white */
+  --plane:#EFF1EE;               /* the raised sheet a row is printed on */
+  --plane-2:#CDD2CE;             /* a spent row, receded */
+  --ink:#191E1B;
+  --rule:#B7BDB8;
+  --ch-pre:#5FA842; --ch-run:#2E7CBF; --ch-post:#E8842A; --ch-log:#7E63A8;
+  --ch:var(--ch-run);            /* the channel on screen; sections reassign it */
+  --in-oklab: ;
+  --sans:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
 @supports (background:linear-gradient(in oklab,white,black)){ :root{ --in-oklab:in oklab } }
+/* Univers is Aicher's face and is not free; Archivo is the closest
+   grotesque with a real width axis, which is the part that matters --
+   the whole programme is a width/weight matrix, not one cut. */
+@font-face{font-family:Archivo;src:url(fonts/archivo-var.woff2)format("woff2-variations"),
+  url(fonts/archivo-var.woff2)format("woff2");
+  font-weight:100 900;font-stretch:62% 125%;font-display:swap;font-style:normal}
 *{box-sizing:border-box}
-/* --- moving backdrop -------------------------------------------------
-   The glass needs something worth blurring. The scrim above it is not a
-   mood layer: it clamps how dark the backdrop can ever get, which is what
-   keeps every contrast solve below valid on arbitrary video frames.      */
-#bg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;
-  pointer-events:none;background:var(--paper)}
-#scrim{position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:linear-gradient(180deg var(--in-oklab),
-    rgba(245,242,255,.84) 0%,
-    rgba(245,242,255,.87) 34%,
-    rgba(245,242,255,.88) 100%)}
-@media (prefers-reduced-motion:reduce){ #bg{display:none} #scrim{background:var(--paper)} }
-@media (prefers-reduced-transparency:reduce){ #bg{display:none} #scrim{background:var(--paper)} }
-@media (forced-colors:active){ #bg{display:none} #scrim{background:Canvas} }
-/* The paper goes on html alone. With it on body as well, body's own background
-   painted over #bg -- a negative z-index child paints before an in-flow
-   parent's background -- so the backdrop below has never actually been on
-   screen. */
-html{background:var(--paper)}
-html,body{margin:0;color:var(--ink);font-family:var(--sans)}
-body{padding:24px 16px calc(40px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;
-  -webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;
-  background-attachment:fixed}
-:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+/* ── the poster band ──────────────────────────────────────────────────
+   Aicher's posters ran treated sports photography under the type. The
+   photograph is desaturated and printed in the channel's own ink, which
+   is what makes it part of the system rather than a backdrop behind it. */
+#bg{position:absolute;top:0;left:0;width:100%;height:132px;object-fit:cover;
+  object-position:center 26%;z-index:-2;pointer-events:none;
+  filter:grayscale(1) contrast(1.22) brightness(1.06)}
+#scrim{position:absolute;top:0;left:0;width:100%;height:132px;z-index:-1;pointer-events:none;
+  background:rgba(10,74,128,.84);border-bottom:2px solid var(--ink)}
+@supports (mix-blend-mode:multiply){
+  #scrim{background:var(--band);mix-blend-mode:multiply}
+}
+/* the user asked for less transparency, or the OS owns the palette: the
+   band becomes a flat field of ink, which is still an Aicher poster. */
+@media (prefers-reduced-transparency:reduce){ #bg{display:none} #scrim{background:var(--band);mix-blend-mode:normal} }
+@media (forced-colors:active){ #bg{display:none} #scrim{background:Canvas;border-bottom:2px solid CanvasText} }
+
+html{background:var(--silver)}
+html,body{margin:0;color:var(--ink);font-family:var(--sans);font-synthesis:none}
+body{padding:0 calc(var(--u)*4) calc(var(--u)*10 + env(safe-area-inset-bottom));
+  max-width:620px;margin:0 auto;-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;min-height:100vh;position:relative}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 button{font-family:inherit}
+/* icons sit on the text baseline at the size of the type they accompany */
+.i{width:1em;height:1em;display:inline-block;vertical-align:-.12em;
+  fill:currentColor;flex:none}
+.acts button .i,.acts a .i{margin-right:.5em}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+html{scrollbar-color:var(--ink) var(--silver);scrollbar-width:thin}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--silver)}
+::-webkit-scrollbar-thumb{background:var(--ink);border:2px solid var(--silver)}
+::selection{background:var(--ch);color:var(--ink)}
+::-moz-selection{background:var(--ch);color:var(--ink)}
 
-.hi{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin:0}
-h1{font-size:clamp(36px,11vw,50px);line-height:.95;letter-spacing:-.035em;font-weight:900;margin:8px 0 0}
-h1 span{background-image:var(--mark);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lede{color:var(--ink-2);font-size:15px;line-height:1.5;margin:12px 0 0;font-weight:500;max-width:42ch}
+/* ── the masthead, knocked out of the band ───────────────────────────
+   Aicher set the programme in lowercase. Only system labels obey it;
+   an exercise name is content and keeps the capitals it was given.    */
+.topbar{display:flex;align-items:flex-end;gap:calc(var(--u)*2);
+  height:132px;padding-bottom:calc(var(--u)*3);color:#fff}
+.topbar h1{font-size:23px;font-weight:700;font-stretch:87%;letter-spacing:-.005em;
+  line-height:1;margin:0;text-transform:lowercase;white-space:nowrap}
+.hi{margin:0;font-size:11px;font-weight:600;font-stretch:87%;letter-spacing:.14em;
+  text-transform:lowercase;opacity:.92}
+.topbar .hi{margin-right:auto;padding-bottom:2px}
+.todaybtn,.gearbtn{flex:none;border:2px solid #fff;background:none;color:#fff;
+  cursor:pointer;border-radius:0;font-family:inherit;
+  transition:background .18s linear,color .18s linear}
+.todaybtn{min-height:44px;padding:calc(var(--u)*1.5) calc(var(--u)*2.5);font-size:12px;font-weight:600;
+  font-stretch:87%;letter-spacing:.06em;text-transform:lowercase}
+.todaybtn[hidden]{display:none}
+.gearbtn{width:48px;height:48px;font-size:15px;line-height:1;display:grid;place-items:center}
+.todaybtn:active,.gearbtn:active{background:#fff;color:var(--ink)}
+/* These two sit on the poster band, which is near-black under the photograph:
+   the global ink focus ring measured 1.22:1 there and was effectively invisible.
+   On the band the ring is white. */
+.topbar :focus-visible{outline-color:#fff}
+.gearbtn[aria-expanded="true"]{background:#fff;color:var(--ink)}
 
-.rainbow{display:flex;gap:4px;margin:20px 0 6px}
-.rainbow i{flex:1;height:10px;border-radius:99px;transition:background .4s,transform .4s,box-shadow .4s}
-.stats{display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
-.run{display:block;width:100%;margin:2px 0 16px;padding:16px 18px;border:0;border-radius:22px;
-  background:var(--run-bg);color:var(--run-fg);text-align:left;cursor:pointer;
-  font-size:16px;font-weight:900;letter-spacing:-.01em;
-  box-shadow:0 10px 26px -14px var(--run-bg)}
-.run small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  margin-top:4px;color:var(--run-fg-2)}
-.run:active{transform:translateY(2px)}
-.legend{display:flex;gap:14px;margin:0 0 22px 4px;flex-wrap:wrap}
-.key{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;color:var(--ink-2);
-  letter-spacing:.06em;text-transform:uppercase}
-.key i{width:14px;height:14px;border-radius:5px;display:block}
-.chip{background:var(--pane);border-radius:99px;padding:9px 15px;font-size:13px;font-weight:800;
-  -webkit-backdrop-filter:blur(14px) saturate(1.6);backdrop-filter:blur(14px) saturate(1.6);
-  border:1px solid rgba(255,255,255,.6)}
-.chip b{font-size:15px}
+/* ── channels ────────────────────────────────────────────────────────
+   A recorder has channels and so does the day. The strip is the one
+   place every channel colour appears at once; everywhere else exactly
+   one is on screen.                                                    */
+.tabs{display:flex;gap:2px;margin:calc(var(--u)*4) 0 calc(var(--u)*5);
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;
+  gap:1px;cursor:pointer;min-height:48px;justify-content:center;
+  padding:calc(var(--u)*2) calc(var(--u)*2) calc(var(--u)*1.5);
+  border:0;border-top:3px solid var(--tab-ch);background:var(--plane);color:var(--ink);
+  font-family:inherit;font-size:12.5px;font-weight:600;font-stretch:87%;
+  letter-spacing:.02em;text-transform:lowercase;white-space:nowrap;text-align:left;
+  transition:background .18s linear,color .18s linear}
+.tab .n{font-size:10.5px;font-weight:500;font-stretch:75%;letter-spacing:.1em;opacity:.72;
+  font-variant-numeric:tabular-nums}
+.tab[aria-selected="true"]{background:var(--tab-ch);color:var(--ink)}
+.tab[aria-selected="true"] .n{opacity:.88}
+@media (forced-colors:active){
+  .tab{border-top:3px solid CanvasText;background:Canvas;color:CanvasText}
+  .tab[aria-selected="true"]{background:Highlight;color:HighlightText;border-top-color:Highlight}
+}
+@media (max-width:360px){ .tab{padding:calc(var(--u)*1.5) calc(var(--u)*1.5);font-size:11.5px} }
+/* the strip must not clip its children's focus rings: an outline does not count
+   as scrollable overflow, so overflow:auto with no padding hid all four */
+.tabs{padding:5px 5px 0;margin-left:-5px;margin-right:-5px}
 
-.dial{display:flex;align-items:center;gap:12px;border-radius:26px;padding:14px 14px 14px 20px;
-  margin-bottom:30px;background:var(--pane);
-  -webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);
-  border:1px solid rgba(255,255,255,.6);box-shadow:0 1px 0 rgba(255,255,255,.5) inset}
-.dial .lab{flex:1;font-size:13px;font-weight:800;line-height:1.35}
-.dial .lab small{display:block;font-weight:600;color:var(--ink-2);font-size:11.5px;margin-top:2px}
-.dial button{width:46px;height:46px;border-radius:50%;border:0;color:#fff;font-size:24px;font-weight:700;
-  line-height:1;cursor:pointer;transition:transform .12s}
-.dial button:active{transform:translateY(2px)}
-.dial output{font-size:28px;font-weight:900;min-width:66px;text-align:center;letter-spacing:-.03em;
+/* ── sections ────────────────────────────────────────────────────────*/
+.ph{display:none;margin-bottom:calc(var(--u)*8)}
+.ph.open{display:block}
+.pht{margin:0 0 calc(var(--u)*4)}
+.pht .s{display:inline-block;font-size:11px;font-weight:600;font-stretch:87%;
+  letter-spacing:.16em;text-transform:lowercase;color:var(--ink);background:var(--ch);
+  padding:calc(var(--u)*1.25) calc(var(--u)*2)}
+h2,h3{font-size:11px;font-weight:600;font-stretch:87%;letter-spacing:.16em;
+  text-transform:lowercase;color:var(--ink);margin:0 0 calc(var(--u)*3)}
+h3{margin:calc(var(--u)*6) 0 calc(var(--u)*3);padding-bottom:calc(var(--u)*1);
+  border-bottom:2px solid var(--ink)}
+section{margin-bottom:calc(var(--u)*7)}
+/* The control that delivers the product's whole promise -- a session completed
+   without picking the phone up -- had no rule at all and rendered as an OS
+   default button in the middle of an Aicher programme. It is the primary
+   action, so it is the loudest field in the column. */
+.run{display:block;width:100%;border:0;border-radius:0;cursor:pointer;
+  margin:0 0 2px;padding:calc(var(--u)*4) calc(var(--u)*4);
+  background:var(--ch);color:var(--ink);font-family:inherit;text-align:left;
+  font-size:17px;font-weight:600;font-stretch:100%;letter-spacing:-.01em;
+  display:flex;align-items:center;gap:.55em;min-height:64px;
+  transition:background .18s linear,color .18s linear}
+.run small{display:block;font-size:11px;font-weight:500;font-stretch:87%;
+  letter-spacing:.12em;text-transform:lowercase;margin-top:3px;opacity:.82}
+.run .i{width:1.15em;height:1.15em}
+.run:active{background:var(--ink);color:var(--ch)}
+.grp{margin-bottom:calc(var(--u)*6)}
+.grp h3{margin-top:0}
+
+/* ── the row ─────────────────────────────────────────────────────────
+   Not a card. A printed band on a sheet: square corners, a rule, and a
+   pictogram block that is part of the same grid as the type beside it. */
+.ex{position:relative;background:var(--plane);border:0;border-radius:0;
+  padding:calc(var(--u)*3);margin-bottom:2px;
+  box-shadow:inset 0 0 0 1px var(--rim);
+  contain:layout style;perspective:1400px;
+  transition:background .22s linear,box-shadow .22s linear,color .22s linear;
+  translate:0;rotate:0deg;scale:1}
+/* height is not animated: transitioning min-height thrashes layout for
+   sixty frames, and the change is behind the rotation anyway. */
+.faces{position:relative;transform-style:preserve-3d;
+  transition:transform .55s cubic-bezier(.2,.75,.2,1);
+  transform:rotateY(0deg)}
+.ex.flipped{min-height:calc((min(620px,100vw) - 32px) * 9 / 16 + 12px)}
+@supports (container-type:inline-size){
+  .ex{container-type:inline-size}
+  .ex.flipped{min-height:0}
+  .ex.flipped .faces{min-height:calc((100cqw + 24px) * 9 / 16 + 12px)}
+}
+.ex.flipped .faces{transform:rotateY(180deg)}
+.front,.back{-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.back{position:absolute;inset:calc(var(--u)*-3);transform:rotateY(180deg);
+  border-radius:0;overflow:hidden;background:var(--solid);display:flex;flex-direction:column}
+.back .vid{position:relative;flex:1 0 auto;width:100%;aspect-ratio:16/9;background:var(--ink)}
+.back .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.back .cap{padding:calc(var(--u)*2.5) calc(var(--u)*3);min-height:44px;flex:0 0 auto;
+  display:flex;justify-content:space-between;gap:calc(var(--u)*2.5);align-items:center;
+  font-size:13px;font-weight:600;color:var(--nm)}
+.back .cap span{font-size:10.5px;font-weight:600;font-stretch:87%;letter-spacing:.14em;
+  text-transform:lowercase;color:var(--deep)}
+.back .fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;
+  padding:calc(var(--u)*4);color:#fff;font-size:14px;font-weight:500;line-height:1.5}
+@media (prefers-reduced-motion:reduce){
+  .faces{transition:none}
+  .ex.flipped .faces{transform:none}
+  .ex.flipped .front{display:none}
+  .back{transform:none;position:relative;inset:auto;margin:calc(var(--u)*-3);width:auto;min-height:0}
+  .ex.flipped{min-height:0}
+  .ex:not(.flipped) .back{display:none}
+}
+
+/* treatment names the state, and only the state */
+.ex[data-state="doing"]{background:var(--solid);box-shadow:none}
+/* Mid-hold the row is read at arm's length by someone breathing hard: the
+   pictogram goes to 3x and the dose comes up with it, so what is on screen is
+   the movement rather than a caption about it. */
+.ex[data-state="doing"]:not(.flipped) .badge{width:104px;height:104px}
+.ex[data-state="doing"]:not(.flipped) .nm{font-size:26px}
+.ex[data-state="doing"]:not(.flipped) .dose{font-size:16px;margin-top:calc(var(--u)*1.5)}
+.ex[data-state="doing"]:not(.flipped) .hd{align-items:center}
+@media (max-width:360px){
+  .ex[data-state="doing"]:not(.flipped) .badge{width:80px;height:80px}
+  .ex[data-state="doing"]:not(.flipped) .nm{font-size:22px}
+}
+.ex[data-state="done"]{background:var(--plane-2);box-shadow:inset 0 0 0 1px var(--rim)}
+/* A finished row is a record, not a target: it keeps the state chip so the work
+   can be undone, and loses the shelf of three buttons that were competing with
+   the rows still to do. */
+.ex[data-state="done"] .acts{display:none}
+
+/* ── the pictogram ───────────────────────────────────────────────────
+   Built on Aicher's raster: strokes at 0, 45 and 90 degrees only, one
+   stroke width throughout, a circle for the head. Every movement in the
+   app has one, so the block is never a letter or a number standing in
+   for a drawing.                                                       */
+.hd{display:flex;gap:calc(var(--u)*3);align-items:flex-start}
+.mark{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
+  gap:calc(var(--u)*1.25)}
+.badge{width:44px;height:44px;border-radius:0;
+  background:var(--badge-bg);color:var(--badge-fg);display:block;
+  box-shadow:inset 0 0 0 2px var(--badge-line);transition:background .22s linear}
+.badge svg{display:block;width:100%;height:100%}
+.badge svg *{vector-effect:non-scaling-stroke}
+.seq{font-size:10px;font-weight:500;font-stretch:75%;letter-spacing:.14em;
+  color:var(--deep);font-variant-numeric:tabular-nums;line-height:1}
+.txt{flex:1;min-width:0;padding-right:calc(var(--u)*6)}
+.nm{font-size:19px;font-weight:600;font-stretch:100%;letter-spacing:-.012em;
+  line-height:1.12;color:var(--nm)}
+.dose{font-size:13px;font-weight:400;color:var(--deep);margin-top:calc(var(--u)*0.75);
   font-variant-numeric:tabular-nums}
 
-h2{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);margin:0 0 12px 4px}
-/* h2 was the section label; inside a phase the groups step down to h3 and keep
-   exactly that look, so nothing shifts visually -- only the outline gains a
-   level. */
-h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
-  margin:22px 0 12px 4px}
+/* ── controls ────────────────────────────────────────────────────────*/
+.check{flex:0 0 auto;border:2px solid var(--chip-line);border-radius:0;
+  min-height:48px;display:inline-flex;align-items:center;
+  padding:calc(var(--u)*2) calc(var(--u)*2.5);background:var(--chip-bg);color:var(--chip-fg);
+  cursor:pointer;font-size:10.5px;font-weight:600;font-stretch:87%;letter-spacing:.1em;
+  text-transform:lowercase;white-space:nowrap;
+  transition:background .18s linear,color .18s linear}
+.ex[data-state="done"] .check::before{content:"";display:inline-block;width:9px;height:5px;
+  border-left:2px solid currentColor;border-bottom:2px solid currentColor;
+  transform:rotate(-45deg);margin-right:6px;vertical-align:2px}
+.acts{display:flex;gap:2px;margin-top:calc(var(--u)*3);flex-wrap:wrap}
+.acts button,.acts a{border:0;border-radius:0;min-height:48px;
+  display:inline-flex;align-items:center;padding:calc(var(--u)*2) calc(var(--u)*3.5);
+  font-size:13px;font-weight:600;font-stretch:87%;letter-spacing:.01em;cursor:pointer;
+  text-decoration:none;transition:background .18s linear,color .18s linear}
+.hold{background:var(--ink);color:var(--plane)}
+.watch,.acts a{background:transparent;color:var(--chip-fg);box-shadow:inset 0 0 0 2px var(--chip-line)}
+.hold:active{background:var(--ch);color:var(--ink)}
+.watch:active,.acts a:active{background:var(--ink);color:var(--plane);box-shadow:none}
 
-/* One phase on screen at a time, chosen from a strip rather than by folding
-   four headers. A fold answers "what else is there" by making you open things;
-   a tab bar answers it at a glance, and keeps the one you want one tap away
-   instead of a scroll away. */
-.tabs{display:flex;gap:6px;margin:22px 0 18px;overflow-x:auto;scrollbar-width:none;
-  -webkit-overflow-scrolling:touch}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex:none;display:flex;align-items:baseline;gap:7px;cursor:pointer;
-  padding:10px 14px;border-radius:99px;border:1px solid transparent;
-  background:var(--pane);color:var(--ink-2);font:900 13.5px/1 var(--sans);
-  letter-spacing:-.01em;white-space:nowrap;
-  transition:background .2s,color .2s,border-color .2s}
-.tab .n{font-size:11px;font-weight:800;opacity:.8}
-/* One line where there were four. The title is small because it is the same
-   every day; the date is the part that changes. */
-.topbar{display:flex;align-items:baseline;gap:10px;padding-top:2px}
-.topbar h1{font-size:16px;font-weight:900;letter-spacing:-.02em;line-height:1.1;margin:0;
-  color:var(--ink);white-space:nowrap}
-.topbar .hi{font-size:11.5px;letter-spacing:.08em;white-space:nowrap;margin-right:auto}
-.topbar .todaybtn{margin-left:0}
-/* Only there when you are not on today, because a button that says "today"
-   while you are looking at today is a button that does nothing. */
-.todaybtn{margin-left:auto;flex:none;padding:8px 13px;border-radius:99px;cursor:pointer;
-  border:1px solid var(--rim);background:var(--pane);color:var(--ink-2);
-  font:800 12px/1 var(--sans);letter-spacing:.02em}
-.todaybtn[hidden]{display:none}
-.topbar .hi{margin-right:auto}
-/* Settings is not part of the day, so it sits above the day rather than among
-   its phases -- and the strip gets its full width back for four tabs that only
-   just fit. */
-.gearbtn{margin-left:0;flex:none;width:38px;height:38px;border-radius:99px;cursor:pointer;
-  border:1px solid var(--rim);background:var(--pane);color:var(--ink-2);font-size:16px;
-  line-height:1;transition:background .2s,color .2s}
-.gearbtn[aria-expanded="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-#devPanels .panel{margin-bottom:10px}
-.tab[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.tab[aria-selected="true"] .n{opacity:.75}
-@media (forced-colors:active){
-  .tab[aria-selected="true"]{border:2px solid Highlight;background:Canvas;color:CanvasText}
-}
-/* 360px is the common narrow phone and the four tabs just miss fitting there.
-   Below that the strip scrolls, which is the right answer rather than shaving
-   the type until it cannot be read. */
-@media (max-width:360px){
-  .tabs{gap:5px}
-  .tab{padding:9px 11px;font-size:12.5px}
-  .tab .n{font-size:10.5px}
-}
+.player{display:none;margin-top:calc(var(--u)*3)}
+.player.open{display:block}
+/* one live window: the clip is the only bright, moving thing on the page */
+.frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:0;overflow:hidden;
+  background:var(--ink)}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.facade{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;cursor:pointer;
+  background:var(--ink)}
+.facade img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.1)}
+.facade b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:var(--ch);color:var(--ink);border-radius:0;padding:calc(var(--u)*3) calc(var(--u)*5);
+  font-size:13px;font-weight:600;font-stretch:87%;letter-spacing:.06em;text-transform:lowercase}
+.hint{font-size:11.5px;font-weight:400;color:var(--ink);opacity:.75;
+  margin:calc(var(--u)*2) 0 0;line-height:1.5}
 
-.ph{display:none;margin-bottom:34px}
-.ph.open{display:block}
-/* The tab already names the phase; this only says the thing the tab cannot. */
-.pht{margin:0 0 12px 2px}
-.pht .s{font-size:12.5px;font-weight:700;color:var(--ink-2)}
-/* The prescription is quoted, not restyled: it arrives as prose with its own
-   line breaks and indented lists, so pre-wrap rather than a paragraph. */
-.pre{font-family:inherit;font-size:13.5px;line-height:1.62;color:var(--ink-2);font-weight:500;
-  white-space:pre-wrap;overflow-wrap:break-word;margin:10px 0 0}
-.plan-t{font-size:17px;font-weight:900;letter-spacing:-.02em;color:var(--ink)}
-.plan-m{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.plan-m .chip{padding:7px 12px;font-size:12px}
-.quiet{color:var(--ink-2);font-size:14px;font-weight:600}
+/* ── the dial ────────────────────────────────────────────────────────*/
+.dial{display:flex;align-items:center;gap:calc(var(--u)*3);
+  padding:calc(var(--u)*3);margin-bottom:calc(var(--u)*6);
+  background:var(--plane);box-shadow:inset 0 0 0 2px var(--ink)}
+.dial .lab{flex:1;font-size:13px;font-weight:600;line-height:1.3}
+.dial .lab small{display:block;font-weight:400;font-size:11.5px;margin-top:2px;opacity:.75}
+.dial button{width:44px;height:44px;border-radius:0;border:0;background:var(--ink);color:var(--plane);
+  font-size:22px;font-weight:600;line-height:1;cursor:pointer;font-family:inherit}
+.dial button:active{background:var(--ch)}
+.dial output{font-size:28px;font-weight:700;font-stretch:112%;min-width:72px;text-align:center;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 
-/* The run card swaps faces rather than rotating them. The video back is
-   absolutely positioned so its height comes from the front, which is right for
-   a 16/9 frame and wrong for a prescription of arbitrary length. */
+/* ── plan, prescription, charts ──────────────────────────────────────*/
+.pre{font-family:inherit;font-size:13.5px;line-height:1.62;font-weight:400;
+  white-space:pre-wrap;overflow-wrap:break-word;margin:calc(var(--u)*2.5) 0 0;color:var(--deep)}
+.plan-t{font-size:17px;font-weight:600;letter-spacing:-.012em;color:var(--nm)}
+.plan-m{display:flex;gap:2px;flex-wrap:wrap;margin-top:calc(var(--u)*2.5)}
+.chip{background:var(--chip-bg);color:var(--chip-fg);border-radius:0;
+  padding:calc(var(--u)*1.5) calc(var(--u)*2.5);font-size:12px;font-weight:600;
+  box-shadow:inset 0 0 0 1px var(--chip-line);font-variant-numeric:tabular-nums}
+.chip b{font-weight:700}
+.quiet{color:var(--ink);opacity:.72;font-size:14px;font-weight:400}
 .runcard{margin-bottom:0}
 .runcard .faces{transform:none!important;min-height:0}
 .runcard.flipped,.runcard.flipped .faces{min-height:0}
@@ -156,278 +303,193 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
   border-radius:0;overflow:visible;display:none}
 .runcard.flipped .back{display:block}
 .runcard.flipped .front{display:none}
-.plan-head{display:flex;align-items:flex-start;gap:10px}
+.plan-head{display:flex;align-items:flex-start;gap:calc(var(--u)*2.5)}
 .plan-head .plan-t{flex:1;min-width:0}
-.info{flex:none;width:30px;height:30px;border-radius:99px;cursor:pointer;
-  border:1px solid var(--rim);background:var(--pane);color:var(--ink-2);
-  font:900 15px/1 var(--sans);font-style:italic}
-.zwrap{margin-top:14px}
-/* Bars sit on a common floor and are read against the CP line, so height has to
-   mean the same thing across the whole chart -- hence one scale for all of them
-   rather than each bar filling its own box. */
-.hist{position:relative;display:flex;align-items:flex-end;gap:2px;height:74px;
-  padding-bottom:1px;border-bottom:1px solid var(--rim)}
-.hist i{display:block;min-width:2px;border-radius:3px 3px 0 0}
+.info{flex:none;width:30px;height:30px;border-radius:0;cursor:pointer;
+  border:2px solid var(--chip-line);background:var(--chip-bg);color:var(--chip-fg);
+  font-family:inherit;font-size:14px;font-weight:700;font-style:italic;line-height:1}
+.zwrap{margin-top:calc(var(--u)*3.5)}
+.hist{position:relative;display:flex;align-items:flex-end;gap:1px;height:74px;
+  padding-bottom:1px;border-bottom:2px solid var(--ink)}
+.hist i{display:block;min-width:2px;border-radius:0}
 .hist .cp{position:absolute;left:0;right:0;bottom:var(--cp);height:0;
-  border-top:1px dashed var(--ink-2);opacity:.55}
-.hist .cp span{position:absolute;right:0;top:-14px;font-size:10px;font-weight:900;
-  letter-spacing:.08em;color:var(--ink-2)}
-.zbar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--pane)}
+  border-top:2px dashed var(--ink);opacity:.6}
+.hist .cp span{position:absolute;right:0;top:-14px;font-size:10px;font-weight:600;
+  font-stretch:75%;letter-spacing:.1em;text-transform:lowercase}
+.zbar{display:flex;height:14px;border-radius:0;overflow:hidden;background:var(--plane-2)}
 .zbar i{display:block}
-.zkey{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:9px}
-.zkey span{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--ink-2)}
-.zkey i{width:9px;height:9px;border-radius:3px;flex:none}
-.zcap{font-size:11.5px;font-weight:700;color:var(--ink-2);opacity:.75;margin-top:8px}
-.grp{margin-bottom:26px}
-.grp h3{margin-top:0}
+.zkey{display:flex;flex-wrap:wrap;gap:calc(var(--u)*1.5) calc(var(--u)*3.5);margin-top:calc(var(--u)*2.5)}
+.zkey span{display:flex;align-items:center;gap:calc(var(--u)*1.5);font-size:11.5px;
+  font-weight:500;font-stretch:87%;text-transform:lowercase;letter-spacing:.04em}
+.zkey i{width:10px;height:10px;border-radius:0;flex:none}
+.zcap{font-size:11px;font-weight:500;font-stretch:87%;letter-spacing:.06em;
+  text-transform:lowercase;opacity:.72;margin-top:calc(var(--u)*2)}
+.age{font-size:11.5px;font-weight:500;font-stretch:87%;letter-spacing:.05em;
+  text-transform:lowercase;margin:calc(var(--u)*2.5) 0 0;opacity:.8}
+/* An expired token is the reason tomorrow's plan will not arrive, so it has to
+   carry. Aicher's programme has no red in it, so it carries by weight and rule
+   instead: full ink, bold, with a rule under it. */
+.age.stale{color:var(--ink);opacity:1;font-weight:700;
+  border-bottom:2px solid var(--ink);padding-bottom:calc(var(--u)*1);display:inline-block}
+.more{margin-top:calc(var(--u)*3)}
+.more summary{cursor:pointer;font-size:11px;font-weight:600;font-stretch:87%;
+  letter-spacing:.14em;text-transform:lowercase;
+  min-height:44px;display:flex;align-items:center}
 .grp .more{margin-top:2px}
-.age{font-size:12px;font-weight:700;color:var(--ink-2);margin:10px 2px 0;opacity:.85}
-/* an expired token is not decoration: it is the reason tomorrow's plan will not arrive */
-.age.stale{color:#8A2F2F;opacity:1}
-.more{margin-top:12px}
-.more summary{cursor:pointer;font-size:12px;font-weight:900;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--ink-2)}
-section{margin-bottom:28px}
 
-.ex{position:relative;border-radius:26px;padding:16px;margin-bottom:10px;
-  background:var(--surface);
-  -webkit-backdrop-filter:blur(20px) saturate(1.8);backdrop-filter:blur(20px) saturate(1.8);
-  border:1px solid var(--rim);
-  box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 10px 26px -20px rgba(27,20,64,.6);
-  contain:layout style;transition:background .25s,box-shadow .3s,scale .2s,min-height .5s,opacity .35s,filter .35s;
-  perspective:1400px;
-  /* identity transforms on the base: applying one only on a state change would
-     move the element into a new stacking context mid-transition */
-  translate:0; rotate:0deg; scale:1}
-.faces{position:relative;transform-style:preserve-3d;
-  transition:transform .65s cubic-bezier(.2,.75,.2,1),min-height .5s;
-  transform:rotateY(0deg)}
-/* The back is a video card: the clip runs edge to edge across the top of the tile
-   and the frame keeps 16/9, so YouTube never pillarboxes it. The card has to be
-   tall enough to hold that frame plus the caption strip, hence the min-height --
-   card width is the body column (620px cap) minus the 16px gutters either side. */
-.ex.flipped{min-height:calc((min(620px,100vw) - 32px) * 9 / 16 + 12px)}
-/* Same sum, but measured instead of assumed: 100cqw is the card's own content box,
-   so the tile keeps fitting the frame if the column width ever changes. The floor
-   lives on .faces because an element cannot query itself as a container. */
-@supports (container-type:inline-size){
-  .ex{container-type:inline-size}
-  .ex.flipped{min-height:0}
-  .ex.flipped .faces{min-height:calc((100cqw + 32px) * 9 / 16 + 12px)}
-}
-.ex.flipped .faces{transform:rotateY(180deg)}
-.front,.back{-webkit-backface-visibility:hidden;backface-visibility:hidden}
-/* -16px on every side cancels the card padding: the back face IS the card, so the
-   clip below it starts at the tile's own edge instead of inside a 16px gutter. */
-.back{position:absolute;inset:-16px;transform:rotateY(180deg);border-radius:25px;overflow:hidden;
-  background:var(--solid);display:flex;flex-direction:column}
-/* flex-basis comes from the aspect ratio, shrink 0 so a short card never squashes the
-   frame back into a letterbox; grow 1 so a tall one is filled by the clip, not by padding */
-.back .vid{position:relative;flex:1 0 auto;width:100%;aspect-ratio:16/9;background:#0E0A22}
-.back .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.back .cap{padding:10px 16px;min-height:44px;flex:0 0 auto;
-  display:flex;justify-content:space-between;gap:10px;align-items:center;
-  font-size:13px;font-weight:900;color:var(--nm)}
-.back .cap span{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--deep)}
-.back .fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:18px;
-  color:#fff;font-size:14px;font-weight:700;line-height:1.5}
-@media (prefers-reduced-motion:reduce){
-  .faces{transition:none}
-  .ex.flipped .faces{transform:none}
-  .ex.flipped .front{display:none}
-  /* no flip here, so the back is in flow: negative margins do the edge-to-edge job
-     that inset:-16px does above, and the 16/9 frame sets the height on its own */
-  .back{transform:none;position:relative;inset:auto;margin:-16px;width:auto;min-height:0}
-  .ex.flipped{min-height:0}
-  .ex:not(.flipped) .back{display:none}
-}
-/* Interacting with a card makes it opaque: at rest it is a window onto the backdrop,
-   under the finger it is a surface you are reading. Doing/Done are already solid. */
-.ex.pinned,.ex:focus-within,.ex:active{background:var(--opaque)}
-@media (hover:hover){ .ex:hover{background:var(--opaque)} }
-.ex[data-state="doing"]{box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 16px 34px -18px var(--solid);
-  scale:1.015}
-.ex[data-state="done"]{box-shadow:0 1px 0 rgba(255,255,255,.22) inset, 0 12px 30px -20px var(--solid)}
+/* ── panels and notes ────────────────────────────────────────────────*/
+.panel{background:var(--plane);border-radius:0;padding:calc(var(--u)*4);
+  box-shadow:inset 0 0 0 1px var(--rule)}
+#devPanels .panel{margin-bottom:2px}
+.panel h3{margin:0 0 calc(var(--u)*2.5);border-bottom:2px solid var(--ink);
+  padding-bottom:calc(var(--u)*1)}
+.log{list-style:none;margin:0;padding:0}
+.log li{display:flex;justify-content:space-between;gap:calc(var(--u)*2.5);
+  padding:calc(var(--u)*2) 0;font-size:13.5px;font-weight:400;border-top:1px solid var(--rule)}
+.log li:first-child{border-top:0}
+.log b{font-weight:600}
+.log span{font-weight:500;font-size:12px;font-variant-numeric:tabular-nums;opacity:.78}
+.verdict{font-size:13.5px;line-height:1.6;font-weight:400;margin:calc(var(--u)*3) 0 0}
+.verdict b{font-weight:600}
+.bump{margin-top:calc(var(--u)*3);width:100%;padding:calc(var(--u)*3.5);border:0;border-radius:0;
+  cursor:pointer;background:var(--ch);color:var(--ink);font-family:inherit;
+  font-size:14px;font-weight:600;font-stretch:87%;letter-spacing:.04em;text-transform:lowercase}
+.bump[disabled]{background:var(--plane-2);color:var(--ink);opacity:.8;cursor:default}
+.note{font-size:13.5px;line-height:1.6;font-weight:400;background:var(--plane);
+  border-radius:0;padding:calc(var(--u)*4);margin:calc(var(--u)*3) 0 0;
+  border-top:2px solid var(--ink)}
+.note b{font-weight:600}
 
-/* Spotlight, while a session is running: everything that is not the exercise
-   being done or the bar timing it drops back, so the card holding the video is
-   the only lit thing left.
-   Dimmed element by element rather than under a single overlay. These cards are
-   glass -- an overlay laid behind them would be sampled by their own
-   backdrop-filter, which would darken the very card the spotlight exists to
-   keep lit. Sections are skipped for the same reason in reverse: dimming one
-   would take the active card inside it down too, and opacity on an ancestor
-   cannot be undone by a child. */
-/* This is a light interface on a pale backdrop, so dimming means receding
-   towards the paper, not going dark: darkening it would invert the whole app
-   for the length of a hold. The backdrop keeps its scrim -- that layer is what
-   bounds contrast for the glass above it -- and only the video behind it calms
-   down. */
-:root{--dim-o:.3;--dim-s:saturate(.5);--dim-bg-o:.4;--dim-bg-f:saturate(.25)}
-/* In forced colours the palette is the user's, and dimming it is not ours to do. */
+/* ── the spotlight ───────────────────────────────────────────────────
+   Kept from the old app because it is behaviour, not decoration: while a
+   session runs, everything that is not the movement being done recedes.
+   It recedes toward the silver, never toward black -- this is a light
+   interface and inverting it for the length of a hold would be worse.  */
+:root{--dim-o:.34;--dim-s:saturate(.35);--dim-bg-o:.45;--dim-bg-f:saturate(.2)}
 @media (forced-colors:active){ :root{--dim-o:1;--dim-s:none;--dim-bg-o:1;--dim-bg-f:none} }
-
-.hi,h1,.lede,.rainbow,.run,.legend,.stats,.dial,h2,.note,.panel{
-  transition:opacity .35s ease,filter .35s ease}
-#bg{transition:opacity .35s ease,filter .35s ease}
-
+.hi,h1,.dial,h2,h3,.note,.panel,.tabs,.pht{transition:opacity .3s linear,filter .3s linear}
+#bg,#scrim{transition:opacity .3s linear,filter .3s linear}
 body.running .hi,
 body.running h1,
-body.running .lede,
-body.running .rainbow,
-body.running .run,
-body.running .legend,
-body.running .stats,
 body.running .dial,
 body.running h2,
+body.running h3,
 body.running .note,
 body.running .panel,
+body.running .tabs,
+body.running .pht,
 body.running .ex:not([data-state="doing"]){opacity:var(--dim-o);filter:var(--dim-s)}
+body.running #bg,body.running #scrim{opacity:var(--dim-bg-o);filter:var(--dim-bg-f)}
 
-/* the moving backdrop calms down with them; the scrim stays, since it is what
-   keeps every contrast solve above it valid */
-body.running #bg{opacity:var(--dim-bg-o);filter:var(--dim-bg-f)}
-
-/* The lit card stops being glass. Left translucent it would blur the darkened
-   backdrop straight through itself and dim along with everything else. */
-body.running .ex[data-state="doing"]{background:var(--opaque)}
-.hd{display:flex;gap:13px;align-items:center}
-.badge{flex:0 0 auto;width:44px;height:44px;border-radius:15px;background:var(--badge-bg);color:var(--badge-fg);
-  display:grid;place-items:center;font-weight:900;font-size:16px;letter-spacing:-.02em}
-.txt{flex:1;min-width:0}
-.nm{font-size:19px;font-weight:900;letter-spacing:-.02em;line-height:1.15;color:var(--nm)}
-.dose{font-size:13px;font-weight:600;color:var(--deep);margin-top:3px}
-.check{flex:0 0 auto;border:0;border-radius:99px;padding:8px 12px;background:var(--chip-bg);color:var(--chip-fg);
-  cursor:pointer;font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;
-  box-shadow:0 0 0 1px rgba(255,255,255,.45) inset}
-.ex[data-state="done"] .check::before{content:"✓ "}
-.acts{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-.acts button,.acts a{border:0;border-radius:99px;padding:11px 17px;font-size:13px;font-weight:800;
-  cursor:pointer;text-decoration:none;display:inline-block;transition:transform .12s}
-.acts button:active,.acts a:active{transform:translateY(2px)}
-.hold{background:var(--chip-bg);color:var(--pill);box-shadow:0 0 0 1px rgba(255,255,255,.45) inset}
-.watch,.acts a{background:var(--chip-bg);box-shadow:0 0 0 1px rgba(255,255,255,.45) inset;color:var(--pill)}
-
-
-.player{display:none;margin-top:14px}
-.player.open{display:block}
-.frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:20px;overflow:hidden;background:#160F35}
-.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.facade{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;cursor:pointer;background:#160F35}
-.facade img{width:100%;height:100%;object-fit:cover}
-.facade b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;color:var(--ink);
-  border-radius:99px;padding:12px 21px;font-size:14px;font-weight:900}
-.hint{font-size:11.5px;font-weight:600;color:var(--deep);margin:9px 4px 0;line-height:1.5}
-
-
-.panel{background:var(--pane);border-radius:22px;padding:16px 17px;
-  -webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);
-  box-shadow:0 0 0 1px rgba(255,255,255,.5) inset}
-.panel h3{font-size:12px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--ink-2);margin:0 0 10px}
-.log{list-style:none;margin:0;padding:0}
-.log li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;font-size:13.5px;font-weight:600;
-  border-top:1px solid rgba(27,20,64,.10)}
-.log li:first-child{border-top:0}
-.log b{font-weight:900}
-.log span{color:var(--ink-2);font-weight:700;font-size:12px;font-variant-numeric:tabular-nums}
-.verdict{font-size:13.5px;line-height:1.6;font-weight:600;margin:12px 0 0;color:var(--ink-2)}
-.verdict b{color:var(--ink);font-weight:900}
-.bump{margin-top:12px;width:100%;padding:14px;border:0;border-radius:16px;cursor:pointer;
-  background:var(--run-bg);color:var(--run-fg);font-size:14px;font-weight:900}
-.bump[disabled]{background:rgba(255,255,255,.5);color:var(--ink-2);cursor:default}
-.note{font-size:13.5px;line-height:1.6;color:var(--ink-2);font-weight:500;background:var(--pane);
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.55);
-  border-radius:22px;padding:15px 17px;margin:12px 0 0}
-.note b{color:var(--ink);font-weight:800}
-
-/* A slim bar, not a sheet. Everything is one row deep: the label pair over the
-   name on the left, the clock and the controls held against the right. What it
-   buys is the screen behind it -- the exercise being timed stays visible while
-   the timer runs, which the full-height sheet made impossible.
-   Column 2 is minmax(0,1fr) rather than 1fr so a long exercise name shrinks and
-   ellipses instead of shoving the clock and the buttons off the edge. */
-.over{position:fixed;left:0;right:0;bottom:0;z-index:30;
+/* ── the carriage ────────────────────────────────────────────────────
+   One row deep, flooded in the channel's ink, the clock at page scale in
+   the expanded cut. It sits at the bottom so the movement being timed
+   stays on screen, which a full-height sheet made impossible.          */
+.over{position:fixed;left:0;right:0;bottom:0;z-index:30;max-width:620px;margin:0 auto;
   display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto auto;align-items:center;
-  column-gap:10px;row-gap:1px;border-radius:18px 18px 0 0;
-  -webkit-backdrop-filter:blur(26px) saturate(1.5);backdrop-filter:blur(26px) saturate(1.5);
-  padding:12px 14px calc(13px + env(safe-area-inset-bottom));color:#fff;
-  box-shadow:0 -18px 40px -24px rgba(14,10,34,.8);
-  transform:translateY(100%);transition:transform .34s cubic-bezier(.2,.85,.25,1)}
+  column-gap:calc(var(--u)*2.5);row-gap:1px;border-radius:0;border-top:2px solid var(--ink);
+  padding:calc(var(--u)*3) calc(var(--u)*3.5) calc(var(--u)*3.25 + env(safe-area-inset-bottom));
+  color:var(--ink);transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.85,.25,1)}
 body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))}
 .over.up{transform:none}
-/* the progress line is the bar's top edge, so it reads as the bar filling rather
-   than as one more widget competing for the height we just saved */
-.over .ring{position:absolute;left:0;top:0;height:3px;background:rgba(255,255,255,.6);width:0}
-.over .phase{grid-row:1;grid-column:1;font-size:11px;font-weight:900;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--phase);
+.over .ring{position:absolute;left:0;top:0;height:4px;background:var(--ink);width:0}
+.over .phase{grid-row:1;grid-column:1;font-size:10.5px;font-weight:600;font-stretch:87%;
+  letter-spacing:.16em;text-transform:lowercase;color:var(--phase);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.over .stepcount{grid-row:1;grid-column:2;overflow:hidden;font-size:11px;
-  font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.7;
-  white-space:nowrap;text-overflow:ellipsis}
-/* :not(:empty) -- the step count is blank off autopilot, and a stray dot is worse
-   than no separator at all */
-.over .stepcount:not(:empty)::before{content:"·";opacity:.55;margin-right:6px}
-/* one line, ellipsis rather than wrap: a long name must not grow the bar */
-.over .what{grid-row:2;grid-column:1/3;font-size:clamp(15px,4.2vw,18px);font-weight:900;
-  letter-spacing:-.01em;line-height:1.15;margin:0;
+.over .stepcount{grid-row:1;grid-column:2;overflow:hidden;font-size:10.5px;font-weight:500;
+  font-stretch:75%;letter-spacing:.12em;text-transform:lowercase;opacity:.8;
+  white-space:nowrap;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.over .stepcount:not(:empty)::before{content:"/";opacity:.6;margin-right:6px}
+.over .what{grid-row:2;grid-column:1/3;font-size:clamp(15px,4.2vw,18px);font-weight:600;
+  letter-spacing:-.012em;line-height:1.12;margin:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* still the largest thing on the bar: it gets read from the floor, mid-hold, a
-   couple of feet away, and that is the one thing the height was never worth */
-.over .digits{grid-row:1/3;grid-column:3;align-self:center;font-size:clamp(34px,10.5vw,46px);
-  font-weight:900;letter-spacing:-.04em;line-height:1;margin:0;
+.over .digits{grid-row:1/3;grid-column:3;align-self:center;
+  font-size:clamp(34px,10.5vw,46px);font-weight:700;font-stretch:112%;
+  letter-spacing:-.03em;line-height:1;margin:0;
   font-variant-numeric:tabular-nums;text-align:right}
-.over .ctl{grid-row:1/3;grid-column:4;align-self:center;display:flex;gap:7px}
-.over .ctl button{flex:none;width:34px;height:34px;padding:0;display:grid;place-items:center;
-  border-radius:99px;border:1px solid rgba(255,255,255,.35);cursor:pointer;
-  background:rgba(255,255,255,.20);color:inherit}
+.over .ctl{grid-row:1/3;grid-column:4;align-self:center;display:flex;gap:calc(var(--u)*2)}
+/* Stop ends the session and reverts the card. Two pixels from Pause, with wet
+   hands, that is a mis-tap that costs the work. It gets its own gutter. */
+.over .ctl button.stop{margin-left:calc(var(--u)*3)}
+.over .ctl button{flex:none;width:48px;height:48px;padding:0;display:grid;place-items:center;
+  border-radius:0;border:2px solid currentColor;cursor:pointer;
+  background:transparent;color:inherit;font-family:inherit}
 .over .ctl button svg{width:16px;height:16px;fill:currentColor;display:block}
-/* The end-of-session prompts answer in words -- "Start", "Not yet" -- and a word
-   does not fit a 34px circle. They take a row of their own under everything
-   else. The bar is allowed to grow there: the session has ended, so there is no
-   longer anything behind it worth keeping in view. */
-.over .ctl.text{grid-row:3;grid-column:1/-1;align-self:auto;margin-top:11px;gap:10px}
-.over .ctl.text button{flex:1;width:auto;height:auto;padding:13px;display:block;
-  font-size:14px;font-weight:900}
-.over .ctl button.go{background:#fff}
-.over .ctl button:active{transform:translateY(2px)}
+.over .ctl.text{grid-row:3;grid-column:1/-1;align-self:auto;margin-top:calc(var(--u)*2.5);gap:2px}
+.over .ctl.text button{flex:1;width:auto;height:auto;padding:calc(var(--u)*3.25);display:block;
+  font-size:13px;font-weight:600;font-stretch:87%;letter-spacing:.05em;text-transform:lowercase}
+.over .ctl button.go{background:var(--ink);color:var(--ch);border-color:var(--ink)}
+.over .ctl button:active{background:var(--ink);border-color:var(--ink);color:var(--ch)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
-/* no backdrop-filter (older WebView): fall back to opaque panels */
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  .ex{background:var(--solid)}
-  .chip,.dial,.note{background:#fff}
-  .over{background:var(--over-solid)}
-}
-/* the user asked the OS for less transparency -- honour it */
-@media (prefers-reduced-transparency:reduce){
-  .ex{background:var(--solid);-webkit-backdrop-filter:none;backdrop-filter:none}
-  .chip,.dial,.note{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
-  .over{-webkit-backdrop-filter:none;backdrop-filter:none}
-}
-/* forced colors strips background-image and box-shadow, so glass would vanish entirely */
+/* forced colours strips backgrounds: the whole system falls back to the
+   user's own two colours plus a border language that still separates. */
 @media (forced-colors:active){
-  .ex,.chip,.dial,.note{background:Canvas;border:1px solid CanvasText;
-    -webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+  .ex,.chip,.dial,.note,.panel{background:Canvas;box-shadow:none;border:1px solid CanvasText}
   .ex .nm,.ex .dose,.note,.chip{color:CanvasText}
   .ex[data-state="doing"]{border:3px solid Highlight}
   .ex[data-state="done"]{border:3px solid LinkText}
-  .badge,.hold,.check{border:1px solid ButtonText}
-  .over{background:Canvas;color:CanvasText;-webkit-backdrop-filter:none;backdrop-filter:none}
-  .rainbow i{forced-color-adjust:none}
+  .badge{box-shadow:none;border:1px solid CanvasText;forced-color-adjust:none}
+  .hold,.check,.watch{border:1px solid ButtonText}
+  .over{background:Canvas;color:CanvasText;border-top:2px solid CanvasText}
+  .zbar i,.hist i,.zkey i{forced-color-adjust:none}
 }
 </style>
 </head>
 <body>
 
+<!--
+  THESIS: The day as Otl Aicher's 1972 programme: every movement a
+  grid-built pictogram, hue naming which channel of the day you are in and
+  treatment naming the state. Refuses the stack of rounded translucent cards.
+  OWN-WORLD: Silver ground (#D9DDD9), printed planes, square corners
+  everywhere, 4px unit, Aicher's spectrum -- light blue, green, orange,
+  violet, no red and no black field. Archivo's width axis stands in for
+  Univers. Sixteen authored pictograms on a 0/45/90 raster.
+  STORY: The runner opens a channel, reads the day as printed bands, and
+  works down it without touching the phone once a hold starts.
+  FIRST VIEWPORT: A 132px poster band -- the running photograph printed in
+  channel ink -- with the masthead knocked out of it; four channel tabs
+  beneath; then the movements as bands, pictogram left, name and dose
+  centre, state at right. The primary action is the row.
+  FORM: Munich '72, candidate 1 of the grounded list, user-pinned over the
+  roll. Seed key d86d9009.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with
+  the finish review, the verdict, DESIGN.md, and every shipping raster
+  carrying its provenance
+-->
+<svg id="picto-defs" aria-hidden="true" focusable="false" width="0" height="0"
+     style="position:absolute;width:0;height:0;overflow:hidden">
+<defs>
+ <g id="pg" fill="none" stroke="currentColor" stroke-width="4"
+    stroke-linecap="butt" stroke-linejoin="miter"></g>
+</defs>
+<symbol id="p-front-plank" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="9" cy="20" r="4.5"/></g><path d="M14 20 H31 L38 27"/><path d="M17 20 V29 H25"/></symbol>
+<symbol id="p-side-plank" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="10" cy="13" r="4.5"/></g><path d="M14 17 L33 36"/><path d="M14 17 V36"/></symbol>
+<symbol id="p-lunge-front" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="20" cy="8" r="4.5"/></g><path d="M20 13 V25"/><path d="M20 25 L31 36"/><path d="M31 36 H37"/><path d="M20 25 L11 34"/><path d="M11 34 H6"/></symbol>
+<symbol id="p-lunge-back" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="24" cy="8" r="4.5"/></g><path d="M24 13 V25"/><path d="M24 25 L13 36"/><path d="M13 36 H7"/><path d="M24 25 L33 34"/><path d="M33 34 H38"/></symbol>
+<symbol id="p-lunge-side" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="22" cy="8" r="4.5"/></g><path d="M22 13 V24"/><path d="M22 24 H34 V34"/><path d="M22 24 V38"/></symbol>
+<symbol id="p-fence" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="13" cy="8" r="4.5"/></g><path d="M4 26 H40"/><path d="M34 26 V38"/><path d="M13 13 V22"/><path d="M13 22 L22 13"/><path d="M13 22 V38"/></symbol>
+<symbol id="p-thrust" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="9" cy="25" r="4.5"/></g><path d="M4 31 H15"/><path d="M13 28 H27"/><path d="M27 28 L34 35"/><path d="M34 35 V38"/></symbol>
+<symbol id="p-donkey" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="9" cy="16" r="4.5"/></g><path d="M13 19 H28"/><path d="M15 19 V33"/><path d="M28 19 V33"/><path d="M28 19 L37 10"/></symbol>
+<symbol id="p-calf" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="10" cy="12" r="4.5"/></g><path d="M38 6 V38"/><path d="M13 15 L24 26"/><path d="M24 26 L15 35"/><path d="M14 15 H34"/></symbol>
+<symbol id="p-glute" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="12" cy="9" r="4.5"/></g><path d="M12 14 V24"/><path d="M12 24 H26"/><path d="M26 24 V34"/><path d="M14 24 L24 14"/></symbol>
+<symbol id="p-hamstring" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="10" cy="10" r="4.5"/></g><path d="M13 13 L23 23"/><path d="M23 23 H37"/><path d="M23 23 V38"/></symbol>
+<symbol id="p-hipflexor" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="14" cy="8" r="4.5"/></g><path d="M14 13 V24"/><path d="M14 24 L25 35"/><path d="M14 24 L6 32"/><path d="M6 32 H16"/></symbol>
+<symbol id="p-quad" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="16" cy="8" r="4.5"/></g><path d="M16 13 V26"/><path d="M16 26 V38"/><path d="M16 26 H24"/><path d="M24 26 V18"/><path d="M16 18 H24"/></symbol>
+<symbol id="p-foam" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="7" cy="11" r="4.5"/></g><path d="M10 14 L26 30"/><path d="M10 14 V24"/><path d="M24 32 H38"/><path d="M31 28 V36"/></symbol>
+<symbol id="p-bath" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="22" cy="15" r="4.5"/></g><path d="M8 22 V34 H36 V22"/><path d="M8 26 H36"/><path d="M22 20 V26"/></symbol>
+<symbol id="p-figure" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="butt" stroke-linejoin="miter"><g fill="currentColor" stroke="none"><circle cx="22" cy="10" r="4.5"/></g><path d="M22 15 V27"/><path d="M22 27 L14 36"/><path d="M22 27 L30 36"/><path d="M14 19 H30"/></symbol>
+</svg>
+
 <img id="bg" src="bg.jpg" alt="" aria-hidden="true">
 <div id="scrim" aria-hidden="true"></div>
 
 <div class="topbar">
-  <h1 id="mark">Core &amp; Mobility</h1>
+  <h1 id="mark">Post-run</h1>
   <p class="hi" id="hi">Today</p>
   <button class="todaybtn" id="todayBtn" type="button" hidden>Today</button>
-  <button class="gearbtn" id="tabSettings" type="button" aria-label="Settings" aria-expanded="false">⚙</button>
+  <button class="gearbtn" id="tabSettings" type="button" aria-label="Settings" aria-expanded="false"></button>
 </div>
 
 <nav class="tabs" id="tabs" role="tablist" aria-label="Phases of the day"></nav>
@@ -505,6 +567,12 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
   <div class="digits" id="digits">0:00</div>
   <div class="ctl" id="ctl"></div>
 </div>
+
+<!-- Nothing about a running session was announced: not the movement, not the
+     state, not the step. The audio cues carry a blind user; a screen-reader
+     user with normal hearing got a silent timer. Polite, and only on change,
+     so it never talks over the count. -->
+<p id="say" class="sr" role="status" aria-live="polite"></p>
 
 <script>
 /**
@@ -589,8 +657,14 @@ var Yn=.022;function qn(r,n,e){return.2126729*Math.pow(r/255,2.4)+.7151522*Math.
    Nothing is coloured by identity, so nine cards no longer mean
    nine hues competing for attention.
    --------------------------------------------------------------- */
-var PAPER = "#F5F2FF", INK = "#1B1440";
-var HUE = { todo:"#8C86B0", doing:"#FF8A1F", done:"#12B981" };
+var PAPER = "#D9DDD9", PLANE = "#EFF1EE", INK = "#191E1B";
+/* Aicher's spectrum for the 1972 Games. Red is absent because he removed it,
+   and nothing here needs it: hue names the channel, not the urgency. */
+var CH = { pre:"#5FA842", run:"#2E7CBF", post:"#E8842A", log:"#7E63A8", settings:"#5B6560" };
+/* The channel on screen. solveStates() re-solves the three treatments against
+   it every time the channel changes, so a green day and an orange day are the
+   same design proved twice, not two palettes. */
+var HUE = { todo:"#8C918C", doing:CH.run, done:CH.run };
 
 function layer(fg, bg, a){ return chroma.mix(bg, fg, a, "rgb").hex() }
 function tintOf(c){ var l = chroma(c).lch(); return chroma.lch(94, Math.min(l[1] * 0.30, 26), l[2]).hex() }
@@ -602,6 +676,12 @@ function inkFor(hue, bg, target){
   return col.hex();
 }
 function fade(fg, bg, target){
+  /* `out` used to start at `fg` and get returned untouched when `fg` itself
+     failed, so a colour that had never passed shipped looking solved. If the
+     foreground cannot carry on this ground at all, that is the caller's bug and
+     it should be loud. */
+  if (chroma.contrast(chroma(fg).hex(), bg) < target)
+    return inkFor(fg, bg, target);
   var out = chroma(fg).hex();
   for (var a = 1; a >= 0.3; a -= 0.02){
     var h = chroma.mix(bg, fg, a, "rgb").hex();          /* test the quantised value */
@@ -621,62 +701,73 @@ function fill(c, fg, target){
   return { bg: bg.hex(), fg: fg, veil: veil };
 }
 
-var WORST = "#FFFFFF";                                   /* darkest backdrop the glass sits on */
-var SHEEN = 0.18;
-var REST  = 0.24;   /* resting card opacity -- thin enough to read the video through */
+var WORST = "#D9DDD9";   /* the ground every foreground is proved against */
 
-/* ---- one style bundle per state, solved once ---- */
+/* ---- one bundle per state, solved once per channel ----
+   Hue names the channel; treatment names the state. Outlined is waiting,
+   flooded is happening, filled-and-receded is done. No state is signalled by
+   colour alone -- the pill spells it out -- so the three read correctly to
+   anyone who cannot separate the hues at all. */
 var STYLE = {};
 function solveStates(){
-  /* Todo: thin frosted glass so the backdrop reads through it. The opacity is NOT
-     raised to protect text -- the scrim already bounds how dark the backdrop can get,
-     so instead the text is solved against the resting composite. Interacting with a
-     card swaps it to `opaque`, which is strictly lighter, so the same text still holds. */
-  var t = tintOf(HUE.todo), a = REST;
-  var floor = layer(t, WORST, a);
-  var btnBg = layer("#FFFFFF", floor, 0.62);
+  /* Todo: a printed plane on the silver. Nothing floats, so there is no
+     composite to solve against -- the plane itself is the ground. */
+  var planeInk = inkFor(INK, PLANE, 7);
   STYLE.todo = {
-    surface: "linear-gradient(152deg var(--in-oklab)," +
-             chroma.mix(t, "#FFFFFF", 0.55, "lch").alpha(a * 0.85).css() + " 0%," +
-             chroma(t).alpha(Math.min(a + 0.10, 1)).css() + " 100%)",
-    opaque:  "linear-gradient(152deg var(--in-oklab)," +
-             chroma.mix(t, "#FFFFFF", 0.55, "lch").hex() + " 0%," + t + " 100%)",
-    solid: chroma.mix(t, "#FFFFFF", 0.25, "lch").hex(),
-    rim:   chroma.mix(HUE.todo, "#FFFFFF", 0.72, "lch").alpha(0.85).css(),
-    nm:    inkFor(HUE.todo, floor, 7),
-    deep:  inkFor(HUE.todo, floor, 4.5),
-    pill:  inkFor(HUE.todo, btnBg, 4.5),
-    chipBg:"rgba(255,255,255,.62)", chipFg: inkFor(HUE.todo, btnBg, 4.5),
-    badge: fill(HUE.todo, INK, 4.5), seg: tintOf(HUE.todo)
+    surface: PLANE, opaque: PLANE, solid: PLANE,
+    rim:     inkFor(INK, PLANE, 3),
+    nm:      planeInk,
+    deep:    inkFor(INK, PLANE, 4.5),
+    pill:    inkFor(HUE.doing, PLANE, 4.5),
+    onSolid: planeInk,
+    chipBg:  PLANE, chipFg: inkFor(INK, PLANE, 4.5),
+    chipLine: inkFor(INK, PLANE, 3),
+    /* The channel hue belongs on the work still waiting, not on the work
+       already finished: in Operate mode the eye has to land on the next undone
+       thing. Outlined in the channel, filled only when it is being done. */
+    badge:   { bg: PLANE, fg: planeInk, line: fill(HUE.doing, INK, 5.5).bg },
+    seg:     chroma(HUE.doing).hex()
   };
 
-  /* Doing: bright amber carrying dark text -- highest luminance on the page, so the
-     movement you are actually on is the thing your eye lands on. */
-  var d = fill(HUE.doing, INK, 7);
+  /* Doing: the channel floods the whole band and everything on it is knocked
+     out white. Solved to 5.5:1 rather than 4.5:1 so the 60% white of a
+     secondary label still clears the floor on the same field. */
+  var d = fill(HUE.doing, INK, 5.5);
   STYLE.doing = {
-    surface: "radial-gradient(120% 80% at 12% 0%,rgba(255,255,255,." + 30 + ") 0%,rgba(0,0,0,0) 55%)," +
-             "linear-gradient(142deg var(--in-oklab)," + chroma(d.bg).brighten(0.45).hex() + " 0%," +
-             d.bg + " 55%," + chroma(d.bg).darken(0.45).saturate(0.3).hex() + " 100%)",
-    opaque: null, solid: d.bg, rim: chroma(d.bg).darken(0.7).alpha(0.55).css(),
-    nm: INK, deep: fade(INK, d.bg, 4.5), pill: INK,
-    chipBg: "rgba(255,255,255,." + Math.round(d.veil * 100) + ")", chipFg: INK,
-    badge: { bg:"rgba(255,255,255,." + Math.round(d.veil * 100) + ")", fg: INK }, seg: d.bg
+    surface: d.bg, opaque: d.bg, solid: d.bg,
+    rim:     inkFor(INK, d.bg, 3),
+    nm:      INK,
+    deep:    fade(INK, d.bg, 4.5),
+    pill:    INK,
+    onSolid: INK,
+    chipBg:  "rgba(0,0,0,0)", chipFg: INK,
+    chipLine: INK,
+    badge:   { bg: "rgba(0,0,0,0)", fg: INK, line: INK },
+    seg:     d.bg
   };
 
-  /* Done: deep green, white text throughout. Solved to 5.5:1 so the sheen and the
-     translucent veils cannot push white back under 4.5:1. */
-  var n = fill(HUE.done, "#FFFFFF", 5.5);
-  var lo = chroma(n.bg).brighten(0.5);
-  for (var i = 0; i < 40 && chroma.contrast("#FFFFFF", layer("#FFFFFF", lo.hex(), SHEEN)) < 4.5; i++) lo = lo.darken(0.06);
+  /* Done: the band recedes to a darker step of the silver and the pictogram
+     block alone carries the channel, filled. The work is still legible; it is
+     simply no longer asking for attention. */
+  /* A finished row recedes toward the ground rather than away from it: darker
+     than the silver read as heavier (the old --plane-2), and brightening past
+     the plane made it the lightest field on the page. It sits between the two,
+     a shade off the ground, carrying no hue and no buttons. */
+  var spent = chroma.mix(PAPER, PLANE, 0.35, "rgb").hex();
+  var block = fill(HUE.done, INK, 5.5);
   STYLE.done = {
-    surface: "radial-gradient(120% 80% at 12% 0%,rgba(255,255,255," + SHEEN + ") 0%,rgba(0,0,0,0) 55%)," +
-             "linear-gradient(142deg var(--in-oklab)," + lo.hex() + " 0%," + n.bg + " 45%," +
-             chroma(n.bg).darken(1.05).saturate(0.4).hex() + " 100%)",
-    opaque: null, solid: n.bg, rim: chroma(n.bg).brighten(1).alpha(0.5).css(),
-    nm: "#FFFFFF", deep: fade("#FFFFFF", n.bg, 4.5), pill: "#FFFFFF",
-    chipBg: "rgba(255,255,255,." + Math.round(n.veil * 100) + ")", chipFg: "#FFFFFF",
-    badge: { bg:"rgba(255,255,255,." + Math.round(n.veil * 100) + ")", fg:"#FFFFFF" },
-    seg: n.bg, tick: n.bg
+    surface: spent, opaque: spent, solid: block.bg,
+    rim:     inkFor(INK, spent, 3),
+    nm:      inkFor(INK, spent, 7),
+    deep:    inkFor(INK, spent, 4.5),
+    pill:    inkFor(HUE.done, spent, 4.5),
+    onSolid: INK,
+    chipBg:  "rgba(0,0,0,0)", chipFg: inkFor(INK, spent, 4.5),
+    chipLine: inkFor(INK, spent, 3),
+    /* Done recedes: no hue, no outline weight, no button row. It is a record,
+       not a target. */
+    badge:   { bg: "rgba(0,0,0,0)", fg: inkFor(INK, spent, 4.5), line: inkFor(INK, spent, 3) },
+    seg:     block.bg, tick: block.bg
   };
 }
 
@@ -767,6 +858,11 @@ var VIEW = null, PLAN_DOC = null;
 function viewISO(){ return VIEW || todayISO() }
 
 function shiftDay(n){
+  /* A session is work in progress. A brushed thumb is a 60px drag, and until
+     this guard existed that drag reset every card on the page while the clock
+     went on counting against one that was no longer on screen. Changing the day
+     is not urgent; losing the session is not recoverable. */
+  if (Q.tick) return;
   var d = new Date(viewISO() + "T12:00:00");   /* midday: no DST edge to fall off */
   d.setDate(d.getDate() + n);
   var iso = d.toISOString().slice(0, 10);
@@ -774,18 +870,33 @@ function shiftDay(n){
   renderDay();
 }
 
-function goToday(){ VIEW = null; renderDay() }
+function goToday(){ if (Q.tick) return; VIEW = null; renderDay() }
+var RENDERED_DAY = null;
 
 /* Everything the day decides: which cards exist, which run is shown, what the
    header says. Kept in one place so a swipe and a page load take the same path. */
 function renderDay(){
   if (PLAN_DOC) buildDay(PLAN_DOC);
-  drawRainbow();
-  ALL.forEach(function(el){ setState(el, "todo") });
+  /* Only a real change of day clears the board. Re-rendering the day you are
+     already on -- a plan.json arriving, a resize, a re-open -- must not throw
+     away what has been done on it. */
+  var day = viewISO(), fresh = day !== RENDERED_DAY;
+  RENDERED_DAY = day;
+  if (fresh) ALL.forEach(function(el){ setState(el, "todo") });
+  else ALL.forEach(function(el){ setState(el, el.dataset.state || "todo") });
   renderPlan();
   refresh();
   if (!document.getElementById("ph-" + ACTIVE) || ACTIVE === "settings") openPhase(currentPhase());
   else openPhase(ACTIVE);
+}
+
+/* An ISO string is how the plan is keyed, not how a date is read. It was
+   appearing verbatim in copy directly under a masthead saying "fri, aug 21". */
+function niceDay(iso){
+  if (!iso) return "";
+  var d = new Date(iso + "T12:00:00");
+  return isNaN(d) ? iso
+    : d.toLocaleDateString(undefined, { day:"numeric", month:"short", year:"numeric" });
 }
 
 function planFor(day){
@@ -1035,7 +1146,7 @@ function renderLink(key){
     '<div class="plan-m" id="live-' + key + '"></div>' +
     '<div class="acts" style="margin-top:14px">' +
       '<button class="hold" data-link="' + key + '">' +
-        (L.state === "live" ? "Disconnect" : L.state === "lost" ? "▶ Reconnect" : "▶ Connect") +
+        (L.state === "live" ? "Disconnect" : UI.play + (L.state === "lost" ? "Reconnect" : "Connect")) +
       '</button></div>' +
     (L.error ? '<div class="quiet" style="margin-top:10px">' + esc(L.error) + '</div>' : "") +
     (known ? '<div class="zcap">' + known + '</div>' : "") +
@@ -1070,7 +1181,7 @@ function renderSettings(){
              ? "valid for " + span(Date.parse(d.tokenExpires) - Date.now())
              : "expired " + span(Date.now() - Date.parse(d.tokenExpires)) + " ago") + ".\n"
          : "") +
-      "Plan covers " + PLAN_FROM + " to " + PLAN_TO + ".\n" +
+      (PLAN_FROM && PLAN_TO ? "Plan covers " + niceDay(PLAN_FROM) + " to " + niceDay(PLAN_TO) + ".\n" : "") +
       DB.log.length + " sessions logged on this phone." + '</div>';
   }
 }
@@ -1213,7 +1324,7 @@ function runChart(w){
   var segs = sessionSegments(w.x, w.s);
   if (!segs.length) return zoneChart(w.z);
 
-  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || "#7B5CFF",
+  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || CH.run,
       top = 110, i;
   for (i = 0; i < segs.length; i++) top = Math.max(top, segs[i].hi);
 
@@ -1245,7 +1356,7 @@ function zoneChart(zones){
   for (i = 0; i < zones.length; i++) total += zones[i] || 0;
   if (!total) return "";
 
-  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || "#7B5CFF",
+  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || CH.run,
       bar = "", key = "";
   for (i = 0; i < zones.length; i++){
     var secs = zones[i] || 0;
@@ -1289,8 +1400,8 @@ function renderPlan(){
     /* Say which of the two it is. "Nothing today" reads as a bug when the real
        answer is that the plan ran out three weeks ago. */
     var msg = (day < PLAN_FROM || day > PLAN_TO)
-      ? "This build carries the plan from " + PLAN_FROM + " to " + PLAN_TO + ", and today is outside it."
-      : "Rest day. Nothing prescribed for " + day + ".";
+      ? "This build carries the plan from " + niceDay(PLAN_FROM) + " to " + niceDay(PLAN_TO) + ", and today is outside it."
+      : "Rest day. Nothing prescribed.";
     run.innerHTML = '<div class="panel quiet">' + esc(msg) + '</div>';
     renderAge();
     return;
@@ -1353,6 +1464,38 @@ var RECOVERY = [
     }
   }
 ];
+
+/* The three glyphs the page used to set as text: ▶ on every action, ⚙ in the
+   masthead, ↗ on outbound links. In a build that ships twenty authored symbols,
+   a character standing in for a drawing is the one inconsistency you cannot
+   argue for. Same raster as the pictograms: butt caps, one weight. */
+var UI = {
+  play:  '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3v10l8-5z"/></svg>',
+  gear:  '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.6v3M12 18.4v3M2.6 12h3M18.4 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg>',
+  out:   '<svg class="i" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h7v7"/><path d="M13 3L4 12"/></svg>',
+  close: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>'
+};
+
+/* Every movement in this app has a drawn pictogram; none is a number or a
+   letter standing in for one. Matching is on the name the plan actually
+   uses, longest key first, so "Hip flexor stretch" cannot be caught by a
+   shorter key that happens to be a prefix of it. */
+var PICTO = [
+  ["front step lunge","lunge-front"], ["back step lunge","lunge-back"],
+  ["side step lunge","lunge-side"],   ["hip flexor","hipflexor"],
+  ["front plank","front-plank"],      ["side plank","side-plank"],
+  ["fence drill","fence"],            ["glute/hip thrust","thrust"],
+  ["donkey kick","donkey"],           ["calf","calf"],
+  ["glute stretch","glute"],          ["hamstring","hamstring"],
+  ["quad","quad"],                    ["foam roll","foam"],
+  ["contrast bath","bath"],           ["bath","bath"]
+];
+function pictoFor(name){
+  var n = (name || "").toLowerCase();
+  for (var i = 0; i < PICTO.length; i++) if (n.indexOf(PICTO[i][0]) !== -1) return PICTO[i][1];
+  return "figure";
+}
+
 var ALL = [], seq = 0;
 var LABEL = { todo:"To do", doing:"Doing", done:"Done" };
 var NEXT  = { todo:"doing", doing:"done", done:"todo" };
@@ -1360,7 +1503,19 @@ var NEXT  = { todo:"doing", doing:"done", done:"todo" };
 function pad(n){ return n < 10 ? "0" + n : "" + n }
 function clock(s){ return Math.floor(s/60) + ":" + pad(s % 60) }
 
+/* The demonstration is a YouTube frame, and offline it is a black rectangle
+   where the movement used to be -- on a page whose primary scene is a bathroom
+   floor with no connection. iframe.onerror does not fire for a network failure,
+   so nothing catches it after the fact; the check has to happen before the flip.
+   Offline the row stays on its front face, flooded, with the pictogram enlarged:
+   that is the Aicher answer and for a movement you already know it is the
+   better one. */
+function canDemo(){
+  return typeof navigator === "undefined" || navigator.onLine !== false;
+}
+
 function flip(el, on){
+  if (on && !canDemo()) on = false;
   var x = el._x, back = el.querySelector(".vid");
   if (on){
     if (el.classList.contains("flipped")) return;
@@ -1414,6 +1569,9 @@ function setState(el, state){
   el.style.setProperty("--chip-fg", s.chipFg);
   el.style.setProperty("--badge-bg", s.badge.bg);
   el.style.setProperty("--badge-fg", s.badge.fg);
+  el.style.setProperty("--badge-line", s.badge.line);
+  el.style.setProperty("--chip-line", s.chipLine);
+  el.style.setProperty("--on-solid", s.onSolid);
   el.style.setProperty("--tick",    s.tick || s.solid);
   flip(el, state === "doing");
   if (state === "done" && typeof record === "function") record(el);
@@ -1431,16 +1589,19 @@ function build(x, host){
   el.innerHTML =
     '<div class="faces"><div class="front">' +
     '<div class="hd">' +
-      '<span class="badge">' + pad(seq) + '</span>' +
+      '<span class="mark"><span class="badge">' +
+        '<svg viewBox="0 0 44 44" role="img" aria-hidden="true">' +
+        '<use href="#p-' + pictoFor(x.n) + '"></use></svg></span>' +
+        '<span class="seq">' + pad(seq) + '</span></span>' +
       '<div class="txt"><div class="nm">' + x.n + '</div>' +
         '<div class="dose">' + x.dose() + (x.sub ? " · " + x.sub : "") + '</div></div>' +
       '<button class="check"><span class="state">To do</span></button>' +
     '</div>' +
     '<div class="acts">' +
-      (x.d               ? '<button class="hold">▶ ' + (x.verb || "Hold") + ' ' + x.d() + 's</button>' :
-       (x.phases || x.auto) ? '<button class="hold">▶ Start</button>' : '') +
+      (x.d               ? '<button class="hold">' + UI.play + (x.verb || "Hold") + ' ' + x.d() + 's</button>' :
+       (x.phases || x.auto) ? '<button class="hold">' + UI.play + 'Start</button>' : '') +
       (x.id ? '<button class="watch">Show me</button>' : '') +
-      (x.id ? '<a href="https://www.youtube.com/watch?v=' + x.id + '" target="_blank" rel="noopener">YouTube ↗</a>' : '') +
+      (x.id ? '<a href="https://www.youtube.com/watch?v=' + x.id + '" target="_blank" rel="noopener">YouTube' + UI.out + '</a>' : '') +
     '</div>' +
     '<div class="player"></div>' +
     '</div><div class="back"><div class="vid"></div>' +
@@ -1459,8 +1620,8 @@ function build(x, host){
       box.dataset.built = "1";
       box.innerHTML =
         '<div class="frame"><button class="facade" aria-label="Play">' +
-        '<img alt="" src="https://i.ytimg.com/vi/' + x.id + '/hqdefault.jpg"><b>▶ Play</b></button></div>' +
-        '<p class="hint">Blank frame? Tap YouTube ↗ instead — some previews block embeds.</p>';
+        '<img alt="" src="https://i.ytimg.com/vi/' + x.id + '/hqdefault.jpg"><b>' + UI.play + 'Play</b></button></div>' +
+        '<p class="hint">Blank frame? Tap the YouTube link instead — some previews block embeds.</p>';
       box.querySelector(".facade").onclick = function(e){
         var f = document.createElement("iframe");
         f.src = "https://www.youtube-nocookie.com/embed/" + x.id + "?autoplay=1&rel=0&playsinline=1";
@@ -1478,31 +1639,62 @@ function build(x, host){
 /* ---------------------------------------------------------------
    Boot
    --------------------------------------------------------------- */
-var SCRIM_MIN = 0.60;   /* the thinnest point of the scrim gradient, over the card region */
-
+/* ---- dressing the page ----
+   No composite to be paranoid about any more: nothing floats over the
+   photograph, so the ground a foreground must survive is the ground itself.
+   The band's own type is knocked out of a solved channel field instead. */
 function dressPage(){
-  /* Worst case is deliberately paranoid: a PURE BLACK video frame under the thinnest
-     part of the scrim. The bundled clip never goes near that, but this way the whole
-     palette stays valid if you drop your own footage into assets/bg.mp4. */
-  WORST = layer(PAPER, "#000000", SCRIM_MIN);
+  WORST = PAPER;
 
   var root = document.documentElement.style;
-  root.setProperty("--pane", chroma("#FFFFFF").alpha(0.42).css());
-  root.setProperty("--ink-2", inkFor(INK, WORST, 4.5));
-  var runFill = fill(HUE.doing, INK, 7);
-  root.setProperty("--run-bg", runFill.bg);
-  root.setProperty("--run-fg", INK);
-  root.setProperty("--run-fg-2", fade(INK, runFill.bg, 4.5));
-  root.setProperty("--mark", "linear-gradient(96deg var(--in-oklab)," +
-    HUE.todo + "," + HUE.doing + " 55%," + HUE.done + ")");
+  root.setProperty("--silver", PAPER);
+  root.setProperty("--plane",  PLANE);
+  root.setProperty("--plane-2", chroma.mix(PAPER, PLANE, 0.35, "rgb").hex());
+  root.setProperty("--ink",    INK);
+  /* Rules, rims and outlines were the one thing the solver never proved: they
+     were picked by eye and landed between 1.26:1 and 1.93:1, which made the
+     done state a value step nobody could see and the state chip look unpressable.
+     Non-text boundaries carry at 3:1, solved the same way the text is. */
+  root.setProperty("--rule",   inkFor(INK, PAPER, 3));
+  root.setProperty("--ink-2",  inkFor(INK, PAPER, 4.5));
+  /* The band is the one dark thing in the system: a photograph printed in
+     deep channel ink, with the masthead knocked out of it in white. It is also
+     the largest field on screen, so it has to obey the system's first rule and
+     name the channel you are actually in -- solved once per channel here, and
+     re-solved by setChannel(). */
+  Object.keys(CH).forEach(function(k){
+    root.setProperty("--band-" + k, fill(CH[k], "#FFFFFF", 5.5).bg);
+  });
+  root.setProperty("--band", fill(CH.run, "#FFFFFF", 5.5).bg);
+  Object.keys(CH).forEach(function(k){
+    /* Aicher's spectrum is light on purpose, so the knockout is ink, not white.
+       Solving these for white drove the light green to #077900 and threw the
+       whole programme away; solving for ink keeps the palette and still proves
+       every field carries its type at 5.5:1. */
+    root.setProperty("--ch-" + k, fill(CH[k], INK, 5.5).bg);
+  });
+}
 
-  /* don't decode video nobody is looking at */
-  var v = document.getElementById("bg");
-  if (v){
-    document.addEventListener("visibilitychange", function(){
-      if (document.hidden) v.pause(); else v.play().catch(function(){});
-    });
-    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) v.pause();
+/* The channel on screen. Everything hue-bearing is re-solved against it, so
+   an orange day and a blue day are the same design proved twice. */
+function setChannel(key){
+  var seed = CH[key] || CH.run;
+  var solved = fill(seed, INK, 5.5).bg;
+  var root = document.documentElement.style;
+  root.setProperty("--ch", solved);
+  /* the poster band follows the channel: blue over orange work was the system
+     contradicting its own first rule with its largest element */
+  root.setProperty("--band", fill(seed, "#FFFFFF", 5.5).bg);
+  HUE.doing = seed; HUE.done = seed;
+  solveStates();
+  /* rows already on screen were dressed in the previous channel */
+  if (typeof ALL !== "undefined")
+    ALL.forEach(function(el){ if (el.dataset.state) setState(el, el.dataset.state) });
+  var bar = document.getElementById("over");
+  if (bar){
+    bar.style.background = solved;
+    root.setProperty("--over-solid", solved);
+    root.setProperty("--phase", fade("#FFFFFF", solved, 4.5));
   }
 }
 
@@ -1511,11 +1703,37 @@ solveStates();
 /* A phase is where a card sits on the page; a group is what runs together.
    Stryd lists the stretch and the drills as two entries on the same day, so
    post-run holds two sessions rather than one long one. */
-function buildAll(list, host, phase, group){
+function buildAll(list, host, phase, group, title){
+  var node = typeof host === "string" ? document.getElementById(host) : host;
+  var wrap = node;
+  /* The baked plan is the floor the app stands on when the sync has not run or
+     the token has expired, and until now it was the one path with no way to run
+     a session hands-free: seventeen rows, seventeen taps, which is the exact
+     thing this app exists to avoid. The queue machinery is per-group and was
+     always there; only the button was missing. */
+  if (title){
+    wrap = document.createElement("div");
+    wrap.className = "grp";
+    var h = document.createElement("h3");
+    h.textContent = title;
+    wrap.appendChild(h);
+    node.appendChild(wrap);
+  }
   list.forEach(function(x){
     x.phase = phase; x.group = group;
-    build(x, typeof host === "string" ? document.getElementById(host) : host);
+    build(x, wrap);
   });
+  if (title && list.length && !list.every(function(x){ return x.solo })){
+    var btn = document.createElement("button");
+    btn.className = "run";
+    btn.innerHTML = UI.play + "Run it<small>hands free · with sound cues</small>";
+    btn.onclick = function(){
+      var q = sessionQueue(group);
+      if (!q.length) return;
+      openPhase(phase); start(q, true); controls();
+    };
+    wrap.insertBefore(btn, wrap.children[1] || null);
+  }
 }
 
 /* ---- cards from the prescription ----------------------------------------
@@ -1597,7 +1815,7 @@ function buildGroup(host, sess, key, phase){
     btn.className = "run";
     btn.id = "run-" + key;
     btn.dataset.group = key;
-    btn.innerHTML = "▶ Run it<small>hands free · with sound cues</small>";
+    btn.innerHTML = UI.play + "Run it<small>hands free · with sound cues</small>";
     btn.onclick = function(){
       var q = sessionQueue(key);
       if (!q.length) return;
@@ -1651,14 +1869,16 @@ function buildDay(doc){
   ALL.sort(function(a, b){
     return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
   });
-  ALL.forEach(function(el, i){ el.querySelector(".badge").textContent = pad(i + 1) });
+  ALL.forEach(function(el, i){
+    var m = el.querySelector(".seq"); if (m) m.textContent = pad(i + 1);
+  });
   return built;
 }
 
-buildAll(PRERUN,    "pre-groups",  "pre",  "predrill");
-buildAll(PLANKS,    "post-groups", "post", "stretch");
-buildAll(MOBILITY,  "post-groups", "post", "stretch");
-buildAll(POSTDRILL, "post-groups", "post", "postdrill");
+buildAll(PRERUN,    "pre-groups",  "pre",  "predrill",  "Drills, before you go out");
+buildAll(PLANKS,    "post-groups", "post", "stretch",   "Core");
+buildAll(MOBILITY,  "post-groups", "post", "stretch2",  "Mobility");
+buildAll(POSTDRILL, "post-groups", "post", "postdrill", "Drills, after");
 buildAll(RECOVERY,  "recovery",    "post", "recovery");
 
 /* No bar and no counters here any more. Three things reported the same state --
@@ -1692,6 +1912,8 @@ var TABBED = ["pre", "run", "post", "progress"];
 var TAB_NAMES = { pre:"Pre", run:"Run", post:"Post", progress:"Log" };
 
 function buildTabs(){
+  var g = document.getElementById("tabSettings");
+  if (g && !g.firstChild) g.innerHTML = UI.gear;
   var strip = document.getElementById("tabs");
   if (!strip) return;
   PHASES.forEach(function(k){ var t = document.getElementById("tab-" + k); if (t) t.remove() });
@@ -1704,7 +1926,11 @@ function buildTabs(){
     b.setAttribute("role", "tab");
     b.setAttribute("aria-controls", "ph-" + k);
     b.setAttribute("aria-selected", "false");
+    /* Only the selected tab is in the tab order; the arrows move between them.
+       That is the roving-tabindex contract role="tab" advertises. */
+    b.tabIndex = -1;
     b.innerHTML = TAB_NAMES[k] + '<span class="n"></span>';
+    b.style.setProperty("--tab-ch", "var(--ch-" + (k === "progress" ? "log" : k) + ")");
     b.onclick = function(){ openPhase(k) };
     strip.appendChild(b);
   });
@@ -1727,9 +1953,21 @@ function openPhase(key){
     if (!sec) return;
     var on = k === key;
     sec.classList.toggle("open", on);
-    if (tab) tab.setAttribute("aria-selected", on ? "true" : "false");
+    /* A section a tab points at is that tab's panel, and it has to say so:
+       aria-controls pointing at a plain <section> promises a relationship the
+       markup never delivered. */
+    if (k !== "settings"){
+      sec.setAttribute("role", "tabpanel");
+      sec.setAttribute("tabindex", "0");
+      if (tab) sec.setAttribute("aria-labelledby", "tab-" + k);
+    }
+    if (tab){
+      tab.setAttribute("aria-selected", on ? "true" : "false");
+      tab.tabIndex = on ? 0 : -1;
+    }
   });
   ACTIVE = key;
+  setChannel(key === "progress" ? "log" : key);
   drawRainbow();
   tally();
   if (key === "settings") renderSettings();
@@ -1783,7 +2021,7 @@ function refresh(){
     /* the button exists for anything runnable, but only a single-hold item has a
        length to restate -- a phase-built one would ask null for a duration */
     var h = el.querySelector(".hold");
-    if (h && x.d) h.textContent = "▶ " + (x.verb || "Hold") + " " + x.d() + "s";
+    if (h && x.d) h.innerHTML = UI.play + (x.verb || "Hold") + " " + x.d() + "s";
   });
   tally();
 }
@@ -1885,19 +2123,16 @@ function sessionQueue(group){
 }
 
 /* ---- the sheet ---- */
-function sky(p){
+/* The carriage is a flat field of the channel's own ink -- Aicher's posters
+   have no gradients in them and neither does this. The argument is kept
+   because progress still has to be visible: it drives the rule along the top
+   edge, not a hue shift nobody can read mid-hold. */
+function sky(){
   var c = STYLE.doing.solid;
-  var lead = chroma(c).set("lch.h", "+" + (p * 22)).brighten(p * 0.5).saturate(0.2);
-  var tail = chroma(c).darken(1.1 - p * 0.3).saturate(0.45);
-  var s = chroma.scale([lead, c, tail]).mode("lch").colors(4);
-  var fg = chroma.contrast("#fff", s[1]) >= chroma.contrast(INK, s[1]) ? "#FFFFFF" : INK;
-  for (var i = 0; i < 25 && chroma.contrast(fg, s[0]) < 4.5; i++)
-    s[0] = fg === "#FFFFFF" ? chroma(s[0]).darken(0.1).hex() : chroma(s[0]).brighten(0.1).hex();
-  var vs = s.map(function(x){ return chroma(x).alpha(0.90).css() });
-  document.documentElement.style.setProperty("--over-solid", s[1]);
-  document.documentElement.style.setProperty("--phase", fade(fg, s[1], 4.5));
-  return { css:"linear-gradient(168deg var(--in-oklab)," + vs[0] + " 0%," + vs[1] + " 34%," +
-                vs[2] + " 70%," + vs[3] + " 100%)", on: fg };
+  var fg = chroma.contrast("#FFFFFF", c) >= chroma.contrast(INK, c) ? "#FFFFFF" : INK;
+  document.documentElement.style.setProperty("--over-solid", c);
+  document.documentElement.style.setProperty("--phase", fade(fg, c, 4.5));
+  return { css: c, on: fg };
 }
 /* The bar has room for glyphs, not words. Drawn inline rather than set as ⏸ and
    ⏭: those render as colour emoji on a lot of Androids, which fights the glass
@@ -1905,10 +2140,10 @@ function sky(p){
    primary button gets dark icons for free. The word stays as the accessible
    name -- to a screen reader the button is still "Pause". */
 var ICONS = {
-  Pause:  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.3"/><rect x="13.5" y="5" width="4" height="14" rx="1.3"/></svg>',
+  Pause:  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14"/><rect x="13.5" y="5" width="4" height="14"/></svg>',
   Resume: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.1v13.8L19 12z"/></svg>',
-  Skip:   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5.1v13.8L15 12z"/><rect x="16.2" y="5" width="3.4" height="14" rx="1.3"/></svg>',
-  Stop:   '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="2.2"/></svg>'
+  Skip:   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5.1v13.8L15 12z"/><rect x="16.2" y="5" width="3.4" height="14"/></svg>',
+  Stop:   '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11"/></svg>'
 };
 function buttons(list){
   ctl.innerHTML = "";
@@ -1920,6 +2155,7 @@ function buttons(list){
       el.title = b.label;
     } else el.textContent = b.label;
     if (b.primary) el.className = "go";
+    if (b.label === "Stop") el.classList.add("stop");
     el.onclick = b.fn;
     ctl.appendChild(el);
   });
@@ -1929,7 +2165,17 @@ function buttons(list){
   [].forEach.call(ctl.querySelectorAll("button.go"), function(b){ b.style.color = STYLE.doing.solid });
 }
 function controls(){
-  if (!Q.auto){ buttons([{ label:"Stop", fn:stopAll }]); return }
+  /* A single hold gets a pause too. Without one the only way to answer the door
+     mid-plank was Stop, which reverts the card -- fifty-five seconds of work
+     discarded because something interrupted the last five. */
+  if (!Q.auto){
+    buttons([
+      { label: Q.paused ? "Resume" : "Pause", primary: Q.paused,
+        fn: function(){ Q.paused = !Q.paused; controls() } },
+      { label:"Stop", fn:stopAll }
+    ]);
+    return;
+  }
   buttons([
     { label: Q.paused ? "Resume" : "Pause", primary: Q.paused, fn: function(){ Q.paused = !Q.paused; controls() } },
     { label:"Skip", fn: function(){ Q.left = 0; advance() } },
@@ -1963,6 +2209,9 @@ function advance(){
   var p = Q.list[Q.i];
   ALL.forEach(function(o){ if (o.dataset.state === "doing" && o !== p.card) setState(o, "todo") });
   if (p.card.dataset.state !== "done") setState(p.card, "doing");
+  dimBackdrop(true, p.card);   /* the lit card just moved; the inert set follows it */
+  say(p.card._x.n + (Q.auto ? ", step " + (Q.i + 1) + " of " + Q.list.length : "") +
+      ", " + fmtClock(p.s));
   if (p.kind === "prep"){
     cue.change();
     try { p.card.scrollIntoView({ behavior:"smooth", block:"start" }) } catch (e){}
@@ -1978,7 +2227,7 @@ function paint(){
   var p = Q.list[Q.i];
   var doneCount = Q.list.slice(0, Q.i).filter(function(x){ return x.last }).length;
   var total = Q.list.filter(function(x){ return x.last }).length;
-  var s = sky(1 - (Q.left / p.s));
+  var s = sky();
   over.style.background = s.css;
   over.style.color = s.on;
   phaseE.textContent = Q.paused ? "Paused" : p.label;
@@ -1987,6 +2236,36 @@ function paint(){
   digits.textContent = clock(Q.left);
   ring.style.width = ((1 - Q.left / p.s) * 100) + "%";
 }
+/* The spotlight dims everything that is not the movement being done. Until
+   this ran, those elements were only *painted* out of the way: a dimmed card
+   at 1.7:1 kept its click handler and its place in the tab order, so a mis-tap
+   mid-hold landed on a control nobody could see. `inert` makes the receding
+   true -- unfocusable, unclickable, and skipped by a screen reader -- which is
+   what it has looked like all along. Forced colours turn the dim off entirely,
+   so the same media query releases the elements as well. */
+var DIMMED = [];
+/* Announced on change only. The countdown is deliberately not read: a live
+   region ticking once a second is unusable. */
+function say(msg){
+  var el = document.getElementById("say");
+  if (el) el.textContent = msg;
+}
+
+function dimBackdrop(on, keep){
+  DIMMED.forEach(function(el){ el.inert = false });
+  DIMMED = [];
+  if (!on) return;
+  if (window.matchMedia && matchMedia("(forced-colors: active)").matches) return;
+  /* The lit card is passed in: read from the DOM at this point in advance() it
+     was still the previous card, so the one element that must stay reachable
+     was the one being made inert. */
+  keep = keep || document.querySelector('.ex[data-state="doing"]');
+  [].forEach.call(document.querySelectorAll(".tabs, .dial, .note, .panel, .ex"), function(el){
+    if (el === keep || (keep && el.contains(keep))) return;
+    el.inert = true; DIMMED.push(el);
+  });
+}
+
 function stopClock(){ if (Q.tick) clearInterval(Q.tick); Q.tick = null }
 function stopAll(){
   stopClock();
@@ -1995,10 +2274,13 @@ function stopAll(){
   stepE.textContent = "";
   over.classList.remove("up");
   document.body.classList.remove("running");
+  dimBackdrop(false);
   holdScreen(false);
 }
 function finish(){
   stopClock();
+  say("Session complete.");
+  dimBackdrop(false);
   holdScreen(false);
   ring.style.width = "100%";
   digits.textContent = "0:00";
@@ -2149,13 +2431,28 @@ function run(el){ openPhase(el._x.phase); start(phasesFor(el), false); controls(
     shiftDay(dx < 0 ? 1 : -1);
   }, { passive:true });
 
-  /* the same on a keyboard, because this is also opened on a laptop */
+  /* On a keyboard the arrows belong to the tab strip, because role="tab" says
+     they do: a screen-reader user following the contract we advertised was
+     changing the day and clearing the board instead of moving between tabs.
+     The day moves on Shift+Arrow, which nothing else claims. */
   document.addEventListener("keydown", function(e){
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     var t = e.target, tag = t && t.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable)) return;
-    if (e.key === "ArrowRight") shiftDay(1);
-    else if (e.key === "ArrowLeft") shiftDay(-1);
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    var step = e.key === "ArrowRight" ? 1 : -1;
+    if (t && t.closest && t.closest('[role="tab"]')){
+      e.preventDefault();
+      var i = TABBED.indexOf(ACTIVE);
+      if (i < 0) i = 0;
+      var next = TABBED[(i + step + TABBED.length) % TABBED.length];
+      openPhase(next);
+      var b = document.getElementById("tab-" + next);
+      if (b) b.focus();
+      return;
+    }
+    if (!e.shiftKey) return;
+    shiftDay(step);
   });
 })();
 
