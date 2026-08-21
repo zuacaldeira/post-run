@@ -135,6 +135,16 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
   border:1px solid var(--rim);background:var(--pane);color:var(--ink-2);
   font:900 15px/1 var(--sans);font-style:italic}
 .zwrap{margin-top:14px}
+/* Bars sit on a common floor and are read against the CP line, so height has to
+   mean the same thing across the whole chart -- hence one scale for all of them
+   rather than each bar filling its own box. */
+.hist{position:relative;display:flex;align-items:flex-end;gap:2px;height:74px;
+  padding-bottom:1px;border-bottom:1px solid var(--rim)}
+.hist i{display:block;min-width:2px;border-radius:3px 3px 0 0}
+.hist .cp{position:absolute;left:0;right:0;bottom:var(--cp);height:0;
+  border-top:1px dashed var(--ink-2);opacity:.55}
+.hist .cp span{position:absolute;right:0;top:-14px;font-size:10px;font-weight:900;
+  letter-spacing:.08em;color:var(--ink-2)}
 .zbar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--pane)}
 .zbar i{display:block}
 .zkey{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:9px}
@@ -815,6 +825,123 @@ function refreshPlan(){
 
 var RUN_FLIPPED = false;
 
+/* ---- reading the session out of the prescription -------------------------
+   Stryd writes its structure in prose and does not expose it any other way:
+   `blocks` is null on the calendar row, on /workouts/{id} and on
+   ?full=true alike. So the shape of the run is parsed from the text.
+
+   The guard is that the segments must sum to the planned duration. A session
+   whose words cannot be reconciled with its own length draws nothing rather
+   than something plausible -- one of the thirteen prescriptions in this block
+   is like that: fifteen minutes of warm-up and 3x1:00 with 2:00 recoveries,
+   inside a twenty minute run.
+
+   Checked against the one session whose splits are visible in the Stryd app:
+   10:00, 0:10, 1:50, 0:10, 1:50, 1:00, 3:00, 9:00, 5:00, 8:00 -- which is what
+   this produces, in that order. */
+
+var D = "(?:(\\d+):(\\d{2})|(\\d+)\\s*(?:minutes?|min\\b)|(\\d+)\\s*(?:seconds?|secs?|s)\\b)";
+var RX = {
+  reps:  new RegExp("(\\d+)\\s*x\\s*" + D + "\\s*(?:\\(or[^)]*\\))?\\s*(?:@|at)?\\s*(?:(\\d+)\\s*-\\s*(\\d+)\\s*%|[^\\n]*?(near top speed|maximal|all out))", "i"),
+  rec:   new RegExp("\\(\\s*" + D + "[^)]*?(?:rec|easy|jog|walk|between)", "i"),
+  recAt: new RegExp("^\\(\\s*" + D + "[^)]*?(?:rec|easy|jog|walk|between)", "i"),
+  forD:  new RegExp("(?:for|first)\\s+(?:the\\s+first\\s+)?" + D, "i"),
+  maxEff:new RegExp("run\\s+" + D + "\\s+at\\s+maxim", "i"),
+  walk:  new RegExp("(?:stop|walk)[^\\n]*?(?:for|next)\\s+" + D, "i"),
+  tempo: new RegExp("\\b" + D + "\\s+(?:MP\\s+)?tempo\\s*(?:@|at)\\s*(\\d+)\\s*-\\s*(\\d+)\\s*%", "i"),
+  warm:  new RegExp("warm[\\s-]?up\\s+for\\s+" + D, "i"),
+  more:  /(?:additional|more)\s+(?:(\d+)\s*)?minutes?/i,
+  fill:  /remainder|balance of|complete the run|cool ?down|resume ez/i,
+  stop:  /^\s*(the purpose|do not overpower|avoid |the objective|the addition|_{3,})/i,
+  base:  /^\s*(?:ez|easy)\s+run\b|^\s*(?:ez|easy)\s+running\b/i,
+  soft:  /easy|ez|steady/i
+};
+
+function durAt(m, i){
+  if (!m) return 0;
+  if (m[i] != null) return parseInt(m[i], 10) * 60 + parseInt(m[i+1], 10);
+  if (m[i+2] != null) return parseInt(m[i+2], 10) * 60;
+  if (m[i+3] != null) return parseInt(m[i+3], 10);
+  return 0;
+}
+
+function lineSegments(line, next){
+  var m = RX.reps.exec(line), out = [], i;
+  if (m){
+    var n = parseInt(m[1], 10), d = durAt(m, 2), lo, hi;
+    if (m[6]){ lo = parseInt(m[6], 10); hi = parseInt(m[7], 10); }
+    else { lo = /top speed/i.test(m[8] || "") ? 120 : 100; hi = 200; }
+    /* the recoveries are often on the next line, in brackets, alone */
+    var r = RX.rec.exec(line.slice(m.index + m[0].length - 1)) || RX.recAt.exec((next || "").trim()),
+        rec = durAt(r, 1);
+    for (i = 0; i < n; i++){
+      out.push({ s:d, lo:lo, hi:hi, k:"work" });
+      if (rec) out.push({ s:rec, lo:0, hi:50, k:"rec" });
+    }
+    return out;
+  }
+  m = RX.maxEff.exec(line);
+  if (m) return [{ s:durAt(m, 1), lo:100, hi:200, k:"max" }];
+  m = RX.walk.exec(line);
+  if (m) return [{ s:durAt(m, 1), lo:0, hi:50, k:"rec" }];
+  m = RX.tempo.exec(line);
+  if (m) return [{ s:durAt(m, 1), lo:parseInt(m[5], 10), hi:parseInt(m[6], 10), k:"work" }];
+  if (RX.soft.test(line)){
+    m = RX.forD.exec(line);
+    if (m) return [{ s:durAt(m, 1), lo:0, hi:80, k:"easy" }];
+    m = RX.more.exec(line);
+    if (m) return [{ s:(parseInt(m[1], 10) || 1) * 60, lo:0, hi:80, k:"easy" }];
+  }
+  return out;
+}
+
+function sessionSegments(desc, total){
+  var lines = (desc || "").split("\n").slice(1),   /* line 1 summarises the set */
+      segs = [], i = 0, j, block, got, stated, m;
+
+  while (i < lines.length){
+    var line = lines[i];
+    if (RX.stop.test(line)) break;
+    if (!line.trim()){ i++; continue }
+
+    m = RX.warm.exec(line);
+    if (m){
+      stated = durAt(m, 1);
+      block = []; j = i + 1;
+      while (j < lines.length && lines[j].trim() && !RX.stop.test(lines[j])){
+        block = block.concat(lineSegments(lines[j], lines[j+1] || "")); j++;
+      }
+      got = block.reduce(function(a, x){ return a + x.s }, 0);
+      /* Prefer the detail: Stryd's bullets often fall short of the heading they
+         sit under, and a flat twenty-minute bar hides the surges inside it. The
+         shortfall lands in the cool-down, which is the remainder anyway. Only a
+         block that overruns its heading is a real contradiction. */
+      segs = segs.concat(block.length && got <= stated + 90
+        ? block : [{ s:stated, lo:0, hi:80, k:"easy" }]);
+      i = j; continue;
+    }
+    if (RX.fill.test(line)){ segs.push({ fill:true }); i++; continue }
+    if (RX.base.test(line) && !RX.forD.test(line)){ segs.push({ fill:true }); i++; continue }
+
+    segs = segs.concat(lineSegments(line, lines[i+1] || ""));
+    i++;
+  }
+
+  var explicit = 0, holes = [];
+  segs.forEach(function(x){ if (x.fill) holes.push(x); else explicit += x.s });
+  if (holes.length){
+    var rest = total - explicit;
+    if (rest < 0) return [];
+    var each = Math.floor(rest / holes.length);
+    holes.forEach(function(h){ h.s = each; h.lo = 0; h.hi = 80; h.k = "easy"; delete h.fill });
+    holes[holes.length - 1].s += rest - each * holes.length;
+  }
+  var sum = segs.reduce(function(a, x){ return a + x.s }, 0);
+  if (!segs.length || Math.abs(sum - total) > 90) return [];
+  return segs;
+}
+
+
 /* Stryd's zones, as seconds spent in each. Not power against time: the
    per-split timeline the Stryd app draws comes from a structured workout this
    API does not return -- `blocks` is null on the calendar row, on
@@ -822,6 +949,43 @@ var RUN_FLIPPED = false;
    the session that is actually available, and it answers the question that
    matters before going out: how much of this is easy, and how much is not. */
 var ZONE_NAMES = ["Easy", "Steady", "Tempo", "Threshold", "Max"];
+
+/* The session as it is run: one bar per segment, width by duration, height by
+   power, with CP drawn across. Stryd's own principle -- what matters before
+   going out is where the hard parts sit and how long you are in them, and a
+   pie of totals cannot say that.
+   Falls back to the zone totals when the prose will not reconcile with the
+   planned duration, because a bar chart of a session nobody can execute is
+   worse than an honest distribution. */
+function runChart(w){
+  var segs = sessionSegments(w.x, w.s);
+  if (!segs.length) return zoneChart(w.z);
+
+  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || "#7B5CFF",
+      top = 110, i;
+  for (i = 0; i < segs.length; i++) top = Math.max(top, segs[i].hi);
+
+  var bars = "";
+  for (i = 0; i < segs.length; i++){
+    var g = segs[i],
+        /* the ramp the zone bar already uses, so hard reads hard in both */
+        mix = Math.max(0, Math.min(1, (g.hi - 40) / 160)),
+        col = chroma.mix("#FFFFFF", anchor, 0.22 + mix * 0.78, "lch").hex();
+    bars += '<i style="flex:' + g.s + ';height:' + (g.hi / top * 100).toFixed(1) +
+            '%;background:' + col + '" title="' + fmtClock(g.s) + " · " +
+            (g.k === "max" ? "all out" : g.lo + "-" + g.hi + "%") + '"></i>';
+  }
+  return '<div class="zwrap"><div class="hist" style="--cp:' +
+           (100 / top * 100).toFixed(1) + '%">' + bars +
+           '<b class="cp"><span>CP</span></b></div>' +
+         '<div class="zcap">' + segs.length + " segments · " + fmtDur(w.s) +
+         " · height is power, width is time</div></div>";
+}
+
+function fmtClock(sec){
+  var m = Math.floor(sec / 60), s = sec % 60;
+  return m + ":" + (s < 10 ? "0" : "") + s;
+}
 
 function zoneChart(zones){
   if (!zones || !zones.length) return "";
@@ -878,7 +1042,7 @@ function renderPlan(){
           (w.m ? '<span class="chip">' + (w.m / 1000).toFixed(1) + ' km</span>' : '') +
           (w.r ? '<span class="chip">RSS ' + Math.round(w.r) + '</span>' : '') +
         '</div>' +
-        zoneChart(w.z) +
+        runChart(w) +
       '</div>' +
       '<div class="back">' +
         '<div class="plan-head"><div class="plan-t">' + esc(w.t) + '</div>' +
