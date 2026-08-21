@@ -19,7 +19,8 @@ tr -d ' \t\r\n' > "$TMP"
 
 # A truncated paste is the usual failure, and it is worth catching before it
 # becomes a 401 an hour later.
-segments=$(tr '.' '\n' < "$TMP" | wc -l)
+# awk counts fields; tr | wc -l counts newlines, and "a.b.c" has two of those
+segments=$(awk -F. '{print NF}' "$TMP")
 if [ "$segments" -ne 3 ]; then
   rm -f "$TMP"
   echo "That is not a JWT: expected three dot-separated segments, got $segments." >&2

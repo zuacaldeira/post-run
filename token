@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Put a fresh Stryd token on the server. Run it from anywhere on this machine.
+#
+#   ./token eyJhbGciOi...          the token as an argument
+#   ./token                        paste it when asked, or pipe it in
+#   ./token -c                     take it from the clipboard
+#
+# The sync starts by itself: a path unit on the server watches the token file,
+# so placing one is the whole job. Nothing else needs running.
+#
+# The token never appears in an ssh command line, so it stays out of the
+# server's process list; it goes over the connection on stdin and is written
+# atomically, which also means the path unit sees one complete file rather than
+# a truncation followed by a write.
+set -euo pipefail
+
+HOST="${POSTRUN_HOST:-root@217.154.2.230}"
+DEST="${POSTRUN_TOKEN_PATH:-/etc/postrun/stryd.token}"
+
+say(){ printf '%s\n' "$*" >&2; }
+
+token=""
+from_argv=0
+case "${1:-}" in
+  -c|--clipboard)
+    for c in wl-paste xclip xsel pbpaste; do
+      command -v "$c" >/dev/null 2>&1 || continue
+      case "$c" in
+        xclip) token=$(xclip -o -selection clipboard) ;;
+        xsel)  token=$(xsel -b -o) ;;
+        *)     token=$("$c") ;;
+      esac
+      break
+    done
+    if [ -z "$token" ]; then
+      say "No clipboard tool found. Install wl-clipboard, or pass the token as an argument."
+      exit 1
+    fi ;;
+  "")
+    if [ -t 0 ]; then say "Paste the JWT, then press Enter and Ctrl-D:"; fi
+    token=$(cat) ;;
+  *)
+    token="$1"; from_argv=1 ;;
+esac
+
+token=$(printf '%s' "$token" | tr -d ' \t\r\n')
+
+# A truncated paste is the usual failure, and it is worth catching here rather
+# than as a 401 an hour later.
+# awk counts fields; tr | wc -l counts newlines, and "a.b.c" has two of those,
+# so the obvious version rejects every valid token
+segments=$(printf '%s' "$token" | awk -F. '{print NF}')
+if [ "$segments" -ne 3 ] || [ "${token#eyJ}" = "$token" ]; then
+  say "That is not a Stryd JWT: expected three dot-separated segments starting eyJ, got $segments."
+  say "Copy the whole value, or the part after 'Bearer ' in the Authorization header."
+  exit 1
+fi
+
+printf '%s' "$token" | ssh "$HOST" "
+  umask 077
+  mkdir -p \"\$(dirname '$DEST')\"
+  cat > '$DEST.new'
+  chown root:root '$DEST.new' 2>/dev/null || true
+  chmod 600 '$DEST.new'
+  mv '$DEST.new' '$DEST'
+"
+say "Placed on $HOST."
+
+if [ "$from_argv" -eq 1 ]; then
+  say ""
+  say "Note: passing it as an argument puts the token in ~/.bash_history and, briefly,"
+  say "in this machine's process list. './token' with no argument reads it from a"
+  say "prompt instead, which avoids both."
+fi
+
+# The path unit has to notice the write and the sync has to run.
+sleep 12
+say ""
+ssh "$HOST" "
+  systemd-run --quiet --wait --pipe --collect --property=User=www-data \
+    --property=WorkingDirectory=/opt/postrun-sync \
+    --property=LoadCredential=stryd:$DEST \
+    /usr/bin/python3 -m tools.stryd.sync --check 2>&1 || true
+  echo
+  echo -n 'last sync: '
+  systemctl show postrun-stryd-sync.service -p Result --value
+  python3 - <<'PY' 2>/dev/null || true
+import json, datetime
+d = json.load(open('/var/www/postrun.zuacaldeira.com/plan.json'))
+print('plan.json: {} days, {} to {}, fetched {}'.format(
+    len(d['days']), min(d['days']), max(d['days']), d['fetched_at']))
+PY
+"
