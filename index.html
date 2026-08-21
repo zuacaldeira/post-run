@@ -96,7 +96,12 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
   letter-spacing:-.01em;white-space:nowrap;
   transition:background .2s,color .2s,border-color .2s}
 .tab .n{font-size:11px;font-weight:800;opacity:.8}
-.topbar{display:flex;align-items:center;gap:10px}
+/* One line where there were four. The title is small because it is the same
+   every day; the date is the part that changes. */
+.topbar{display:flex;align-items:baseline;gap:10px;padding-top:2px}
+.topbar h1{font-size:17px;font-weight:900;letter-spacing:-.02em;line-height:1.1;margin:0;
+  color:var(--ink);white-space:nowrap}
+.topbar .hi{font-size:11.5px;letter-spacing:.1em}
 /* Only there when you are not on today, because a button that says "today"
    while you are looking at today is a button that does nothing. */
 .todaybtn{margin-left:auto;flex:none;padding:8px 13px;border-radius:99px;cursor:pointer;
@@ -128,8 +133,8 @@ h3{font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
 
 .ph{display:none;margin-bottom:34px}
 .ph.open{display:block}
-.pht{margin:0 0 14px 2px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.pht .t{font-size:23px;font-weight:900;letter-spacing:-.02em;color:var(--ink)}
+/* The tab already names the phase; this only says the thing the tab cannot. */
+.pht{margin:0 0 12px 2px}
 .pht .s{font-size:12.5px;font-weight:700;color:var(--ink-2)}
 /* The prescription is quoted, not restyled: it arrives as prose with its own
    line breaks and indented lists, so pre-wrap rather than a paragraph. */
@@ -418,26 +423,16 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
 <div id="scrim" aria-hidden="true"></div>
 
 <div class="topbar">
+  <h1 id="mark">Core &amp; Mobility</h1>
   <p class="hi" id="hi">Today</p>
   <button class="todaybtn" id="todayBtn" type="button" hidden>Today</button>
   <button class="gearbtn" id="tabSettings" type="button" aria-label="Settings" aria-expanded="false">⚙</button>
-</div>
-<h1>Core &amp;<br><span id="mark">Mobility</span></h1>
-<p class="lede">The day in three parts: the warm-up out of today's Stryd plan, the run
-itself, and the core and mobility session afterwards. Hold what you can hold well, then
-add a little every couple of weeks.</p>
-
-<div class="rainbow" id="rainbow"></div>
-<div class="legend" id="legend"></div>
-<div class="stats">
-  <span class="chip" id="cDone"><b>0</b> done</span>
-  <span class="chip" id="cTime">about <b>9 min</b></span>
 </div>
 
 <nav class="tabs" id="tabs" role="tablist" aria-label="Phases of the day"></nav>
 
 <section class="ph" id="ph-pre" data-phase="pre">
-  <h2 class="pht"><span class="t">Pre-run</span><span class="s">before you go out</span></h2>
+  <h2 class="pht"><span class="s">before you go out</span></h2>
   <div id="pre-groups"></div>
 
   <p class="note">Whatever Stryd schedules as pre-run work for this day. It keeps its
@@ -449,13 +444,13 @@ add a little every couple of weeks.</p>
 </section>
 
 <section class="ph" id="ph-run" data-phase="run">
-  <h2 class="pht"><span class="t">Run</span><span class="s">today, from the Stryd plan</span></h2>
+  <h2 class="pht"><span class="s">today, from the Stryd plan</span></h2>
   <div id="runplan"></div>
   <p class="age" id="planage"></p>
 </section>
 
 <section class="ph" id="ph-post" data-phase="post">
-  <h2 class="pht"><span class="t">Post-run</span><span class="s">core &amp; mobility</span></h2>
+  <h2 class="pht"><span class="s">core &amp; mobility</span></h2>
   <div class="dial">
     <span class="lab">Front plank hold<small>Side planks follow at half</small></span>
     <button id="minus" aria-label="Five seconds less">−</button>
@@ -475,7 +470,7 @@ add a little every couple of weeks.</p>
 </section>
 
 <section class="ph" id="ph-settings" data-phase="settings">
-  <h2 class="pht"><span class="t">Settings</span><span class="s">devices, and what they say</span></h2>
+  <h2 class="pht"><span class="s">devices, and what they say</span></h2>
 
   <h3>Devices</h3>
   <div id="devPanels"></div>
@@ -488,10 +483,16 @@ add a little every couple of weeks.</p>
 
   <h3>Data</h3>
   <div class="panel" id="dataPanel"></div>
+
+  <h3>What this is</h3>
+  <p class="note">The day in three parts: the warm-up out of the Stryd plan, the run
+  itself, and the core and mobility session afterwards. Hold what you can hold well,
+  then add a little every couple of weeks. It sat on the front page until that page
+  had eight things stacked above the first card.</p>
 </section>
 
 <section class="ph" id="ph-progress" data-phase="progress">
-  <h2 class="pht"><span class="t">Progress</span><span class="s">what you have been doing</span></h2>
+  <h2 class="pht"><span class="s">what you have been doing</span></h2>
   <div class="panel" id="progress"></div>
 </section>
 
@@ -1658,50 +1659,13 @@ buildAll(MOBILITY,  "post-groups", "post", "stretch");
 buildAll(POSTDRILL, "post-groups", "post", "postdrill");
 buildAll(RECOVERY,  "recovery",    "post", "recovery");
 
-/* legend, because colour now carries meaning */
-var leg = document.getElementById("legend");
-["todo","doing","done"].forEach(function(k){
-  var s = document.createElement("span");
-  s.className = "key";
-  s.innerHTML = '<i style="background:' + STYLE[k].seg + '"></i>' + LABEL[k];
-  leg.appendChild(s);
-});
+/* No bar and no counters here any more. Three things reported the same state --
+   the bar, the "0 of 28" chips and the tab counts -- and the tabs are the ones
+   that say it per phase and never leave the screen. drawRainbow stays as a
+   no-op because the day-change path calls it; there is simply nothing to draw. */
+function drawRainbow(){}
 
-var rb = document.getElementById("rainbow");
-/* The bar belongs to the phase on screen, not to the day. Twenty-eight segments
-   for every phase at once made it a decoration: nothing you could look at and
-   learn where you were. Scoped to the active tab it reads as that session's
-   progress, and on a tab with no cards -- the run, the log -- there is nothing
-   to draw, so it goes. */
-function phaseCards(){
-  return ALL.filter(function(el){ return !ACTIVE || el._x.phase === ACTIVE });
-}
-function drawRainbow(){
-  var cards = phaseCards();
-  rb.innerHTML = "";
-  rb.style.display = cards.length ? "" : "none";
-  document.getElementById("legend").style.display = cards.length ? "" : "none";
-  cards.forEach(function(){ rb.appendChild(document.createElement("i")) });
-}
-drawRainbow();
-
-function tally(){
-  var n = { todo:0, doing:0, done:0 };
-  /* the count is the day's, the bar is the phase's */
-  ALL.forEach(function(el){ n[el.dataset.state || "todo"]++ });
-  phaseCards().forEach(function(el, i){
-    var seg = rb.children[i];
-    if (!seg) return;
-    var st = el.dataset.state || "todo";
-    seg.style.background = STYLE[st].seg;
-    seg.style.transform  = st === "done" ? "scaleY(1.4)" : "none";
-  });
-  /* Exercises, said plainly: the run is in the time above but cannot be ticked
-     off here, and "0 of 28 done" invited the question of what the 28 were. */
-  document.getElementById("cDone").innerHTML =
-    "<b>" + n.done + "</b> of " + ALL.length + " exercises";
-  summarise();
-}
+function tally(){ summarise() }
 function estimate(group){
   var s = 0;
   /* solo items are not in the session, so they are not in its estimate either */
@@ -1810,17 +1774,6 @@ function labelRuns(){
   });
 }
 function refresh(){
-  /* The day, not the exercises. Left as the sum of the cards this read "about
-     27 min" for a day whose largest part is a 40 minute run -- the one number
-     meant to describe the day omitting most of it. The run has no card to count
-     because it does not happen here, which is exactly why it has to be added by
-     hand. */
-  var today = planFor(viewISO()),
-      secs = estimate() * 60 + (today ? today.s : 0);
-  /* "today" is only true when it is: the same total on a swiped day would be
-     claiming to describe a day you are not looking at */
-  document.getElementById("cTime").innerHTML =
-    "about <b>" + fmtDur(secs) + "</b>" + (today && !VIEW ? " today" : "");
   labelRuns();
   ALL.forEach(function(el){
     var x = el._x;
