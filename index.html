@@ -5,297 +5,296 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Post-run · core &amp; mobility</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#D9DDD9">
+<meta name="theme-color" content="#F4F6F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="preload" href="fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/barlowcond-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/barlow-400.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-/* ── the system ───────────────────────────────────────────────────────
-   Otl Aicher's 1972 programme, applied. Two rules do all the work:
-   HUE NAMES THE CHANNEL -- which part of the day you are in -- and
-   TREATMENT NAMES THE STATE -- outlined, flooded, or filled. Neither
-   variable ever carries the other's meaning. Every colour below is a
-   seed; solveStates() derives what is painted and proves it against the
-   ground before it ships.                                              */
+/* ── tokens ───────────────────────────────────────────────────────────
+   Two themes designed together, not one inverted. Every colour below is
+   a seed; solveStates()/dressPage() derive what is painted and prove it
+   against the ground of the theme actually in use, so the light and the
+   dark app are the same design proved twice.                          */
 :root{
+  color-scheme:light dark;
   --u:4px;
-  --band:#0A4A80;                       /* one unit. every measure is a multiple */
-  --silver:#D9DDD9;              /* Aicher's silber: the page is grey, not white */
-  --plane:#EFF1EE;               /* the raised sheet a row is printed on */
-  --plane-2:#CDD2CE;             /* a spent row, receded */
-  --ink:#191E1B;
-  --rule:#B7BDB8;
-  --ch-pre:#5FA842; --ch-run:#2E7CBF; --ch-post:#E8842A; --ch-log:#7E63A8;
-  --ch:var(--ch-run);            /* the channel on screen; sections reassign it */
-  --in-oklab: ;
-  --sans:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --bg:#F4F6F8; --surface:#FFFFFF; --surface-2:#EBEEF2; --line:#D5DAE1;
+  --ink:#0E1621; --ink-2:#4A5666;
+  --shadow:0 1px 2px rgba(14,22,33,.06), 0 6px 16px -8px rgba(14,22,33,.18);
+  --shadow-lift:0 2px 4px rgba(14,22,33,.08), 0 14px 30px -12px rgba(14,22,33,.30);
+  --r-s:10px; --r-m:16px; --r-l:22px; --r-pill:999px;
+  --display:"Barlow Condensed","Oswald","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow","Helvetica Neue",system-ui,-apple-system,sans-serif;
+  --nav-h:72px;
 }
-@supports (background:linear-gradient(in oklab,white,black)){ :root{ --in-oklab:in oklab } }
-/* Univers is Aicher's face and is not free; Archivo is the closest
-   grotesque with a real width axis, which is the part that matters --
-   the whole programme is a width/weight matrix, not one cut. */
-@font-face{font-family:Archivo;src:url(fonts/archivo-var.woff2)format("woff2-variations"),
-  url(fonts/archivo-var.woff2)format("woff2");
-  font-weight:100 900;font-stretch:62% 125%;font-display:swap;font-style:normal}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F172A; --surface:#182234; --surface-2:#1F2B40; --line:#31405A;
+    --ink:#F2F6FB; --ink-2:#9DAABD;
+    /* a shadow on a dark ground reads as dirt; depth comes from the
+       surface step and the hairline instead */
+    --shadow:0 0 0 1px rgba(255,255,255,.05);
+    --shadow-lift:0 0 0 1px rgba(255,255,255,.10), 0 18px 34px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F172A; --surface:#182234; --surface-2:#1F2B40; --line:#31405A;
+  --ink:#F2F6FB; --ink-2:#9DAABD;
+  --shadow:0 0 0 1px rgba(255,255,255,.05);
+  --shadow-lift:0 0 0 1px rgba(255,255,255,.10), 0 18px 34px -16px rgba(0,0,0,.7);
+}
+@font-face{font-family:"Barlow Condensed";src:url(fonts/barlowcond-700.woff2)format("woff2");
+  font-weight:700;font-display:swap}
+@font-face{font-family:Barlow;src:url(fonts/barlow-400.woff2)format("woff2");
+  font-weight:400;font-display:swap}
+@font-face{font-family:Barlow;src:url(fonts/barlow-600.woff2)format("woff2");
+  font-weight:600;font-display:swap}
 *{box-sizing:border-box}
-
-/* ── the poster band ──────────────────────────────────────────────────
-   Aicher's posters ran treated sports photography under the type. The
-   photograph is desaturated and printed in the channel's own ink, which
-   is what makes it part of the system rather than a backdrop behind it. */
-#bg{position:absolute;top:0;left:0;width:100%;height:132px;object-fit:cover;
-  object-position:center 26%;z-index:-2;pointer-events:none;
-  filter:grayscale(1) contrast(1.22) brightness(1.06)}
-#scrim{position:absolute;top:0;left:0;width:100%;height:132px;z-index:-1;pointer-events:none;
-  background:rgba(10,74,128,.84);border-bottom:2px solid var(--ink)}
-@supports (mix-blend-mode:multiply){
-  #scrim{background:var(--band);mix-blend-mode:multiply}
-}
-/* the user asked for less transparency, or the OS owns the palette: the
-   band becomes a flat field of ink, which is still an Aicher poster. */
-@media (prefers-reduced-transparency:reduce){ #bg{display:none} #scrim{background:var(--band);mix-blend-mode:normal} }
-@media (forced-colors:active){ #bg{display:none} #scrim{background:Canvas;border-bottom:2px solid CanvasText} }
-
-html{background:var(--silver)}
-html,body{margin:0;color:var(--ink);font-family:var(--sans);font-synthesis:none}
-body{padding:0 calc(var(--u)*4) calc(var(--u)*10 + env(safe-area-inset-bottom));
-  max-width:620px;margin:0 auto;-webkit-font-smoothing:antialiased;
-  overflow-x:hidden;min-height:100vh;position:relative}
-:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
-button{font-family:inherit}
-/* icons sit on the text baseline at the size of the type they accompany */
-.i{width:1em;height:1em;display:inline-block;vertical-align:-.12em;
-  fill:currentColor;flex:none}
-.acts button .i,.acts a .i{margin-right:.5em}
+html{background:var(--bg)}
+html,body{margin:0;color:var(--ink);font-family:var(--body);font-size:16px}
+body{background:var(--bg);max-width:640px;margin:0 auto;
+  padding:0 calc(var(--u)*4) calc(var(--nav-h) + env(safe-area-inset-bottom) + var(--u)*6);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100dvh;
+  text-rendering:optimizeLegibility}
+:focus-visible{outline:3px solid var(--accent-ink);outline-offset:2px;border-radius:4px}
+button,input{font-family:inherit}
+::selection{background:var(--accent);color:var(--on-accent)}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
-  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
-html{scrollbar-color:var(--ink) var(--silver);scrollbar-width:thin}
-::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-track{background:var(--silver)}
-::-webkit-scrollbar-thumb{background:var(--ink);border:2px solid var(--silver)}
-::selection{background:var(--ch);color:var(--ink)}
-::-moz-selection{background:var(--ch);color:var(--ink)}
+  clip-path:inset(50%);white-space:nowrap;border:0}
+.i{width:1em;height:1em;display:inline-block;vertical-align:-.13em;fill:currentColor;flex:none}
 
-/* ── the masthead, knocked out of the band ───────────────────────────
-   Aicher set the programme in lowercase. Only system labels obey it;
-   an exercise name is content and keeps the capitals it was given.    */
-.topbar{display:flex;align-items:flex-end;gap:calc(var(--u)*2);
-  height:132px;padding-bottom:calc(var(--u)*3);color:#fff}
-.topbar h1{font-size:23px;font-weight:700;font-stretch:87%;letter-spacing:-.005em;
-  line-height:1;margin:0;text-transform:lowercase;white-space:nowrap}
-.hi{margin:0;font-size:11px;font-weight:600;font-stretch:87%;letter-spacing:.14em;
-  text-transform:lowercase;opacity:.92}
-.topbar .hi{margin-right:auto;padding-bottom:2px}
-.todaybtn,.gearbtn{flex:none;border:2px solid #fff;background:none;color:#fff;
-  cursor:pointer;border-radius:0;font-family:inherit;
-  transition:background .18s linear,color .18s linear}
-.todaybtn{min-height:44px;padding:calc(var(--u)*1.5) calc(var(--u)*2.5);font-size:12px;font-weight:600;
-  font-stretch:87%;letter-spacing:.06em;text-transform:lowercase}
+/* the backdrop is gone: a photograph behind a working tool was decoration */
+#bg,#scrim{display:none}
+
+/* ── header ──────────────────────────────────────────────────────────
+   Compact and non-sticky. The controls that matter live at the bottom
+   now, in the half of the screen a thumb can actually reach.          */
+.topbar{display:flex;align-items:center;gap:calc(var(--u)*3);
+  padding:calc(var(--u)*5) 0 calc(var(--u)*3);
+  padding-top:calc(var(--u)*5 + env(safe-area-inset-top))}
+.topbar h1{font-family:var(--display);font-weight:700;font-size:34px;line-height:.95;
+  letter-spacing:.005em;margin:0;text-transform:uppercase}
+.hi{margin:2px 0 0;font-size:13px;font-weight:600;color:var(--ink-2);
+  letter-spacing:.02em;text-transform:capitalize}
+.topbar .hi{margin-right:auto}
+.todaybtn,.gearbtn{flex:none;border:1px solid var(--line);background:var(--surface);
+  color:var(--ink);cursor:pointer;border-radius:var(--r-pill);
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:background .15s ease,border-color .15s ease,transform .1s ease}
+.todaybtn{min-height:44px;padding:0 calc(var(--u)*4);font-size:14px;font-weight:600}
 .todaybtn[hidden]{display:none}
-.gearbtn{width:48px;height:48px;font-size:15px;line-height:1;display:grid;place-items:center}
-.todaybtn:active,.gearbtn:active{background:#fff;color:var(--ink)}
-/* These two sit on the poster band, which is near-black under the photograph:
-   the global ink focus ring measured 1.22:1 there and was effectively invisible.
-   On the band the ring is white. */
-.topbar :focus-visible{outline-color:#fff}
-.gearbtn[aria-expanded="true"]{background:#fff;color:var(--ink)}
+.gearbtn{width:44px;height:44px;font-size:19px}
+.todaybtn:active,.gearbtn:active{transform:scale(.96);background:var(--surface-2)}
+.gearbtn[aria-expanded="true"]{background:var(--accent);color:var(--on-accent);
+  border-color:var(--accent)}
 
-/* ── channels ────────────────────────────────────────────────────────
-   A recorder has channels and so does the day. The strip is the one
-   place every channel colour appears at once; everywhere else exactly
-   one is on screen.                                                    */
-.tabs{display:flex;gap:2px;margin:calc(var(--u)*4) 0 calc(var(--u)*5);
-  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;
-  gap:1px;cursor:pointer;min-height:48px;justify-content:center;
-  padding:calc(var(--u)*2) calc(var(--u)*2) calc(var(--u)*1.5);
-  border:0;border-top:3px solid var(--tab-ch);background:var(--plane);color:var(--ink);
-  font-family:inherit;font-size:12.5px;font-weight:600;font-stretch:87%;
-  letter-spacing:.02em;text-transform:lowercase;white-space:nowrap;text-align:left;
-  transition:background .18s linear,color .18s linear}
-.tab .n{font-size:10.5px;font-weight:500;font-stretch:75%;letter-spacing:.1em;opacity:.72;
-  font-variant-numeric:tabular-nums}
-.tab[aria-selected="true"]{background:var(--tab-ch);color:var(--ink)}
-.tab[aria-selected="true"] .n{opacity:.88}
+/* ── bottom navigation ───────────────────────────────────────────────
+   Four destinations, icon plus label, in the thumb zone. Every control
+   in the old build sat in the top half of the screen; on a propped
+   phone held one-handed that is the half a thumb cannot reach.        */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;
+  display:flex;gap:0;max-width:640px;margin:0 auto;
+  background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+.tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;border:0;background:none;
+  color:var(--ink-2);min-height:var(--nav-h);padding:calc(var(--u)*2) 2px;
+  font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.02em;
+  position:relative;transition:color .15s ease}
+.tab .i{width:24px;height:24px;vertical-align:0}
+.tab .lbl{display:block;line-height:1.05;font-size:11px}
+.tab .n{font-size:10px;font-weight:600;font-variant-numeric:tabular-nums;
+  color:var(--ink-2);opacity:.85;line-height:1}
+.tab .n:empty{display:none}
+.tab[aria-selected="true"]{color:var(--accent-ink)}
+.tab[aria-selected="true"] .n{color:var(--accent-ink)}
+/* the active mark is a bar, not a colour change: colour alone is never
+   the only signal */
+.tab[aria-selected="true"]::before{content:"";position:absolute;top:0;left:50%;
+  transform:translateX(-50%);width:28px;height:3px;border-radius:0 0 3px 3px;
+  background:var(--accent-ink)}
+.tab:active{transform:none;background:var(--surface-2)}
 @media (forced-colors:active){
-  .tab{border-top:3px solid CanvasText;background:Canvas;color:CanvasText}
-  .tab[aria-selected="true"]{background:Highlight;color:HighlightText;border-top-color:Highlight}
+  .tab[aria-selected="true"]{color:Highlight}
+  .tab[aria-selected="true"]::before{background:Highlight}
 }
-@media (max-width:360px){ .tab{padding:calc(var(--u)*1.5) calc(var(--u)*1.5);font-size:11.5px} }
-/* the strip must not clip its children's focus rings: an outline does not count
-   as scrollable overflow, so overflow:auto with no padding hid all four */
-.tabs{padding:5px 5px 0;margin-left:-5px;margin-right:-5px}
 
 /* ── sections ────────────────────────────────────────────────────────*/
-.ph{display:none;margin-bottom:calc(var(--u)*8)}
+.ph{display:none}
 .ph.open{display:block}
 .pht{margin:0 0 calc(var(--u)*4)}
-.pht .s{display:inline-block;font-size:11px;font-weight:600;font-stretch:87%;
-  letter-spacing:.16em;text-transform:lowercase;color:var(--ink);background:var(--ch);
-  padding:calc(var(--u)*1.25) calc(var(--u)*2)}
-h2,h3{font-size:11px;font-weight:600;font-stretch:87%;letter-spacing:.16em;
-  text-transform:lowercase;color:var(--ink);margin:0 0 calc(var(--u)*3)}
-h3{margin:calc(var(--u)*6) 0 calc(var(--u)*3);padding-bottom:calc(var(--u)*1);
-  border-bottom:2px solid var(--ink)}
-section{margin-bottom:calc(var(--u)*7)}
-/* The control that delivers the product's whole promise -- a session completed
-   without picking the phone up -- had no rule at all and rendered as an OS
-   default button in the middle of an Aicher programme. It is the primary
-   action, so it is the loudest field in the column. */
-.run{display:block;width:100%;border:0;border-radius:0;cursor:pointer;
-  margin:0 0 2px;padding:calc(var(--u)*4) calc(var(--u)*4);
-  background:var(--ch);color:var(--ink);font-family:inherit;text-align:left;
-  font-size:17px;font-weight:600;font-stretch:100%;letter-spacing:-.01em;
-  display:flex;align-items:center;gap:.55em;min-height:64px;
-  transition:background .18s linear,color .18s linear}
-.run small{display:block;font-size:11px;font-weight:500;font-stretch:87%;
-  letter-spacing:.12em;text-transform:lowercase;margin-top:3px;opacity:.82}
-.run .i{width:1.15em;height:1.15em}
-.run:active{background:var(--ink);color:var(--ch)}
-.grp{margin-bottom:calc(var(--u)*6)}
+.pht .s{font-family:var(--display);font-weight:700;font-size:15px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+h2,h3{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.03em;
+  text-transform:uppercase;color:var(--ink);margin:0 0 calc(var(--u)*3)}
+h3{margin:calc(var(--u)*7) 0 calc(var(--u)*3)}
+section{margin-bottom:calc(var(--u)*6)}
+.grp{margin-bottom:calc(var(--u)*7)}
 .grp h3{margin-top:0}
 
-/* ── the row ─────────────────────────────────────────────────────────
-   Not a card. A printed band on a sheet: square corners, a rule, and a
-   pictogram block that is part of the same grid as the type beside it. */
-.ex{position:relative;background:var(--plane);border:0;border-radius:0;
-  padding:calc(var(--u)*3);margin-bottom:2px;
-  box-shadow:inset 0 0 0 1px var(--rim);
-  contain:layout style;perspective:1400px;
-  transition:background .22s linear,box-shadow .22s linear,color .22s linear;
-  translate:0;rotate:0deg;scale:1}
-/* height is not animated: transitioning min-height thrashes layout for
-   sixty frames, and the change is behind the rotation anyway. */
+/* ── the primary action ──────────────────────────────────────────────
+   One primary CTA per screen, full width, in the accent. It is the
+   control the whole product exists for.                              */
+.run{display:flex;width:100%;align-items:center;gap:calc(var(--u)*3);
+  border:0;border-radius:var(--r-l);cursor:pointer;
+  margin:0 0 calc(var(--u)*4);padding:calc(var(--u)*5);
+  background:var(--accent);color:var(--on-accent);font-family:var(--display);
+  font-size:24px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;
+  text-align:left;min-height:68px;box-shadow:var(--shadow-lift);
+  transition:transform .12s cubic-bezier(.2,.8,.3,1),filter .15s ease}
+.run small{display:block;font-family:var(--body);font-size:12px;font-weight:600;
+  letter-spacing:.01em;text-transform:none;opacity:.9;margin-top:2px}
+.run .i{width:26px;height:26px}
+.run:active{transform:scale(.985);filter:brightness(.94)}
+.run-2{background:var(--surface);color:var(--ink);
+  box-shadow:inset 0 0 0 2px var(--line);font-size:20px;min-height:60px}
+.run-2 small{color:var(--ink-2)}
+
+/* ── the movement block ──────────────────────────────────────────────
+   A card, deliberately: this is an app you operate, and a tappable
+   block with a real elevation reads as tappable in a way a printed
+   band does not. Whole block is the target.                          */
+.ex{position:relative;background:var(--surface);border-radius:var(--r-l);
+  padding:calc(var(--u)*4);margin-bottom:calc(var(--u)*3);
+  box-shadow:var(--shadow);cursor:pointer;
+  transition:transform .12s cubic-bezier(.2,.8,.3,1),box-shadow .2s ease,
+             background .2s ease;
+  contain:layout style;perspective:1200px}
+.ex:active{transform:scale(.99)}
 .faces{position:relative;transform-style:preserve-3d;
-  transition:transform .55s cubic-bezier(.2,.75,.2,1);
-  transform:rotateY(0deg)}
-.ex.flipped{min-height:calc((min(620px,100vw) - 32px) * 9 / 16 + 12px)}
+  transition:transform .5s cubic-bezier(.25,.8,.3,1);transform:rotateY(0deg)}
+.ex.flipped{min-height:calc((min(640px,100vw) - 32px) * 9 / 16 + 12px)}
 @supports (container-type:inline-size){
   .ex{container-type:inline-size}
   .ex.flipped{min-height:0}
-  .ex.flipped .faces{min-height:calc((100cqw + 24px) * 9 / 16 + 12px)}
+  .ex.flipped .faces{min-height:calc((100cqw + 32px) * 9 / 16 + 12px)}
 }
 .ex.flipped .faces{transform:rotateY(180deg)}
 .front,.back{-webkit-backface-visibility:hidden;backface-visibility:hidden}
-.back{position:absolute;inset:calc(var(--u)*-3);transform:rotateY(180deg);
-  border-radius:0;overflow:hidden;background:var(--solid);display:flex;flex-direction:column}
-.back .vid{position:relative;flex:1 0 auto;width:100%;aspect-ratio:16/9;background:var(--ink)}
+.back{position:absolute;inset:calc(var(--u)*-4);transform:rotateY(180deg);
+  border-radius:var(--r-l);overflow:hidden;background:#000;display:flex;
+  flex-direction:column}
+.back .vid{position:relative;flex:1 0 auto;width:100%;aspect-ratio:16/9;background:#000}
 .back .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.back .cap{padding:calc(var(--u)*2.5) calc(var(--u)*3);min-height:44px;flex:0 0 auto;
-  display:flex;justify-content:space-between;gap:calc(var(--u)*2.5);align-items:center;
-  font-size:13px;font-weight:600;color:var(--nm)}
-.back .cap span{font-size:10.5px;font-weight:600;font-stretch:87%;letter-spacing:.14em;
-  text-transform:lowercase;color:var(--deep)}
-.back .fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;
-  padding:calc(var(--u)*4);color:#fff;font-size:14px;font-weight:500;line-height:1.5}
+.back .cap{padding:calc(var(--u)*3) calc(var(--u)*4);min-height:48px;flex:0 0 auto;
+  display:flex;justify-content:space-between;gap:calc(var(--u)*3);align-items:center;
+  font-size:15px;font-weight:600;color:#fff;background:#000}
+.back .cap span{font-size:11px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:rgba(255,255,255,.7)}
+.back .fallback{position:absolute;inset:0;display:grid;place-items:center;
+  text-align:center;padding:calc(var(--u)*5);color:#fff;font-size:15px;line-height:1.5}
 @media (prefers-reduced-motion:reduce){
   .faces{transition:none}
   .ex.flipped .faces{transform:none}
   .ex.flipped .front{display:none}
-  .back{transform:none;position:relative;inset:auto;margin:calc(var(--u)*-3);width:auto;min-height:0}
+  .back{transform:none;position:relative;inset:auto;margin:calc(var(--u)*-4);
+    width:auto;min-height:0}
   .ex.flipped{min-height:0}
   .ex:not(.flipped) .back{display:none}
 }
 
-/* treatment names the state, and only the state */
-.ex[data-state="doing"]{background:var(--solid);box-shadow:none}
-/* Mid-hold the row is read at arm's length by someone breathing hard: the
-   pictogram goes to 3x and the dose comes up with it, so what is on screen is
-   the movement rather than a caption about it. */
-.ex[data-state="doing"]:not(.flipped) .badge{width:104px;height:104px}
-.ex[data-state="doing"]:not(.flipped) .nm{font-size:26px}
-.ex[data-state="doing"]:not(.flipped) .dose{font-size:16px;margin-top:calc(var(--u)*1.5)}
-.ex[data-state="doing"]:not(.flipped) .hd{align-items:center}
-@media (max-width:360px){
-  .ex[data-state="doing"]:not(.flipped) .badge{width:80px;height:80px}
-  .ex[data-state="doing"]:not(.flipped) .nm{font-size:22px}
-}
-.ex[data-state="done"]{background:var(--plane-2);box-shadow:inset 0 0 0 1px var(--rim)}
-/* A finished row is a record, not a target: it keeps the state chip so the work
-   can be undone, and loses the shelf of three buttons that were competing with
-   the rows still to do. */
-.ex[data-state="done"] .acts{display:none}
-
-/* ── the pictogram ───────────────────────────────────────────────────
-   Built on Aicher's raster: strokes at 0, 45 and 90 degrees only, one
-   stroke width throughout, a circle for the head. Every movement in the
-   app has one, so the block is never a letter or a number standing in
-   for a drawing.                                                       */
-.hd{display:flex;gap:calc(var(--u)*3);align-items:flex-start}
-.mark{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
-  gap:calc(var(--u)*1.25)}
-.badge{width:44px;height:44px;border-radius:0;
-  background:var(--badge-bg);color:var(--badge-fg);display:block;
-  box-shadow:inset 0 0 0 2px var(--badge-line);transition:background .22s linear}
+.hd{display:flex;gap:calc(var(--u)*4);align-items:center}
+.mark{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.badge{width:52px;height:52px;border-radius:var(--r-m);background:var(--surface-2);
+  color:var(--ink);display:block;transition:background .2s ease,color .2s ease}
 .badge svg{display:block;width:100%;height:100%}
-.badge svg *{vector-effect:non-scaling-stroke}
-.seq{font-size:10px;font-weight:500;font-stretch:75%;letter-spacing:.14em;
-  color:var(--deep);font-variant-numeric:tabular-nums;line-height:1}
-.txt{flex:1;min-width:0;padding-right:calc(var(--u)*6)}
-.nm{font-size:19px;font-weight:600;font-stretch:100%;letter-spacing:-.012em;
-  line-height:1.12;color:var(--nm)}
-.dose{font-size:13px;font-weight:400;color:var(--deep);margin-top:calc(var(--u)*0.75);
+.seq{font-family:var(--body);font-size:10px;font-weight:600;color:var(--ink-2);
+  font-variant-numeric:tabular-nums;letter-spacing:.06em;line-height:1}
+.txt{flex:1;min-width:0}
+.nm{font-size:19px;font-weight:600;line-height:1.2;color:var(--ink);
+  letter-spacing:-.005em}
+.dose{font-size:15px;font-weight:400;color:var(--ink-2);margin-top:2px;
   font-variant-numeric:tabular-nums}
 
-/* ── controls ────────────────────────────────────────────────────────*/
-.check{flex:0 0 auto;border:2px solid var(--chip-line);border-radius:0;
-  min-height:48px;display:inline-flex;align-items:center;
-  padding:calc(var(--u)*2) calc(var(--u)*2.5);background:var(--chip-bg);color:var(--chip-fg);
-  cursor:pointer;font-size:10.5px;font-weight:600;font-stretch:87%;letter-spacing:.1em;
-  text-transform:lowercase;white-space:nowrap;
-  transition:background .18s linear,color .18s linear}
-.ex[data-state="done"] .check::before{content:"";display:inline-block;width:9px;height:5px;
-  border-left:2px solid currentColor;border-bottom:2px solid currentColor;
-  transform:rotate(-45deg);margin-right:6px;vertical-align:2px}
-.acts{display:flex;gap:2px;margin-top:calc(var(--u)*3);flex-wrap:wrap}
-.acts button,.acts a{border:0;border-radius:0;min-height:48px;
-  display:inline-flex;align-items:center;padding:calc(var(--u)*2) calc(var(--u)*3.5);
-  font-size:13px;font-weight:600;font-stretch:87%;letter-spacing:.01em;cursor:pointer;
-  text-decoration:none;transition:background .18s linear,color .18s linear}
-.hold{background:var(--ink);color:var(--plane)}
-.watch,.acts a{background:transparent;color:var(--chip-fg);box-shadow:inset 0 0 0 2px var(--chip-line)}
-.hold:active{background:var(--ch);color:var(--ink)}
-.watch:active,.acts a:active{background:var(--ink);color:var(--plane);box-shadow:none}
+/* state: never colour alone — the pill spells it and the block changes shape */
+.check{flex:none;border:1px solid var(--line);border-radius:var(--r-pill);
+  min-height:44px;min-width:44px;display:inline-flex;align-items:center;gap:5px;
+  padding:0 calc(var(--u)*3.5);background:var(--surface);color:var(--ink-2);
+  cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.02em;
+  transition:background .15s ease,color .15s ease,border-color .15s ease}
+.check:active{transform:scale(.95)}
+.ex[data-state="doing"]{background:var(--doing-bg);box-shadow:var(--shadow-lift)}
+.ex[data-state="doing"] .nm,.ex[data-state="doing"] .seq{color:var(--on-doing)}
+.ex[data-state="doing"] .dose{color:var(--on-doing-2)}
+.ex[data-state="doing"] .badge{background:var(--doing-badge);color:var(--on-doing)}
+.ex[data-state="doing"] .check{background:transparent;color:var(--on-doing);
+  border-color:var(--on-doing-2)}
+.ex[data-state="done"]{background:var(--bg);box-shadow:0 0 0 1px var(--line)}
+.ex[data-state="done"] .nm{color:var(--ink-2);text-decoration:line-through;
+  text-decoration-thickness:1px;text-underline-offset:2px}
+.ex[data-state="done"] .badge{background:transparent;color:var(--ink-2)}
+.ex[data-state="done"] .check{background:var(--ok);color:var(--on-ok);
+  border-color:var(--ok)}
+.ex[data-state="done"] .acts{display:none}
 
-.player{display:none;margin-top:calc(var(--u)*3)}
+.acts{display:flex;gap:calc(var(--u)*2);margin-top:calc(var(--u)*4);flex-wrap:wrap}
+.acts button,.acts a{border:1px solid var(--line);border-radius:var(--r-pill);
+  min-height:48px;display:inline-flex;align-items:center;gap:6px;
+  padding:0 calc(var(--u)*4.5);font-size:15px;font-weight:600;cursor:pointer;
+  text-decoration:none;background:var(--surface);color:var(--ink);
+  transition:background .15s ease,transform .1s ease}
+.hold{background:var(--ink)!important;color:var(--bg)!important;border-color:var(--ink)!important}
+.acts button:active,.acts a:active{transform:scale(.96);background:var(--surface-2)}
+.ex[data-state="doing"] .acts button,.ex[data-state="doing"] .acts a{
+  background:transparent;color:var(--on-doing);border-color:var(--on-doing-2)}
+.ex[data-state="doing"] .hold{background:var(--on-doing)!important;
+  color:var(--doing-bg)!important;border-color:var(--on-doing)!important}
+
+.player{display:none;margin-top:calc(var(--u)*4)}
 .player.open{display:block}
-/* one live window: the clip is the only bright, moving thing on the page */
-.frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:0;overflow:hidden;
-  background:var(--ink)}
+.frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--r-m);
+  overflow:hidden;background:#000}
 .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.facade{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;cursor:pointer;
-  background:var(--ink)}
-.facade img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.1)}
+.facade{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;
+  cursor:pointer;background:#000}
+.facade img{width:100%;height:100%;object-fit:cover}
 .facade b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  background:var(--ch);color:var(--ink);border-radius:0;padding:calc(var(--u)*3) calc(var(--u)*5);
-  font-size:13px;font-weight:600;font-stretch:87%;letter-spacing:.06em;text-transform:lowercase}
-.hint{font-size:11.5px;font-weight:400;color:var(--ink);opacity:.75;
-  margin:calc(var(--u)*2) 0 0;line-height:1.5}
+  background:var(--accent);color:var(--on-accent);border-radius:var(--r-pill);
+  padding:calc(var(--u)*3) calc(var(--u)*5);font-size:15px;font-weight:600;
+  display:inline-flex;align-items:center;gap:6px}
+.hint{font-size:13px;color:var(--ink-2);margin:calc(var(--u)*2) 0 0;line-height:1.5}
 
 /* ── the dial ────────────────────────────────────────────────────────*/
 .dial{display:flex;align-items:center;gap:calc(var(--u)*3);
-  padding:calc(var(--u)*3);margin-bottom:calc(var(--u)*6);
-  background:var(--plane);box-shadow:inset 0 0 0 2px var(--ink)}
-.dial .lab{flex:1;font-size:13px;font-weight:600;line-height:1.3}
-.dial .lab small{display:block;font-weight:400;font-size:11.5px;margin-top:2px;opacity:.75}
-.dial button{width:44px;height:44px;border-radius:0;border:0;background:var(--ink);color:var(--plane);
-  font-size:22px;font-weight:600;line-height:1;cursor:pointer;font-family:inherit}
-.dial button:active{background:var(--ch)}
-.dial output{font-size:28px;font-weight:700;font-stretch:112%;min-width:72px;text-align:center;
-  letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  padding:calc(var(--u)*4);margin-bottom:calc(var(--u)*5);
+  background:var(--surface);border-radius:var(--r-l);box-shadow:var(--shadow)}
+.dial .lab{flex:1;font-size:15px;font-weight:600;line-height:1.3}
+.dial .lab small{display:block;font-weight:400;font-size:13px;color:var(--ink-2);
+  margin-top:2px}
+.dial button{width:48px;height:48px;border-radius:var(--r-pill);border:1px solid var(--line);
+  background:var(--surface-2);color:var(--ink);font-size:24px;font-weight:600;
+  line-height:1;cursor:pointer;transition:transform .1s ease,background .15s ease}
+.dial button:active{transform:scale(.92);background:var(--accent);color:var(--on-accent)}
+.dial output{font-family:var(--display);font-size:34px;font-weight:700;min-width:78px;
+  text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.01em}
 
-/* ── plan, prescription, charts ──────────────────────────────────────*/
-.pre{font-family:inherit;font-size:13.5px;line-height:1.62;font-weight:400;
-  white-space:pre-wrap;overflow-wrap:break-word;margin:calc(var(--u)*2.5) 0 0;color:var(--deep)}
-.plan-t{font-size:17px;font-weight:600;letter-spacing:-.012em;color:var(--nm)}
-.plan-m{display:flex;gap:2px;flex-wrap:wrap;margin-top:calc(var(--u)*2.5)}
-.chip{background:var(--chip-bg);color:var(--chip-fg);border-radius:0;
-  padding:calc(var(--u)*1.5) calc(var(--u)*2.5);font-size:12px;font-weight:600;
-  box-shadow:inset 0 0 0 1px var(--chip-line);font-variant-numeric:tabular-nums}
+/* ── panels, notes, plan ─────────────────────────────────────────────*/
+.panel{background:var(--surface);border-radius:var(--r-l);padding:calc(var(--u)*4);
+  box-shadow:var(--shadow)}
+#devPanels .panel{margin-bottom:calc(var(--u)*3)}
+.panel h3{margin:0 0 calc(var(--u)*3)}
+.note{font-size:15px;line-height:1.6;color:var(--ink-2);background:var(--surface-2);
+  border-radius:var(--r-m);padding:calc(var(--u)*4);margin:calc(var(--u)*4) 0 0}
+.note b{color:var(--ink);font-weight:600}
+.quiet{color:var(--ink-2);font-size:15px}
+.chip{background:var(--surface-2);color:var(--ink);border-radius:var(--r-pill);
+  padding:calc(var(--u)*2) calc(var(--u)*3.5);font-size:13px;font-weight:600;
+  font-variant-numeric:tabular-nums}
 .chip b{font-weight:700}
-.quiet{color:var(--ink);opacity:.72;font-size:14px;font-weight:400}
+.plan-m{display:flex;gap:calc(var(--u)*2);flex-wrap:wrap;margin-top:calc(var(--u)*3)}
+.plan-t{font-family:var(--display);font-size:24px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
+.plan-head{display:flex;align-items:flex-start;gap:calc(var(--u)*3)}
+.plan-head .plan-t{flex:1;min-width:0}
+.info{flex:none;width:44px;height:44px;border-radius:var(--r-pill);cursor:pointer;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  font-size:17px;font-weight:700;font-style:italic;line-height:1}
+.pre{font-family:inherit;font-size:15px;line-height:1.65;color:var(--ink-2);
+  white-space:pre-wrap;overflow-wrap:break-word;margin:calc(var(--u)*3) 0 0}
 .runcard{margin-bottom:0}
 .runcard .faces{transform:none!important;min-height:0}
 .runcard.flipped,.runcard.flipped .faces{min-height:0}
@@ -303,135 +302,99 @@ section{margin-bottom:calc(var(--u)*7)}
   border-radius:0;overflow:visible;display:none}
 .runcard.flipped .back{display:block}
 .runcard.flipped .front{display:none}
-.plan-head{display:flex;align-items:flex-start;gap:calc(var(--u)*2.5)}
-.plan-head .plan-t{flex:1;min-width:0}
-.info{flex:none;width:30px;height:30px;border-radius:0;cursor:pointer;
-  border:2px solid var(--chip-line);background:var(--chip-bg);color:var(--chip-fg);
-  font-family:inherit;font-size:14px;font-weight:700;font-style:italic;line-height:1}
-.zwrap{margin-top:calc(var(--u)*3.5)}
-.hist{position:relative;display:flex;align-items:flex-end;gap:1px;height:74px;
-  padding-bottom:1px;border-bottom:2px solid var(--ink)}
-.hist i{display:block;min-width:2px;border-radius:0}
+.zwrap{margin-top:calc(var(--u)*4)}
+.hist{position:relative;display:flex;align-items:flex-end;gap:2px;height:88px;
+  border-bottom:1px solid var(--line)}
+.hist i{display:block;min-width:2px;border-radius:3px 3px 0 0}
 .hist .cp{position:absolute;left:0;right:0;bottom:var(--cp);height:0;
-  border-top:2px dashed var(--ink);opacity:.6}
-.hist .cp span{position:absolute;right:0;top:-14px;font-size:10px;font-weight:600;
-  font-stretch:75%;letter-spacing:.1em;text-transform:lowercase}
-.zbar{display:flex;height:14px;border-radius:0;overflow:hidden;background:var(--plane-2)}
+  border-top:1px dashed var(--ink-2)}
+.hist .cp span{position:absolute;right:0;top:-15px;font-size:11px;font-weight:600;
+  color:var(--ink-2)}
+.zbar{display:flex;height:16px;border-radius:var(--r-pill);overflow:hidden;
+  background:var(--surface-2)}
 .zbar i{display:block}
-.zkey{display:flex;flex-wrap:wrap;gap:calc(var(--u)*1.5) calc(var(--u)*3.5);margin-top:calc(var(--u)*2.5)}
-.zkey span{display:flex;align-items:center;gap:calc(var(--u)*1.5);font-size:11.5px;
-  font-weight:500;font-stretch:87%;text-transform:lowercase;letter-spacing:.04em}
-.zkey i{width:10px;height:10px;border-radius:0;flex:none}
-.zcap{font-size:11px;font-weight:500;font-stretch:87%;letter-spacing:.06em;
-  text-transform:lowercase;opacity:.72;margin-top:calc(var(--u)*2)}
-.age{font-size:11.5px;font-weight:500;font-stretch:87%;letter-spacing:.05em;
-  text-transform:lowercase;margin:calc(var(--u)*2.5) 0 0;opacity:.8}
-/* An expired token is the reason tomorrow's plan will not arrive, so it has to
-   carry. Aicher's programme has no red in it, so it carries by weight and rule
-   instead: full ink, bold, with a rule under it. */
-.age.stale{color:var(--ink);opacity:1;font-weight:700;
-  border-bottom:2px solid var(--ink);padding-bottom:calc(var(--u)*1);display:inline-block}
+.zkey{display:flex;flex-wrap:wrap;gap:calc(var(--u)*2) calc(var(--u)*4);
+  margin-top:calc(var(--u)*3)}
+.zkey span{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
+  color:var(--ink-2)}
+.zkey i{width:10px;height:10px;border-radius:3px;flex:none}
+.zcap{font-size:13px;color:var(--ink-2);margin-top:calc(var(--u)*2)}
+.age{font-size:13px;color:var(--ink-2);margin:calc(var(--u)*3) 0 0}
+.age.stale{color:var(--ink);font-weight:600}
+.age.stale::before{content:"";display:inline-block;width:8px;height:8px;
+  border-radius:50%;background:var(--warn);margin-right:7px;vertical-align:1px}
 .more{margin-top:calc(var(--u)*3)}
-.more summary{cursor:pointer;font-size:11px;font-weight:600;font-stretch:87%;
-  letter-spacing:.14em;text-transform:lowercase;
+.more summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--ink-2);
   min-height:44px;display:flex;align-items:center}
-.grp .more{margin-top:2px}
-
-/* ── panels and notes ────────────────────────────────────────────────*/
-.panel{background:var(--plane);border-radius:0;padding:calc(var(--u)*4);
-  box-shadow:inset 0 0 0 1px var(--rule)}
-#devPanels .panel{margin-bottom:2px}
-.panel h3{margin:0 0 calc(var(--u)*2.5);border-bottom:2px solid var(--ink);
-  padding-bottom:calc(var(--u)*1)}
 .log{list-style:none;margin:0;padding:0}
-.log li{display:flex;justify-content:space-between;gap:calc(var(--u)*2.5);
-  padding:calc(var(--u)*2) 0;font-size:13.5px;font-weight:400;border-top:1px solid var(--rule)}
+.log li{display:flex;justify-content:space-between;gap:calc(var(--u)*3);
+  padding:calc(var(--u)*3) 0;font-size:15px;border-top:1px solid var(--line)}
 .log li:first-child{border-top:0}
 .log b{font-weight:600}
-.log span{font-weight:500;font-size:12px;font-variant-numeric:tabular-nums;opacity:.78}
-.verdict{font-size:13.5px;line-height:1.6;font-weight:400;margin:calc(var(--u)*3) 0 0}
-.verdict b{font-weight:600}
-.bump{margin-top:calc(var(--u)*3);width:100%;padding:calc(var(--u)*3.5);border:0;border-radius:0;
-  cursor:pointer;background:var(--ch);color:var(--ink);font-family:inherit;
-  font-size:14px;font-weight:600;font-stretch:87%;letter-spacing:.04em;text-transform:lowercase}
-.bump[disabled]{background:var(--plane-2);color:var(--ink);opacity:.8;cursor:default}
-.note{font-size:13.5px;line-height:1.6;font-weight:400;background:var(--plane);
-  border-radius:0;padding:calc(var(--u)*4);margin:calc(var(--u)*3) 0 0;
-  border-top:2px solid var(--ink)}
-.note b{font-weight:600}
+.log span{color:var(--ink-2);font-size:13px;font-variant-numeric:tabular-nums}
+.verdict{font-size:15px;line-height:1.6;color:var(--ink-2);margin:calc(var(--u)*4) 0 0}
+.verdict b{color:var(--ink);font-weight:600}
+.bump{margin-top:calc(var(--u)*4);width:100%;min-height:52px;border:0;
+  border-radius:var(--r-m);cursor:pointer;background:var(--accent);
+  color:var(--on-accent);font-family:inherit;font-size:16px;font-weight:600}
+.bump[disabled]{background:var(--surface-2);color:var(--ink-2);cursor:default}
 
-/* ── the spotlight ───────────────────────────────────────────────────
-   Kept from the old app because it is behaviour, not decoration: while a
-   session runs, everything that is not the movement being done recedes.
-   It recedes toward the silver, never toward black -- this is a light
-   interface and inverting it for the length of a hold would be worse.  */
-:root{--dim-o:.34;--dim-s:saturate(.35);--dim-bg-o:.45;--dim-bg-f:saturate(.2)}
-@media (forced-colors:active){ :root{--dim-o:1;--dim-s:none;--dim-bg-o:1;--dim-bg-f:none} }
-.hi,h1,.dial,h2,h3,.note,.panel,.tabs,.pht{transition:opacity .3s linear,filter .3s linear}
-#bg,#scrim{transition:opacity .3s linear,filter .3s linear}
-body.running .hi,
-body.running h1,
-body.running .dial,
-body.running h2,
-body.running h3,
-body.running .note,
-body.running .panel,
-body.running .tabs,
-body.running .pht,
-body.running .ex:not([data-state="doing"]){opacity:var(--dim-o);filter:var(--dim-s)}
-body.running #bg,body.running #scrim{opacity:var(--dim-bg-o);filter:var(--dim-bg-f)}
-
-/* ── the carriage ────────────────────────────────────────────────────
-   One row deep, flooded in the channel's ink, the clock at page scale in
-   the expanded cut. It sits at the bottom so the movement being timed
-   stays on screen, which a full-height sheet made impossible.          */
-.over{position:fixed;left:0;right:0;bottom:0;z-index:30;max-width:620px;margin:0 auto;
-  display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr) auto auto;align-items:center;
-  column-gap:calc(var(--u)*2.5);row-gap:1px;border-radius:0;border-top:2px solid var(--ink);
-  padding:calc(var(--u)*3) calc(var(--u)*3.5) calc(var(--u)*3.25 + env(safe-area-inset-bottom));
-  color:var(--ink);transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.85,.25,1)}
-body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))}
-.over.up{transform:none}
-.over .ring{position:absolute;left:0;top:0;height:4px;background:var(--ink);width:0}
-.over .phase{grid-row:1;grid-column:1;font-size:10.5px;font-weight:600;font-stretch:87%;
-  letter-spacing:.16em;text-transform:lowercase;color:var(--phase);
+/* ── the session ─────────────────────────────────────────────────────
+   Promoted from a slim bar to the whole screen. At the one moment the
+   phone must not be touched, everything that is not the movement, the
+   clock and the two controls is gone -- and the controls sit at the
+   bottom where a thumb already is.                                    */
+.over{position:fixed;inset:0;z-index:60;display:none;
+  grid-template-rows:auto 1fr auto;
+  padding:calc(var(--u)*6 + env(safe-area-inset-top)) calc(var(--u)*6)
+          calc(var(--u)*8 + env(safe-area-inset-bottom));
+  background:var(--doing-bg);color:var(--on-doing);
+  opacity:0;transition:opacity .28s ease}
+.over.up{display:grid;opacity:1}
+@media (prefers-reduced-motion:reduce){ .over{transition:none} }
+.over .ring{position:absolute;left:0;top:0;height:4px;background:var(--on-doing);
+  width:100%;opacity:.85;transform:scaleX(0);transform-origin:0 50%;
+  transition:transform .3s linear}
+@media (prefers-reduced-motion:reduce){ .over .ring{transition:none} }
+.over .head{grid-row:1}
+.over .phase{font-family:var(--display);font-size:15px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;opacity:.85;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.over .stepcount{grid-row:1;grid-column:2;overflow:hidden;font-size:10.5px;font-weight:500;
-  font-stretch:75%;letter-spacing:.12em;text-transform:lowercase;opacity:.8;
-  white-space:nowrap;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
-.over .stepcount:not(:empty)::before{content:"/";opacity:.6;margin-right:6px}
-.over .what{grid-row:2;grid-column:1/3;font-size:clamp(15px,4.2vw,18px);font-weight:600;
-  letter-spacing:-.012em;line-height:1.12;margin:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.over .digits{grid-row:1/3;grid-column:3;align-self:center;
-  font-size:clamp(34px,10.5vw,46px);font-weight:700;font-stretch:112%;
-  letter-spacing:-.03em;line-height:1;margin:0;
-  font-variant-numeric:tabular-nums;text-align:right}
-.over .ctl{grid-row:1/3;grid-column:4;align-self:center;display:flex;gap:calc(var(--u)*2)}
-/* Stop ends the session and reverts the card. Two pixels from Pause, with wet
-   hands, that is a mis-tap that costs the work. It gets its own gutter. */
-.over .ctl button.stop{margin-left:calc(var(--u)*3)}
-.over .ctl button{flex:none;width:48px;height:48px;padding:0;display:grid;place-items:center;
-  border-radius:0;border:2px solid currentColor;cursor:pointer;
-  background:transparent;color:inherit;font-family:inherit}
-.over .ctl button svg{width:16px;height:16px;fill:currentColor;display:block}
-.over .ctl.text{grid-row:3;grid-column:1/-1;align-self:auto;margin-top:calc(var(--u)*2.5);gap:2px}
-.over .ctl.text button{flex:1;width:auto;height:auto;padding:calc(var(--u)*3.25);display:block;
-  font-size:13px;font-weight:600;font-stretch:87%;letter-spacing:.05em;text-transform:lowercase}
-.over .ctl button.go{background:var(--ink);color:var(--ch);border-color:var(--ink)}
-.over .ctl button:active{background:var(--ink);border-color:var(--ink);color:var(--ch)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.over .stepcount{font-size:13px;font-weight:600;opacity:.75;
+  font-variant-numeric:tabular-nums;margin-top:2px}
+.over .figure{width:clamp(96px,30vw,150px);height:clamp(96px,30vw,150px);
+  color:var(--on-doing);opacity:.9}
+.over .figure svg{width:100%;height:100%;display:block}
+.over .figure svg *{vector-effect:non-scaling-stroke}
+.over .ctl button span{font-family:var(--display);font-size:17px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase}
+.over .mid{grid-row:2;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:calc(var(--u)*4);min-height:0;text-align:center}
+.over .what{font-family:var(--display);font-size:clamp(30px,9vw,46px);font-weight:700;
+  line-height:1.02;text-transform:uppercase;letter-spacing:.01em;margin:0;
+  overflow-wrap:anywhere}
+.over .digits{font-family:var(--display);font-size:clamp(78px,26vw,140px);
+  font-weight:700;line-height:.88;margin:0;font-variant-numeric:tabular-nums;
+  letter-spacing:-.01em}
+.over .ctl{grid-row:3;display:flex;gap:calc(var(--u)*3);align-items:center;
+  justify-content:center}
+.over .ctl button{flex:1;min-height:64px;border-radius:var(--r-pill);
+  border:2px solid var(--on-doing);background:transparent;color:var(--on-doing);
+  cursor:pointer;font-family:inherit;font-size:16px;font-weight:600;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .1s ease}
+.over .ctl button svg{width:22px;height:22px;fill:currentColor;display:block}
+.over .ctl button.go{background:var(--on-doing);color:var(--doing-bg)}
+.over .ctl button:active{transform:scale(.96)}
+body.running{overflow:hidden}
+body.running .tabs{display:none}
 
-/* forced colours strips backgrounds: the whole system falls back to the
-   user's own two colours plus a border language that still separates. */
 @media (forced-colors:active){
-  .ex,.chip,.dial,.note,.panel{background:Canvas;box-shadow:none;border:1px solid CanvasText}
-  .ex .nm,.ex .dose,.note,.chip{color:CanvasText}
+  .ex,.panel,.dial,.note,.chip{background:Canvas;border:1px solid CanvasText;
+    box-shadow:none}
   .ex[data-state="doing"]{border:3px solid Highlight}
   .ex[data-state="done"]{border:3px solid LinkText}
-  .badge{box-shadow:none;border:1px solid CanvasText;forced-color-adjust:none}
-  .hold,.check,.watch{border:1px solid ButtonText}
-  .over{background:Canvas;color:CanvasText;border-top:2px solid CanvasText}
+  .run,.bump,.over{background:Canvas;color:CanvasText;border:2px solid CanvasText}
   .zbar i,.hist i,.zkey i{forced-color-adjust:none}
 }
 </style>
@@ -498,7 +461,6 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
   <button class="gearbtn" id="tabSettings" type="button" aria-label="Settings" aria-expanded="false"></button>
 </div>
 
-<nav class="tabs" id="tabs" role="tablist" aria-label="Phases of the day"></nav>
 
 <section class="ph" id="ph-pre" data-phase="pre">
   <h2 class="pht"><span class="s">before you go out</span></h2>
@@ -565,12 +527,19 @@ body.running{padding-bottom:calc(max(120px, 12vh) + env(safe-area-inset-bottom))
   <div class="panel" id="progress"></div>
 </section>
 
-<div class="over" id="over">
+<nav class="tabs" id="tabs" role="tablist" aria-label="Phases of the day"></nav>
+
+<div class="over" id="over" role="dialog" aria-modal="true" aria-label="Session">
   <div class="ring" id="ring"></div>
-  <div class="phase" id="phase">Holding</div>
-  <div class="stepcount" id="stepcount"></div>
-  <div class="what" id="what">—</div>
-  <div class="digits" id="digits">0:00</div>
+  <div class="head">
+    <div class="phase" id="phase">Holding</div>
+    <div class="stepcount" id="stepcount"></div>
+  </div>
+  <div class="mid">
+    <div class="figure" id="figure" aria-hidden="true"></div>
+    <p class="what" id="what">—</p>
+    <p class="digits" id="digits">0:00</p>
+  </div>
   <div class="ctl" id="ctl"></div>
 </div>
 
@@ -663,34 +632,53 @@ var Yn=.022;function qn(r,n,e){return.2126729*Math.pow(r/255,2.4)+.7151522*Math.
    Nothing is coloured by identity, so nine cards no longer mean
    nine hues competing for attention.
    --------------------------------------------------------------- */
-var PAPER = "#D9DDD9", PLANE = "#EFF1EE", INK = "#191E1B";
-/* Aicher's spectrum for the 1972 Games. Red is absent because he removed it,
-   and nothing here needs it: hue names the channel, not the urgency. */
-var CH = { pre:"#5FA842", run:"#2E7CBF", post:"#E8842A", log:"#7E63A8", settings:"#5B6560" };
-/* The channel on screen. solveStates() re-solves the three treatments against
-   it every time the channel changes, so a green day and an orange day are the
-   same design proved twice, not two palettes. */
-var HUE = { todo:"#8C918C", doing:CH.run, done:CH.run };
+/* ---- the two themes, solved ----------------------------------------
+   Light and dark are designed together and proved separately: the same
+   seeds, run through the same solvers, against whichever ground is
+   actually on screen. Nothing here is inverted from the other theme --
+   an inverted palette is how dark mode ends up with text nobody can
+   read on a surface nobody chose. */
+var SEED  = { accent:"#EA580C", ok:"#059669", warn:"#D97706" };
+var LIGHT = { bg:"#F4F6F8", surface:"#FFFFFF", surface2:"#EBEEF2",
+              line:"#D5DAE1", ink:"#0E1621", ink2:"#4A5666" };
+var DARK  = { bg:"#0F172A", surface:"#182234", surface2:"#1F2B40",
+              line:"#31405A", ink:"#F2F6FB", ink2:"#9DAABD" };
+var T = LIGHT, INK = LIGHT.ink, PAPER = LIGHT.bg;
 
-function layer(fg, bg, a){ return chroma.mix(bg, fg, a, "rgb").hex() }
-function tintOf(c){ var l = chroma(c).lch(); return chroma.lch(94, Math.min(l[1] * 0.30, 26), l[2]).hex() }
-function inkFor(hue, bg, target){
-  /* validate the quantised hex, not the float: rounding to 8-bit costs ~0.01 and
-     was landing a value at 4.4999 against a 4.5 target. */
-  var l = chroma(hue).lch(), col = chroma.lch(40, Math.min(l[1], 45), l[2]);
-  for (var i = 0; i < 80 && chroma.contrast(col.hex(), bg) < target; i++) col = col.darken(0.08);
-  return col.hex();
+function darkMode(){
+  var set = document.documentElement.getAttribute("data-theme");
+  if (set === "dark") return true;
+  if (set === "light") return false;
+  return !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
 }
+function layer(fg, bg, a){ return chroma.mix(bg, fg, a, "rgb").hex() }
+function isDarkGround(bg){
+  return chroma.contrast("#FFFFFF", bg) > chroma.contrast("#000000", bg);
+}
+/* Move a colour until it carries on this ground, in whichever direction
+   this ground requires. The old solver only ever darkened, which is
+   correct on paper and useless on a dark surface. */
+function tone(seed, bg, target){
+  var c = chroma(seed), up = isDarkGround(bg);
+  for (var i = 0; i < 120 && chroma.contrast(c.hex(), bg) < target; i++)
+    c = up ? c.brighten(0.07) : c.darken(0.07);
+  return c.hex();
+}
+/* A filled block plus the foreground that survives on it, chosen rather
+   than assumed: white and ink are both candidates and the better one wins. */
+function pair(seed, target){
+  var fg = chroma.contrast("#FFFFFF", seed) >= chroma.contrast(T.ink, seed)
+             ? "#FFFFFF" : T.ink;
+  var f = fill(seed, fg, target);
+  return { bg: f.bg, fg: fg, veil: f.veil };
+}
+
+function inkFor(hue, bg, target){ return tone(hue, bg, target) }
 function fade(fg, bg, target){
-  /* `out` used to start at `fg` and get returned untouched when `fg` itself
-     failed, so a colour that had never passed shipped looking solved. If the
-     foreground cannot carry on this ground at all, that is the caller's bug and
-     it should be loud. */
-  if (chroma.contrast(chroma(fg).hex(), bg) < target)
-    return inkFor(fg, bg, target);
+  if (chroma.contrast(chroma(fg).hex(), bg) < target) return tone(fg, bg, target);
   var out = chroma(fg).hex();
   for (var a = 1; a >= 0.3; a -= 0.02){
-    var h = chroma.mix(bg, fg, a, "rgb").hex();          /* test the quantised value */
+    var h = chroma.mix(bg, fg, a, "rgb").hex();
     if (chroma.contrast(h, bg) < target) break;
     out = h;
   }
@@ -699,82 +687,20 @@ function fade(fg, bg, target){
 /* a filled surface plus a foreground that survives on it, at `target` */
 function fill(c, fg, target){
   var bg = chroma(c);
-  for (var i = 0; i < 90 && chroma.contrast(fg, bg) < target; i++)
-    bg = fg === "#FFFFFF" ? bg.darken(0.08).saturate(0.05) : bg.brighten(0.08);
+  for (var i = 0; i < 120 && chroma.contrast(fg, bg) < target; i++)
+    bg = fg === "#FFFFFF" ? bg.darken(0.07).saturate(0.04) : bg.brighten(0.07);
   var veil = 0.30;
   for (; veil > 0.04; veil -= 0.02)
     if (chroma.contrast(fg, layer(fg === "#FFFFFF" ? "#FFFFFF" : "#000000", bg.hex(), veil)) >= 4.5) break;
   return { bg: bg.hex(), fg: fg, veil: veil };
 }
 
-var WORST = "#D9DDD9";   /* the ground every foreground is proved against */
-
-/* ---- one bundle per state, solved once per channel ----
-   Hue names the channel; treatment names the state. Outlined is waiting,
-   flooded is happening, filled-and-receded is done. No state is signalled by
-   colour alone -- the pill spells it out -- so the three read correctly to
-   anyone who cannot separate the hues at all. */
 var STYLE = {};
 function solveStates(){
-  /* Todo: a printed plane on the silver. Nothing floats, so there is no
-     composite to solve against -- the plane itself is the ground. */
-  var planeInk = inkFor(INK, PLANE, 7);
-  STYLE.todo = {
-    surface: PLANE, opaque: PLANE, solid: PLANE,
-    rim:     inkFor(INK, PLANE, 3),
-    nm:      planeInk,
-    deep:    inkFor(INK, PLANE, 4.5),
-    pill:    inkFor(HUE.doing, PLANE, 4.5),
-    onSolid: planeInk,
-    chipBg:  PLANE, chipFg: inkFor(INK, PLANE, 4.5),
-    chipLine: inkFor(INK, PLANE, 3),
-    /* The channel hue belongs on the work still waiting, not on the work
-       already finished: in Operate mode the eye has to land on the next undone
-       thing. Outlined in the channel, filled only when it is being done. */
-    badge:   { bg: PLANE, fg: planeInk, line: fill(HUE.doing, INK, 5.5).bg },
-    seg:     chroma(HUE.doing).hex()
-  };
-
-  /* Doing: the channel floods the whole band and everything on it is knocked
-     out white. Solved to 5.5:1 rather than 4.5:1 so the 60% white of a
-     secondary label still clears the floor on the same field. */
-  var d = fill(HUE.doing, INK, 5.5);
-  STYLE.doing = {
-    surface: d.bg, opaque: d.bg, solid: d.bg,
-    rim:     inkFor(INK, d.bg, 3),
-    nm:      INK,
-    deep:    fade(INK, d.bg, 4.5),
-    pill:    INK,
-    onSolid: INK,
-    chipBg:  "rgba(0,0,0,0)", chipFg: INK,
-    chipLine: INK,
-    badge:   { bg: "rgba(0,0,0,0)", fg: INK, line: INK },
-    seg:     d.bg
-  };
-
-  /* Done: the band recedes to a darker step of the silver and the pictogram
-     block alone carries the channel, filled. The work is still legible; it is
-     simply no longer asking for attention. */
-  /* A finished row recedes toward the ground rather than away from it: darker
-     than the silver read as heavier (the old --plane-2), and brightening past
-     the plane made it the lightest field on the page. It sits between the two,
-     a shade off the ground, carrying no hue and no buttons. */
-  var spent = chroma.mix(PAPER, PLANE, 0.35, "rgb").hex();
-  var block = fill(HUE.done, INK, 5.5);
-  STYLE.done = {
-    surface: spent, opaque: spent, solid: block.bg,
-    rim:     inkFor(INK, spent, 3),
-    nm:      inkFor(INK, spent, 7),
-    deep:    inkFor(INK, spent, 4.5),
-    pill:    inkFor(HUE.done, spent, 4.5),
-    onSolid: INK,
-    chipBg:  "rgba(0,0,0,0)", chipFg: inkFor(INK, spent, 4.5),
-    chipLine: inkFor(INK, spent, 3),
-    /* Done recedes: no hue, no outline weight, no button row. It is a record,
-       not a target. */
-    badge:   { bg: "rgba(0,0,0,0)", fg: inkFor(INK, spent, 4.5), line: inkFor(INK, spent, 3) },
-    seg:     block.bg, tick: block.bg
-  };
+  var a = pair(SEED.accent, 4.5);
+  STYLE.doing = { solid: a.bg, fg: a.fg };
+  STYLE.todo  = { solid: T.surface, fg: T.ink };
+  STYLE.done  = { solid: T.bg, fg: T.ink2 };
 }
 
 /* ---------------------------------------------------------------
@@ -1330,7 +1256,7 @@ function runChart(w){
   var segs = sessionSegments(w.x, w.s);
   if (!segs.length) return zoneChart(w.z);
 
-  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || CH.run,
+  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || (T && T.ink) || "#EA580C",
       top = 110, i;
   for (i = 0; i < segs.length; i++) top = Math.max(top, segs[i].hi);
 
@@ -1362,7 +1288,7 @@ function zoneChart(zones){
   for (i = 0; i < zones.length; i++) total += zones[i] || 0;
   if (!total) return "";
 
-  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || CH.run,
+  var anchor = (window.STYLE && STYLE.doing && STYLE.doing.solid) || (T && T.ink) || "#EA580C",
       bar = "", key = "";
   for (i = 0; i < zones.length; i++){
     var secs = zones[i] || 0;
@@ -1421,7 +1347,7 @@ function renderPlan(){
     '<article class="ex runcard' + (RUN_FLIPPED ? ' flipped' : '') + '"><div class="faces">' +
       '<div class="front">' +
         '<div class="plan-head"><div class="plan-t">' + esc(w.t) + '</div>' +
-          '<button class="info" type="button" aria-label="Show the full prescription">i</button></div>' +
+          '<button class="info" type="button" aria-label="Show the full prescription">' + UI.info + '</button></div>' +
         '<div class="plan-m">' +
           '<span class="chip">' + fmtDur(w.s) + '</span>' +
           (w.m ? '<span class="chip">' + (w.m / 1000).toFixed(1) + ' km</span>' : '') +
@@ -1479,7 +1405,12 @@ var UI = {
   play:  '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3v10l8-5z"/></svg>',
   gear:  '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.6v3M12 18.4v3M2.6 12h3M18.4 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg>',
   out:   '<svg class="i" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h7v7"/><path d="M13 3L4 12"/></svg>',
-  close: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>'
+  close: '<svg class="i" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>',
+  info:  '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 10.5v6"/><circle cx="12" cy="7.4" r="1.15" fill="currentColor" stroke="none"/></svg>',
+  pre:   '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12h3l2.5-5 5 10L17 12h3"/></svg>',
+  run:   '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="15.5" cy="4.6" r="2.1"/><path d="M12.6 20.5l1.7-5.2-3.1-2.6-1.2 4"/><path d="M11.2 12.7l2.2-4.6 3.1 1.9 3 .6"/><path d="M9.9 9.6L6.6 11"/><path d="M14.3 15.3l3.2 2.1 1.1 3.1"/></svg>',
+  post:  '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.6" r="2.1"/><path d="M12 7v5"/><path d="M12 12l-4 3.5V21"/><path d="M12 12l4 3.5V21"/><path d="M7.5 9.5h9"/></svg>',
+  log:   '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10"/><path d="M9.3 20V4"/><path d="M14.7 20v-7"/><path d="M20 20v-11"/></svg>'
 };
 
 /* Every movement in this app has a drawn pictogram; none is a number or a
@@ -1571,23 +1502,7 @@ function flip(el, on){
 }
 
 function setState(el, state){
-  var s = STYLE[state];
   el.dataset.state = state;
-  el.style.setProperty("--surface", s.surface);
-  el.style.setProperty("--opaque",  s.opaque || s.surface);
-  el.style.setProperty("--solid",   s.solid);
-  el.style.setProperty("--rim",     s.rim);
-  el.style.setProperty("--nm",      s.nm);
-  el.style.setProperty("--deep",    s.deep);
-  el.style.setProperty("--pill",    s.pill);
-  el.style.setProperty("--chip-bg", s.chipBg);
-  el.style.setProperty("--chip-fg", s.chipFg);
-  el.style.setProperty("--badge-bg", s.badge.bg);
-  el.style.setProperty("--badge-fg", s.badge.fg);
-  el.style.setProperty("--badge-line", s.badge.line);
-  el.style.setProperty("--chip-line", s.chipLine);
-  el.style.setProperty("--on-solid", s.onSolid);
-  el.style.setProperty("--tick",    s.tick || s.solid);
   flip(el, state === "doing");
   if (state === "done" && typeof record === "function") record(el);
   /* state is never signalled by colour alone -- the pill spells it out */
@@ -1659,59 +1574,53 @@ function build(x, host){
    photograph, so the ground a foreground must survive is the ground itself.
    The band's own type is knocked out of a solved channel field instead. */
 function dressPage(){
-  WORST = PAPER;
-
+  T = darkMode() ? DARK : LIGHT;
+  INK = T.ink; PAPER = T.bg;
   var root = document.documentElement.style;
-  root.setProperty("--silver", PAPER);
-  root.setProperty("--plane",  PLANE);
-  root.setProperty("--plane-2", chroma.mix(PAPER, PLANE, 0.35, "rgb").hex());
-  root.setProperty("--ink",    INK);
-  /* Rules, rims and outlines were the one thing the solver never proved: they
-     were picked by eye and landed between 1.26:1 and 1.93:1, which made the
-     done state a value step nobody could see and the state chip look unpressable.
-     Non-text boundaries carry at 3:1, solved the same way the text is. */
-  root.setProperty("--rule",   inkFor(INK, PAPER, 3));
-  root.setProperty("--ink-2",  inkFor(INK, PAPER, 4.5));
-  /* The band is the one dark thing in the system: a photograph printed in
-     deep channel ink, with the masthead knocked out of it in white. It is also
-     the largest field on screen, so it has to obey the system's first rule and
-     name the channel you are actually in -- solved once per channel here, and
-     re-solved by setChannel(). */
-  Object.keys(CH).forEach(function(k){
-    root.setProperty("--band-" + k, fill(CH[k], "#FFFFFF", 5.5).bg);
-  });
-  root.setProperty("--band", fill(CH.run, "#FFFFFF", 5.5).bg);
-  Object.keys(CH).forEach(function(k){
-    /* Aicher's spectrum is light on purpose, so the knockout is ink, not white.
-       Solving these for white drove the light green to #077900 and threw the
-       whole programme away; solving for ink keeps the palette and still proves
-       every field carries its type at 5.5:1. */
-    root.setProperty("--ch-" + k, fill(CH[k], INK, 5.5).bg);
-  });
-}
 
-/* The channel on screen. Everything hue-bearing is re-solved against it, so
-   an orange day and a blue day are the same design proved twice. */
-function setChannel(key){
-  var seed = CH[key] || CH.run;
-  var solved = fill(seed, INK, 5.5).bg;
-  var root = document.documentElement.style;
-  root.setProperty("--ch", solved);
-  /* the poster band follows the channel: blue over orange work was the system
-     contradicting its own first rule with its largest element */
-  root.setProperty("--band", fill(seed, "#FFFFFF", 5.5).bg);
-  HUE.doing = seed; HUE.done = seed;
+  root.setProperty("--bg", T.bg);
+  root.setProperty("--surface", T.surface);
+  root.setProperty("--surface-2", T.surface2);
+  root.setProperty("--line", T.line);
+  root.setProperty("--ink", T.ink);
+  root.setProperty("--ink-2", tone(T.ink2, T.surface, 4.5));
+
+  /* The accent has two jobs and they are two different contrast problems:
+     as a filled block it must carry its own foreground, and as a label on
+     a surface it must carry itself. Solving one and using it for both is
+     how an accent ends up unreadable in exactly one of its two roles. */
+  var a = pair(SEED.accent, 4.5);
+  root.setProperty("--accent", a.bg);
+  root.setProperty("--on-accent", a.fg);
+  root.setProperty("--accent-ink", tone(SEED.accent, T.surface, 4.5));
+
+  var k = pair(SEED.ok, 4.5);
+  root.setProperty("--ok", k.bg);
+  root.setProperty("--on-ok", k.fg);
+  root.setProperty("--warn", tone(SEED.warn, T.surface, 3));
+
+  /* the session screen and the card being done are the same field */
+  root.setProperty("--doing-bg", a.bg);
+  root.setProperty("--on-doing", a.fg);
+  root.setProperty("--on-doing-2", fade(a.fg, a.bg, 4.5));
+  root.setProperty("--doing-badge", layer(a.fg, a.bg, Math.min(a.veil + 0.06, 0.32)));
+
   solveStates();
-  /* rows already on screen were dressed in the previous channel */
-  if (typeof ALL !== "undefined")
-    ALL.forEach(function(el){ if (el.dataset.state) setState(el, el.dataset.state) });
-  var bar = document.getElementById("over");
-  if (bar){
-    bar.style.background = solved;
-    root.setProperty("--over-solid", solved);
-    root.setProperty("--phase", fade("#FFFFFF", solved, 4.5));
-  }
 }
+
+/* The OS owns the theme, so the app has to notice when it changes rather
+   than solving once at boot and keeping a palette for the wrong ground. */
+(function watchTheme(){
+  if (!window.matchMedia) return;
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  var onChange = function(){
+    dressPage();
+    if (typeof ALL !== "undefined")
+      ALL.forEach(function(el){ if (el.dataset.state) setState(el, el.dataset.state) });
+  };
+  if (mq.addEventListener) mq.addEventListener("change", onChange);
+  else if (mq.addListener) mq.addListener(onChange);
+})();
 
 dressPage();
 solveStates();
@@ -1741,6 +1650,7 @@ function buildAll(list, host, phase, group, title){
   if (title && list.length && !list.every(function(x){ return x.solo })){
     var btn = document.createElement("button");
     btn.className = "run";
+    btn.dataset.group = group;
     btn.innerHTML = UI.play + "Run it<small>hands free · with sound cues</small>";
     btn.onclick = function(){
       var q = sessionQueue(group);
@@ -1924,7 +1834,7 @@ var TABBED = ["pre", "run", "post", "progress"];
 /* Short, because four tabs and their counts want about 430px and a 390px phone
    offers 358 -- which clipped the fourth into "P...". The panel underneath
    still says "Pre-run · before you go out", so the strip does not have to. */
-var TAB_NAMES = { pre:"Pre", run:"Run", post:"Post", progress:"Log" };
+var TAB_NAMES = { pre:"Before", run:"Run", post:"After", progress:"Log" };
 
 function buildTabs(){
   var g = document.getElementById("tabSettings");
@@ -1944,8 +1854,9 @@ function buildTabs(){
     /* Only the selected tab is in the tab order; the arrows move between them.
        That is the roving-tabindex contract role="tab" advertises. */
     b.tabIndex = -1;
-    b.innerHTML = TAB_NAMES[k] + '<span class="n"></span>';
-    b.style.setProperty("--tab-ch", "var(--ch-" + (k === "progress" ? "log" : k) + ")");
+    b.innerHTML = (UI[k === "progress" ? "log" : k] || "") +
+                  '<span class="lbl">' + TAB_NAMES[k] + '</span>' +
+                  '<span class="n"></span>';
     b.onclick = function(){ openPhase(k) };
     strip.appendChild(b);
   });
@@ -1982,7 +1893,6 @@ function openPhase(key){
     }
   });
   ACTIVE = key;
-  setChannel(key === "progress" ? "log" : key);
   drawRainbow();
   tally();
   if (key === "settings") renderSettings();
@@ -2023,6 +1933,16 @@ function currentPhase(){
 }
 
 function labelRuns(){
+  /* Three full-width accent buttons on one screen is three primary actions,
+     which is none. The first session in the open phase is the primary; the
+     others are still one tap away, just not shouting. */
+  PHASES.forEach(function(k){
+    var sec = document.getElementById("ph-" + k);
+    if (!sec) return;
+    [].forEach.call(sec.querySelectorAll(".run"), function(b, i){
+      b.classList.toggle("run-2", i > 0);
+    });
+  });
   [].forEach.call(document.querySelectorAll(".grp .run"), function(b){
     b.querySelector("small").textContent =
       "about " + estimate(b.dataset.group) + " min · hands free · with sound cues";
@@ -2165,8 +2085,7 @@ function buttons(list){
   list.forEach(function(b){
     var el = document.createElement("button");
     if (ICONS[b.label]){
-      el.innerHTML = ICONS[b.label];
-      el.setAttribute("aria-label", b.label);
+      el.innerHTML = ICONS[b.label] + '<span>' + b.label + '</span>';
       el.title = b.label;
     } else el.textContent = b.label;
     if (b.primary) el.className = "go";
@@ -2177,7 +2096,10 @@ function buttons(list){
   /* One word among them is enough to need the wide row: mixing a pill and a
      circle in the same line looks like a mistake rather than a hierarchy. */
   ctl.classList.toggle("text", list.some(function(b){ return !ICONS[b.label] }));
-  [].forEach.call(ctl.querySelectorAll("button.go"), function(b){ b.style.color = STYLE.doing.solid });
+  /* the primary control inverts: the field colour becomes its text */
+  [].forEach.call(ctl.querySelectorAll("button.go"), function(b){
+    b.style.color = STYLE.doing.solid; b.style.background = STYLE.doing.fg;
+  });
 }
 function controls(){
   /* A single hold gets a pause too. Without one the only way to answer the door
@@ -2225,6 +2147,9 @@ function advance(){
   ALL.forEach(function(o){ if (o.dataset.state === "doing" && o !== p.card) setState(o, "todo") });
   if (p.card.dataset.state !== "done") setState(p.card, "doing");
   dimBackdrop(true, p.card);   /* the lit card just moved; the inert set follows it */
+  var fig = document.getElementById("figure");
+  if (fig) fig.innerHTML = '<svg viewBox="0 0 44 44"><use href="#p-' +
+    pictoFor(p.card._x.n) + '"></use></svg>';
   say(p.card._x.n + (Q.auto ? ", step " + (Q.i + 1) + " of " + Q.list.length : "") +
       ", " + fmtClock(p.s));
   if (p.kind === "prep"){
@@ -2249,7 +2174,7 @@ function paint(){
   whatE.textContent = p.card._x.n;
   stepE.textContent = Q.auto ? (Math.min(doneCount + 1, total) + " of " + total) : "";
   digits.textContent = clock(Q.left);
-  ring.style.width = ((1 - Q.left / p.s) * 100) + "%";
+  ring.style.transform = "scaleX(" + (1 - Q.left / p.s).toFixed(4) + ")";
 }
 /* The spotlight dims everything that is not the movement being done. Until
    this ran, those elements were only *painted* out of the way: a dimmed card
@@ -2285,7 +2210,7 @@ function stopClock(){ if (Q.tick) clearInterval(Q.tick); Q.tick = null }
 function stopAll(){
   stopClock();
   ALL.forEach(function(o){ if (o.dataset.state === "doing") setState(o, "todo") });
-  ring.style.width = "0";
+  ring.style.transform = "scaleX(0)";
   stepE.textContent = "";
   over.classList.remove("up");
   document.body.classList.remove("running");
@@ -2297,7 +2222,7 @@ function finish(){
   say("Session complete.");
   dimBackdrop(false);
   holdScreen(false);
-  ring.style.width = "100%";
+  ring.style.transform = "scaleX(1)";
   digits.textContent = "0:00";
   stepE.textContent = "";
   var left = ALL.filter(function(el){ return el.dataset.state !== "done" });
