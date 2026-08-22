@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Post-run has moved</title>
+<style>
+:root{color-scheme:light dark}
+body{margin:0;min-height:100dvh;display:grid;place-items:center;
+  background:#E7E4DD;color:#15171B;font:16px/1.6 ui-sans-serif,system-ui,sans-serif;
+  padding:24px;text-align:center}
+@media (prefers-color-scheme:dark){body{background:#1A1917;color:#E8E3DA}}
+main{max-width:34ch}
+h1{font-size:22px;font-weight:600;margin:0 0 12px}
+p{margin:0 0 18px;opacity:.8}
+a{display:inline-block;padding:14px 22px;border-radius:2px;background:#1D4E6B;
+  color:#E7E4DD;text-decoration:none;font-weight:600;min-height:48px;
+  display:inline-flex;align-items:center}
+@media (prefers-color-scheme:dark){a{background:#C8933F;color:#1A1917}}
+</style></head><body><main>
+<h1>Post-run is part of Fundo now</h1>
+<p>The drills, the mobility work and the timers moved across, along with the
+plan they come from. This address is being retired.</p>
+<p><a href="https://fundo.zuacaldeira.com/">Open Fundo</a></p>
+</main>
+<script>
+/* Clear this origin out before leaving it: the installed app keeps a worker and
+   a cache, and neither would ever be replaced once nothing is deployed here. */
+(async () => {
+  try {
+    if (navigator.serviceWorker) {
+      for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+    }
+    if (window.caches) for (const k of await caches.keys()) await caches.delete(k);
+    localStorage.removeItem("postrun.v1");
+  } catch (e) {}
+  setTimeout(() => location.replace("https://fundo.zuacaldeira.com/"), 2500);
+})();
+</script></body></html>
