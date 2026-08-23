@@ -54,6 +54,13 @@ h1 span{background-image:var(--mark);-webkit-background-clip:text;background-cli
 /* off today the label doubles as the way back, so it has to look pressable */
 .daylabel.away{background:var(--run-bg);color:var(--run-fg)}
 .daylabel.away::after{content:" · back to today";font-weight:700;opacity:.75}
+/* What the watch says about this day. Hidden unless the sync is deployed and
+   has something to say -- the app has to be whole without it. */
+.trained{display:flex;align-items:center;gap:8px;margin:10px 2px 0;
+  font-size:12.5px;font-weight:700;line-height:1.4;color:var(--ink-2)}
+.trained[hidden]{display:none}
+.trained i{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--dot)}
+.trained b{color:var(--ink);font-weight:900}
 .rainbow{display:flex;gap:4px;margin:20px 0 6px}
 .rainbow i{flex:1;height:10px;border-radius:99px;transition:background .4s,transform .4s,box-shadow .4s}
 .stats{display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
@@ -260,6 +267,8 @@ body.running{padding-bottom:calc(58vh + env(safe-area-inset-bottom))}
   <button class="daylabel" id="dayLabel" aria-live="polite"></button>
   <button id="dayNext" aria-label="Next day">›</button>
 </div>
+
+<p class="trained" id="trained" hidden></p>
 
 <div class="rainbow" id="rainbow"></div>
 <button class="run" id="runAll">▶ Run the whole session<small>hands free · with sound cues</small></button>
@@ -1072,7 +1081,63 @@ function showDay(key){
   var map = DB.status[day] || {};
   ALL.forEach(function(el){ setState(el, map[el._x.n] || "todo", true) });
   paintDay();
+  paintTrained();
 }
+
+/* ---------------------------------------------------------------
+   What the watch saw
+
+   sync/sync.py asks intervals.icu hourly what was planned and what was actually
+   run, and leaves the answer at data/training.json. Everything here is optional:
+   no file, no network, a truncated write -- the line just stays hidden and the
+   rest of the app carries on.
+   --------------------------------------------------------------- */
+var TRAIN = null, trainEl = document.getElementById("trained");
+
+function paintTrained(){
+  var d = TRAIN && TRAIN.days && TRAIN.days[day];
+  if (!d || d.state === "rest"){ trainEl.hidden = true; return }
+
+  var ran = d.done && d.done[0], plan = d.planned && d.planned[0], txt;
+  if (ran){
+    var bits = [];
+    if (ran.km) bits.push(ran.km + " km");
+    if (ran.minutes) bits.push(ran.minutes + " min");
+    if (ran.watts) bits.push(Math.round(ran.watts) + " W");
+    txt = "<b>" + esc(ran.name) + "</b>" + (bits.length ? " · " + bits.join(" · ") : "");
+    if (d.state === "unplanned") txt += " · not planned";
+    else if (plan) txt += " · planned: " + esc(plan.name);
+    if (d.done.length > 1) txt += " · +" + (d.done.length - 1) + " more";
+  } else {
+    txt = "<b>" + esc(plan.name) + "</b>" + (plan.minutes ? " · " + plan.minutes + " min" : "") +
+          (d.state === "missed" ? " · not done" : " · planned");
+  }
+  trainEl.innerHTML = '<i></i><span>' + txt + '</span>';
+  /* done and planned borrow the board's own colours so the two agree at a glance.
+     Missed does not: todo's solid is near-white frosted glass, which reads as no
+     dot at all, so it takes the muted ink instead. */
+  trainEl.style.setProperty("--dot", d.state === "missed" ? "var(--ink-2)"
+                                   : STYLE[d.state === "done" ? "done" : "doing"].solid);
+  trainEl.hidden = false;
+}
+
+/* the file is written by a machine, but it describes text off a watch: names
+   come from Garmin and land in innerHTML */
+function esc(v){
+  return String(v == null ? "" : v).replace(/[&<>"']/g, function(c){
+    return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+  });
+}
+
+function loadTrained(){
+  fetch("data/training.json", { cache:"no-store" })
+    .then(function(r){ return r.ok ? r.json() : null })
+    .then(function(j){ if (j && j.days){ TRAIN = j; paintTrained() } })
+    .catch(function(){ /* not deployed, or offline before the first sync */ });
+}
+loadTrained();
+/* hourly on the server, so re-reading when the app comes back is enough */
+addEventListener("visibilitychange", function(){ if (!document.hidden) loadTrained() });
 
 document.getElementById("dayPrev").onclick = function(){ showDay(shiftDay(day, -1)) };
 document.getElementById("dayNext").onclick = function(){ showDay(shiftDay(day,  1)) };

@@ -32,6 +32,20 @@ self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;          // let YouTube go to the network
+
+  /* The training file is rewritten every hour, so serving it stale-first would
+     show yesterday's run until the launch after next -- exactly backwards for
+     the one thing here that is supposed to be current. Network first, cache as
+     the fallback so it still says something sensible offline. */
+  if (url.pathname.indexOf("/data/") !== -1){
+    e.respondWith(caches.open(CACHE).then(cache =>
+      fetch(e.request).then(res => {
+        if (res.status === 200) cache.put(e.request, res.clone()).catch(() => {});
+        return res;
+      }).catch(() => cache.match(e.request).then(hit => hit || Response.error()))));
+    return;
+  }
+
   e.respondWith(caches.open(CACHE).then(cache => cache.match(e.request).then(hit => {
     const fresh = fetch(e.request).then(res => {
       /* 200 only: the video's range requests come back 206 and cannot be put(), and an

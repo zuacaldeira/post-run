@@ -96,3 +96,42 @@ If assets ever get content-hashed names, give those a long `max-age` and leave
 
 `start_url` and `scope` are relative and nothing in the app uses an absolute path,
 so it works unchanged at a domain root or under `/post-run/`.
+
+## Hourly training sync
+
+```sh
+docker compose -f compose.yaml -f compose.sync.yaml up -d      # add -f compose.tls.yaml too
+docker compose logs -f sync
+```
+
+Every hour it asks intervals.icu what was planned and what was actually run, and
+writes `data/training.json` into a volume the web container publishes read-only.
+The app shows the line for whichever day you are looking at; without this overlay
+the file is absent, the line stays hidden and nothing else changes.
+
+intervals.icu is the only source. Garmin has no usable API, but the watch already
+syncs there carrying the Stryd power with it, and the plan lives there too -- so
+one call answers both halves of "was this executed" instead of reconciling two
+services that disagree about where a day begins.
+
+A failed sync never overwrites good data: the app keeps showing the last
+successful pull rather than going blank because of one 500.
+
+**This file is public.** It sits at `https://<your domain>/data/training.json`
+with no authentication, so anyone with the URL can read your training. It is your
+domain and an unguessable-ish path, which may well be enough -- but if not, put
+basic auth on `location /data/` in `deploy/nginx.conf`, or serve it from a path
+with a random component.
+
+### Checking what the API actually returns
+
+The field names below are taken from intervals.icu's documented shape and were
+never exercised against the live API from the machine that wrote them. If the
+line looks wrong or empty:
+
+```sh
+docker compose run --rm sync --once --dump /data --out /data/training.json
+```
+
+That saves the raw `events.json` and `activities.json` next to the output so you
+can see exactly what came back.

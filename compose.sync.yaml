@@ -1,0 +1,30 @@
+# Hourly training sync.
+#
+#   docker compose -f compose.yaml -f compose.sync.yaml up -d
+#
+# Separate from the base file because it needs credentials the app itself does
+# not: without this overlay the app runs exactly as before and simply shows no
+# training line. Add compose.tls.yaml as well if Caddy is fronting it.
+services:
+  sync:
+    build: ./sync
+    container_name: post-run-sync
+    restart: unless-stopped
+    environment:
+      INTERVALS_ATHLETE_ID: ${INTERVALS_ATHLETE_ID:?set INTERVALS_ATHLETE_ID in .env}
+      INTERVALS_API_KEY: ${INTERVALS_API_KEY:?set INTERVALS_API_KEY in .env}
+      SYNC_INTERVAL: ${SYNC_INTERVAL:-3600}
+      OUT: /data/training.json
+    volumes:
+      - training:/data
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+
+  post-run:
+    volumes:
+      # read-only: the web server publishes this file, it never writes it
+      - training:/usr/share/nginx/html/data:ro
+
+volumes:
+  training:
